@@ -1,0 +1,280 @@
+import AVFoundation
+import Audiobookshelf
+import Combine
+import Foundation
+import SwiftData
+
+@MainActor
+final class DownloadManager: ObservableObject {
+  static let shared = DownloadManager()
+
+  private let audiobookshelf = Audiobookshelf.shared
+
+  enum DownloadState: Equatable {
+    case notDownloaded
+    case downloading
+    case downloaded
+  }
+  @Published private(set) var downloads: [String: DownloadState] = [:]
+
+  private var downloadTasks: [String: Task<Void, Never>] = [:]
+  private let audiobookshelfService: Audiobookshelf
+
+  private init() {
+    self.audiobookshelfService = Audiobookshelf.shared
+  }
+
+  func downloadState(for bookID: String) -> DownloadState {
+    return downloads[bookID] ?? .notDownloaded
+  }
+
+  func startDownload(for item: RecentlyPlayedItem) {
+    let sessionInfo = item.playSessionInfo
+
+    guard let tracks = sessionInfo.orderedTracks, let serverURL = audiobookshelf.serverURL
+    else {
+      print("Cannot start download: missing session info or tracks")
+      ToastManager.shared.show(error: "Cannot start download: missing session info")
+      return
+    }
+
+    let bookID = item.bookID
+    downloads[bookID] = .downloading
+    print("Starting download of \(tracks.count) tracks for book: \(item.title)")
+
+    let task = Task {
+      do {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+          .first!
+        let bookDirectory = documentsPath.appendingPathComponent("Downloads")
+          .appendingPathComponent(bookID)
+
+        try FileManager.default.createDirectory(
+          at: bookDirectory, withIntermediateDirectories: true)
+
+        for (index, track) in tracks.enumerated() {
+          let baseURL = serverURL.absoluteString.trimmingCharacters(
+            in: CharacterSet(charactersIn: "/"))
+          let streamingPath = "/public/session/\(sessionInfo.id)/track/\(track.index)"
+          guard let trackURL = URL(string: "\(baseURL)\(streamingPath)") else {
+            print("Skipping track \(track.index) - invalid URL")
+            continue
+          }
+
+          print("Starting download of track \(track.index) (\(index + 1)/\(tracks.count))")
+
+          let (data, response) = try await URLSession.shared.data(from: trackURL)
+
+          guard let httpResponse = response as? HTTPURLResponse,
+            let contentType = httpResponse.allHeaderFields["Content-Type"] as? String
+          else {
+            print("ERROR: No Content-Type header for track \(track.index)")
+            throw URLError(.badServerResponse)
+          }
+
+          let fileExtension = contentTypeToExtension(contentType)
+          print("Content-Type: '\(contentType)' -> .\(fileExtension)")
+
+          let trackFile = bookDirectory.appendingPathComponent(
+            "track_\(track.index).\(fileExtension)")
+          try data.write(to: trackFile)
+
+          await MainActor.run {
+            track.localFilePath = trackFile.path
+          }
+
+          print(
+            "Downloaded track \(track.index) (\(index + 1)/\(tracks.count)) to: \(trackFile.path)")
+        }
+
+        await MainActor.run {
+          do {
+            try item.save()
+            print("Successfully saved download information to database")
+          } catch {
+            print("Failed to save download information: \(error)")
+            ToastManager.shared.show(error: "Failed to save download information")
+          }
+        }
+
+        await MainActor.run {
+          downloads[bookID] = .downloaded
+          print("Download completed successfully")
+          ToastManager.shared.show(success: "Download completed successfully")
+
+          NotificationCenter.default.post(
+            name: Notification.Name("DownloadCompleted"), object: bookID)
+        }
+
+      } catch {
+        print("Download failed: \(error)")
+        await MainActor.run {
+          downloads[bookID] = .notDownloaded
+          ToastManager.shared.show(error: "Download failed")
+        }
+      }
+
+      downloadTasks.removeValue(forKey: bookID)
+    }
+
+    downloadTasks[bookID] = task
+  }
+
+  func startDownload(for book: Book) {
+    let bookID = book.id
+    downloads[bookID] = .downloading
+    print("Starting download for book: \(book.title)")
+
+    let task = Task {
+      do {
+        let playSession = try await audiobookshelf.sessions.start(itemID: bookID)
+
+        let recentItem = RecentlyPlayedItem(
+          bookID: bookID,
+          title: book.title,
+          author: book.authorName,
+          coverURL: book.coverURL,
+          playSessionInfo: PlaySessionInfo(from: playSession)
+        )
+
+        try recentItem.save()
+
+        startDownload(for: recentItem)
+
+      } catch {
+        await MainActor.run {
+          downloads[bookID] = .notDownloaded
+          ToastManager.shared.show(error: "Failed to start download: \(error.localizedDescription)")
+          print("Failed to start download for book \(book.title): \(error)")
+        }
+      }
+    }
+
+    downloadTasks[bookID] = task
+  }
+
+  func cancelDownload(for bookID: String) {
+    downloadTasks[bookID]?.cancel()
+    downloadTasks.removeValue(forKey: bookID)
+    downloads[bookID] = .notDownloaded
+    print("Download cancelled for book: \(bookID)")
+  }
+
+  func deleteDownload(for bookID: String) {
+    Task { @MainActor in
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        .first!
+      let bookDirectory = documentsPath.appendingPathComponent("Downloads").appendingPathComponent(
+        bookID)
+
+      do {
+        try FileManager.default.removeItem(at: bookDirectory)
+
+        if let item = try? RecentlyPlayedItem.fetch(bookID: bookID),
+          let tracks = item.playSessionInfo.orderedTracks
+        {
+          for track in tracks {
+            track.localFilePath = nil
+          }
+          try item.save()
+          print("Successfully updated database to remove download information")
+        }
+
+        downloads[bookID] = .notDownloaded
+        print("Download deleted successfully for book: \(bookID)")
+      } catch {
+        print("Failed to delete download: \(error)")
+        ToastManager.shared.show(error: "Failed to delete download")
+      }
+    }
+  }
+
+  func cleanupOrphanedDownloads() {
+    Task { @MainActor in
+      do {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+          .first!
+        let downloadsDirectory = documentsPath.appendingPathComponent("Downloads")
+
+        guard FileManager.default.fileExists(atPath: downloadsDirectory.path) else {
+          print("Downloads directory does not exist, nothing to cleanup")
+          return
+        }
+
+        let allRecentItems = try RecentlyPlayedItem.fetchAll()
+        var validFilePaths = Set<String>()
+
+        for item in allRecentItems {
+          if let tracks = item.playSessionInfo.orderedTracks {
+            for track in tracks {
+              if let localPath = track.localFilePath {
+                validFilePaths.insert(localPath)
+              }
+            }
+          }
+        }
+
+        print("Found \(validFilePaths.count) valid file references to preserve")
+
+        var orphanedFilesCount = 0
+        var orphanedDirectoriesCount = 0
+
+        let downloadDirectories = try FileManager.default.contentsOfDirectory(
+          at: downloadsDirectory, includingPropertiesForKeys: [.isDirectoryKey])
+
+        for directory in downloadDirectories {
+          var isDirectory: ObjCBool = false
+          FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory)
+
+          if isDirectory.boolValue {
+            let bookID = directory.lastPathComponent
+            let filesInDirectory = try FileManager.default.contentsOfDirectory(
+              at: directory, includingPropertiesForKeys: nil)
+
+            var hasValidFiles = false
+            for file in filesInDirectory {
+              if validFilePaths.contains(file.path) {
+                hasValidFiles = true
+              } else {
+                try FileManager.default.removeItem(at: file)
+                orphanedFilesCount += 1
+                print("Removed orphaned file: \(file.lastPathComponent)")
+              }
+            }
+
+            if !hasValidFiles {
+              try FileManager.default.removeItem(at: directory)
+              orphanedDirectoriesCount += 1
+              print("Removed empty orphaned directory: \(bookID)")
+            }
+          }
+        }
+
+        if orphanedFilesCount > 0 || orphanedDirectoriesCount > 0 {
+          print(
+            "Cleanup completed: removed \(orphanedFilesCount) orphaned files and \(orphanedDirectoriesCount) empty directories"
+          )
+        } else {
+          print("No orphaned files or directories found")
+        }
+
+      } catch {
+        print("Failed to cleanup orphaned downloads: \(error)")
+      }
+    }
+  }
+
+  private func contentTypeToExtension(_ contentType: String) -> String {
+    switch contentType.lowercased() {
+    case "audio/mpeg", "audio/mp3":
+      return "mp3"
+    case "audio/mp4", "audio/m4a", "audio/aac":
+      return "m4a"
+    case "audio/wav":
+      return "wav"
+    default:
+      print("WARNING: Unknown Content-Type '\(contentType)', defaulting to mp3")
+      return "mp3"
+    }
+  }
+}

@@ -1,0 +1,129 @@
+import Audiobookshelf
+import SwiftUI
+
+struct AuthorCard: View {
+  @Bindable var model: Model
+
+  var body: some View {
+    NavigationLink(destination: LibraryPage(model: model.library)) {
+      content
+    }
+    .buttonStyle(.plain)
+  }
+
+  var content: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      ZStack(alignment: .topTrailing) {
+        GeometryReader { geometry in
+          let size = geometry.size.width
+
+          ZStack {
+            if let imageURL = model.imageURL {
+              LazyImage(url: imageURL) { state in
+                if let image = state.image {
+                  image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                } else {
+                  Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .overlay(
+                      Image(systemName: "person.circle")
+                        .font(.largeTitle)
+                        .foregroundColor(.gray)
+                    )
+                }
+              }
+              .frame(width: size, height: size)
+              .clipShape(Circle())
+            } else {
+              Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: size, height: size)
+                .overlay(
+                  Image(systemName: "person.circle")
+                    .font(.largeTitle)
+                    .foregroundColor(.gray)
+                )
+            }
+          }
+        }
+        .aspectRatio(1.0, contentMode: .fit)
+
+        if model.bookCount > 0 {
+          Text("\(model.bookCount)")
+            .font(.caption)
+            .fontWeight(.medium)
+            .foregroundColor(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.blue)
+            .cornerRadius(12)
+            .padding(.top, 8)
+        }
+      }
+
+      Text(model.name)
+        .font(.footnote)
+        .fontWeight(.bold)
+        .lineLimit(2)
+        .padding(.horizontal)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+  }
+}
+
+extension AuthorCard {
+  @Observable class Model {
+    var id: String
+    var name: String
+    var bookCount: Int
+    var imageURL: URL?
+    var library: LibraryPage.Model
+
+    init(
+      id: String = UUID().uuidString,
+      name: String = "",
+      bookCount: Int = 0,
+      imageURL: URL? = nil,
+      library: LibraryPage.Model
+    ) {
+      self.id = id
+      self.name = name
+      self.bookCount = bookCount
+      self.imageURL = imageURL
+      self.library = library
+    }
+  }
+}
+
+extension AuthorCard.Model {
+  static var mock: AuthorCard.Model {
+    return AuthorCard.Model(
+      name: "Brandon Sanderson",
+      bookCount: 15,
+      imageURL: URL(
+        string:
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
+      ),
+      library: .mock
+    )
+  }
+}
+
+#Preview("AuthorCard - Mock") {
+  LazyVGrid(
+    columns: [
+      GridItem(spacing: 12, alignment: .top),
+      GridItem(spacing: 12, alignment: .top),
+      GridItem(spacing: 12, alignment: .top),
+    ],
+    spacing: 20
+  ) {
+    AuthorCard(model: .mock)
+    AuthorCard(model: .mock)
+    AuthorCard(model: .mock)
+  }
+  .padding()
+}

@@ -1,0 +1,11 @@
+repos:
+  - repo: local
+    hooks:
+      - id: swift-format
+        name: Swift Format
+        entry: swift-format
+        language: system
+        files: \.swift$
+        args: [--in-place]
+        pass_filenames: true
+        description: "Format Swift code using swift-format"

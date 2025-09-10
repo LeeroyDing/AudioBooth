@@ -1,0 +1,117 @@
+import Audiobookshelf
+import SwiftData
+import SwiftUI
+
+struct ContentView: View {
+  @StateObject private var playerManager = PlayerManager.shared
+  @State private var toastManager = ToastManager.shared
+  @AppStorage("audiobookshelf_selected_library") private var libraryData: Data?
+
+  @State var miniPlayerHeight: CGFloat = 0.0
+
+  private var hasSelectedLibrary: Bool {
+    libraryData != nil
+  }
+
+  var body: some View {
+    TabView {
+      NavigationView {
+        HomeView()
+          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+      }
+      .navigationViewStyle(.stack)
+      .tabItem {
+        Image(systemName: "house")
+        Text("Home")
+      }
+
+      if hasSelectedLibrary {
+        NavigationView {
+          LibraryPage()
+            .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+        }
+        .navigationViewStyle(.stack)
+        .tabItem {
+          Image(systemName: "book")
+          Text("Library")
+        }
+
+        NavigationView {
+          SeriesPage()
+            .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+        }
+        .tabItem {
+          Image(systemName: "rectangle.split.3x1")
+          Text("Series")
+        }
+
+        NavigationView {
+          AuthorsPage()
+            .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+        }
+        .tabItem {
+          Image(systemName: "person.3")
+          Text("Authors")
+        }
+      }
+
+      NavigationView {
+        SettingsView()
+      }
+      .navigationViewStyle(.stack)
+      .tabItem {
+        Image(systemName: "gear")
+        Text("Settings")
+      }
+    }
+    .safeAreaInset(edge: .bottom) { miniPlayer.padding(.bottom, 49) }
+    .sheet(isPresented: $playerManager.isShowingFullPlayer) {
+      if let currentPlayer = playerManager.current {
+        BookPlayer(model: .constant(currentPlayer))
+          .presentationDetents([.large])
+          .presentationDragIndicator(.visible)
+      }
+    }
+    .overlay(alignment: .top) {
+      if let toast = toastManager.currentToast {
+        ToastView(toast: toast) {
+          toastManager.dismissToast()
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .animation(.spring(duration: 0.4), value: toastManager.currentToast != nil)
+        .zIndex(999)
+        .padding(.top, 50)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var miniPlayer: some View {
+    if let currentPlayer = playerManager.current {
+      MiniBookPlayer(player: currentPlayer) {
+        playerManager.showFullPlayer()
+      }
+      .id(currentPlayer.id)
+      .transition(.move(edge: .bottom))
+      .animation(.easeInOut(duration: 0.3), value: playerManager.hasActivePlayer)
+      .overlay {
+        GeometryReader { geometry in
+          Color.clear.onAppear {
+            miniPlayerHeight = geometry.size.height
+          }
+        }
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var miniPlayerOffsetView: some View {
+    if playerManager.current != nil {
+      Color.clear.frame(height: miniPlayerHeight)
+    }
+  }
+}
+
+#Preview {
+  ContentView()
+}

@@ -1,0 +1,76 @@
+import Audiobookshelf
+import SwiftUI
+
+@MainActor
+final class SeriesPageModel: SeriesPage.Model {
+  private let audiobookshelf = Audiobookshelf.shared
+
+  private var fetchedSeries: [SeriesCard.Model] = []
+
+  private var currentPage: Int = 0
+  private var hasMorePages: Bool = true
+  private var isLoadingNextPage: Bool = false
+  private let itemsPerPage: Int = 50
+
+  init() {
+    super.init()
+    self.search = SearchViewModel()
+  }
+
+  override func onAppear() {
+    Task {
+      await loadSeries()
+    }
+  }
+
+  override func refresh() async {
+    currentPage = 0
+    hasMorePages = true
+    fetchedSeries.removeAll()
+    series.removeAll()
+    await loadSeries()
+  }
+
+  private func loadSeries() async {
+    guard hasMorePages && !isLoadingNextPage else { return }
+
+    isLoadingNextPage = true
+    isLoading = currentPage == 0
+
+    do {
+      let response = try await audiobookshelf.series.fetch(
+        limit: itemsPerPage,
+        page: currentPage,
+        sortBy: .name,
+        ascending: true
+      )
+
+      let seriesCards = response.results.map(SeriesCardModel.init)
+
+      if currentPage == 0 {
+        fetchedSeries = seriesCards
+      } else {
+        fetchedSeries.append(contentsOf: seriesCards)
+      }
+
+      self.series = fetchedSeries
+      currentPage += 1
+
+      hasMorePages = (currentPage * itemsPerPage) < response.total
+
+    } catch {
+      print("Failed to fetch series: \(error)")
+      if currentPage == 0 {
+        fetchedSeries = []
+        series = []
+      }
+    }
+
+    isLoadingNextPage = false
+    isLoading = false
+  }
+
+  func loadNextPageIfNeeded() async {
+    await loadSeries()
+  }
+}
