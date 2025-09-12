@@ -9,7 +9,7 @@ final class ModelContextProvider {
   let context: ModelContext
 
   private init() {
-    let schema = Schema([RecentlyPlayedItem.self])
+    let schema = Schema([RecentlyPlayedItem.self, MediaProgress.self])
 
     let dbURL = URL.documentsDirectory.appending(path: "AudiobookshelfData.sqlite")
     let configuration = ModelConfiguration(

@@ -7,10 +7,6 @@ final class RecentlyPlayedItem {
   var title: String
   var author: String?
   var coverURL: URL?
-  var lastPlayedAt: Date
-  var currentTime: TimeInterval
-  var timeListened: TimeInterval
-  var duration: TimeInterval?
   var playSessionInfo: PlaySessionInfo
 
   init(
@@ -18,28 +14,13 @@ final class RecentlyPlayedItem {
     title: String,
     author: String? = nil,
     coverURL: URL? = nil,
-    lastPlayedAt: Date = Date(),
-    currentTime: TimeInterval = 0,
-    timeListened: TimeInterval = 0,
-    duration: TimeInterval? = nil,
     playSessionInfo: PlaySessionInfo
   ) {
     self.bookID = bookID
     self.title = title
     self.author = author
     self.coverURL = coverURL
-    self.lastPlayedAt = lastPlayedAt
-    self.currentTime = currentTime
-    self.timeListened = timeListened
-    self.duration = duration
     self.playSessionInfo = playSessionInfo
-  }
-}
-
-extension RecentlyPlayedItem {
-  var progress: Double {
-    guard let duration = duration, duration > 0 else { return 0 }
-    return min(currentTime / duration, 1.0)
   }
 }
 
@@ -47,9 +28,7 @@ extension RecentlyPlayedItem {
   @MainActor
   static func fetchAll() throws -> [RecentlyPlayedItem] {
     let context = ModelContextProvider.shared.context
-    let descriptor = FetchDescriptor<RecentlyPlayedItem>(
-      sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
-    )
+    let descriptor = FetchDescriptor<RecentlyPlayedItem>()
     return try context.fetch(descriptor)
   }
 
@@ -57,16 +36,12 @@ extension RecentlyPlayedItem {
   static func observeAll() -> AsyncStream<[RecentlyPlayedItem]> {
     AsyncStream { continuation in
       let context = ModelContextProvider.shared.context
-      let descriptor = FetchDescriptor<RecentlyPlayedItem>(
-        sortBy: [SortDescriptor(\.lastPlayedAt, order: .reverse)]
-      )
-
+      let descriptor = FetchDescriptor<RecentlyPlayedItem>()
       let fetchData = {
         do {
           let items = try context.fetch(descriptor)
           continuation.yield(items)
         } catch {
-          print("Failed to fetch RecentlyPlayedItem: \(error)")
           continuation.yield([])
         }
       }
@@ -105,10 +80,6 @@ extension RecentlyPlayedItem {
       existingItem.title = self.title
       existingItem.author = self.author
       existingItem.coverURL = self.coverURL
-      existingItem.lastPlayedAt = self.lastPlayedAt
-      existingItem.currentTime = self.currentTime
-      existingItem.timeListened = self.timeListened
-      existingItem.duration = self.duration
       existingItem.playSessionInfo.merge(with: self.playSessionInfo)
     } else {
       context.insert(self)
@@ -146,10 +117,8 @@ extension RecentlyPlayedItem {
     do {
       if FileManager.default.fileExists(atPath: bookDirectory.path) {
         try FileManager.default.removeItem(at: bookDirectory)
-        print("Cleaned up local files for book: \(title)")
       }
     } catch {
-      print("Failed to clean up local files for book \(title): \(error)")
     }
   }
 

@@ -5,8 +5,6 @@ import SwiftUI
 
 @MainActor
 final class RecentRowModel: RecentRow.Model {
-  private var userProgressService = UserProgressService.shared
-
   enum Item {
     case recent(RecentlyPlayedItem)
     case book(Book)
@@ -18,46 +16,51 @@ final class RecentRowModel: RecentRow.Model {
   private let downloadManager = DownloadManager.shared
   private var playerManager = PlayerManager.shared
   private var cancellables = Set<AnyCancellable>()
+  private var mediaProgressObservation: Task<Void, Never>?
 
   private var onRemoved: (() -> Void)?
 
   init(recent: RecentlyPlayedItem) {
     self.item = .recent(recent)
-    self.lastPlayedAt = recent.lastPlayedAt
+
+    let progress =
+      (try? MediaProgress.fetch(bookID: recent.bookID)) ?? MediaProgress(bookID: recent.bookID)
+    self.lastPlayedAt = progress.lastPlayedAt
 
     super.init(
       id: recent.bookID,
       title: recent.title,
       author: recent.author,
       coverURL: recent.coverURL,
-      progress: recent.progress,
-      lastPlayed: recent.lastPlayedAt.formatted(.relative(presentation: .named)),
-      timeRemaining: Self.formatTimeRemaining(from: recent)
+      progress: progress.progress,
+      lastPlayed: progress.lastPlayedAt.formatted(.relative(presentation: .named)),
+      timeRemaining: Self.formatTimeRemaining(progress: progress)
     )
 
     setupDownloadStateBinding()
+    setupProgressObservation()
   }
 
   init(book: Book, onRemoved: @escaping () -> Void) {
     self.item = .book(book)
 
-    let progress = userProgressService.progressByBookID[book.id]
-
-    self.lastPlayedAt = progress.map {
-      Date(timeIntervalSince1970: TimeInterval($0.lastUpdate / 1000))
-    }
+    let progress =
+      (try? MediaProgress.fetch(bookID: book.id))
+      ?? MediaProgress(bookID: book.id, duration: book.duration)
+    self.lastPlayedAt = progress.lastPlayedAt
 
     super.init(
       id: book.id,
       title: book.title,
       author: book.authorName,
       coverURL: book.coverURL,
-      progress: progress?.progress,
-      lastPlayed: lastPlayedAt?.formatted(.relative(presentation: .named)),
-      timeRemaining: Self.formatTimeRemaining(from: book, progress: progress?.progress)
+      progress: progress.progress,
+      lastPlayed: progress.lastPlayedAt.formatted(.relative(presentation: .named)),
+      timeRemaining: Self.formatTimeRemaining(from: book, progress: progress)
     )
 
     setupDownloadStateBinding()
+    setupProgressObservation()
 
     self.onRemoved = onRemoved
   }
@@ -88,8 +91,28 @@ final class RecentRowModel: RecentRow.Model {
           return .notDownloaded
         }
       }
-      .assign(to: \.downloadState, on: self)
+      .sink { [weak self] downloadState in
+        self?.downloadState = downloadState
+      }
       .store(in: &cancellables)
+  }
+
+  private func setupProgressObservation() {
+    mediaProgressObservation = Task {
+      for await progress in MediaProgress.observe(bookID: id) {
+        guard !Task.isCancelled, let progress else { continue }
+
+        self.progress = progress.progress
+        self.lastPlayed = progress.lastPlayedAt.formatted(.relative(presentation: .named))
+
+        switch item {
+        case .recent:
+          self.timeRemaining = Self.formatTimeRemaining(progress: progress)
+        case .book(let book):
+          self.timeRemaining = Self.formatTimeRemaining(from: book, progress: progress)
+        }
+      }
+    }
   }
 
   override func onDownloadTapped() {
@@ -119,12 +142,11 @@ final class RecentRowModel: RecentRow.Model {
           }
         }
 
-        if !isFileOnly, let progress = userProgressService.progressByBookID[id] {
-          try? await Audiobookshelf.shared.sessions.removeFromContinueListening(progress.id)
+        if !isFileOnly, let progress = try? MediaProgress.fetch(bookID: id), let id = progress.id {
+          try? await Audiobookshelf.shared.sessions.removeFromContinueListening(id)
           onRemoved?()
         }
       } catch {
-        print("Failed to delete item: \(error)")
       }
     }
   }
@@ -135,16 +157,15 @@ final class RecentRowModel: RecentRow.Model {
         try await Audiobookshelf.shared.libraries.updateBookFinishedStatus(
           bookID: id, isFinished: isFinished)
 
-        userProgressService.updateProgress(for: id, isFinished: isFinished)
+        try MediaProgress.updateFinishedStatus(for: id, isFinished: isFinished)
       } catch {
-        print("Failed to update finished status: \(error)")
       }
     }
   }
 
-  private static func formatTimeRemaining(from recent: RecentlyPlayedItem) -> String? {
-    guard let duration = recent.duration, duration > 0 else { return nil }
-    let remainingTime = duration - recent.currentTime
+  private static func formatTimeRemaining(progress: MediaProgress) -> String? {
+    guard progress.duration > 0 else { return nil }
+    let remainingTime = progress.duration - progress.currentTime
     guard remainingTime > 0 else { return nil }
     return Duration.seconds(remainingTime).formatted(
       .units(
@@ -154,9 +175,11 @@ final class RecentRowModel: RecentRow.Model {
     ) + " left"
   }
 
-  private static func formatTimeRemaining(from book: Book, progress: Double?) -> String? {
-    guard let progress = progress, progress > 0, progress < 1.0 else { return nil }
-    let remainingTime = book.duration * (1.0 - progress)
+  private static func formatTimeRemaining(from book: Book, progress: MediaProgress) -> String? {
+    guard progress.progress > 0,
+      progress.progress < 1.0
+    else { return nil }
+    let remainingTime = book.duration * (1.0 - progress.progress)
     guard remainingTime > 0 else { return nil }
     return Duration.seconds(remainingTime).formatted(
       .units(

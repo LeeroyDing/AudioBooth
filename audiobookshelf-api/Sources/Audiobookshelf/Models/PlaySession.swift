@@ -4,10 +4,8 @@ public struct PlaySession: Codable, Sendable {
   public let id: String
   public let userId: String
   public let libraryItemId: String
-  public let sessionType: String?
-  public let playMethod: Int?
-  public let mediaType: String?
-  public let currentTime: Double?
+  public let currentTime: Double
+  public let duration: Double
   public let audioTracks: [Track]?
   public let chapters: [Chapter]?
 

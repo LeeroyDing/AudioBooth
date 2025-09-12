@@ -4,7 +4,6 @@ import Foundation
 @MainActor
 final class BookCardModel: BookCard.Model {
   private var playerManager = PlayerManager.shared
-  private var userProgressService = UserProgressService.shared
 
   private let book: Book
 
@@ -46,7 +45,7 @@ final class BookCardModel: BookCard.Model {
       details: details,
       coverURL: item.coverURL,
       sequence: item.sequence,
-      progress: userProgressService.progressByBookID[id]?.progress
+      progress: (try? MediaProgress.fetch(bookID: id))?.progress
     )
   }
 

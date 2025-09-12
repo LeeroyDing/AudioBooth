@@ -10,13 +10,13 @@ import SwiftUI
 @MainActor
 final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   private let audiobookshelf = Audiobookshelf.shared
-  private var userProgressService = UserProgressService.shared
 
   private var player: AVPlayer?
 
   private var timeObserver: Any?
   private var cancellables = Set<AnyCancellable>()
   private var item: RecentlyPlayedItem?
+  private var mediaProgress: MediaProgress
   private var timerSecondsCounter = 0
   private var lastPlaybackTime: Date?
 
@@ -26,6 +26,11 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
 
   init(_ book: Book) {
     self.item = nil
+    do {
+      self.mediaProgress = try MediaProgress.getOrCreate(for: book.id, duration: book.duration)
+    } catch {
+      fatalError("Failed to create MediaProgress for book \(book.id): \(error)")
+    }
 
     super.init(
       id: book.id,
@@ -37,9 +42,7 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
       playbackProgress: PlaybackProgressViewModel()
     )
 
-    if let progress = userProgressService.progressByBookID[book.id] {
-      self.currentTime = progress.currentTime
-    }
+    self.currentTime = mediaProgress.currentTime
 
     setupDownloadStateBinding()
     onLoad()
@@ -47,6 +50,11 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
 
   init(_ item: RecentlyPlayedItem) {
     self.item = item
+    do {
+      self.mediaProgress = try MediaProgress.getOrCreate(for: item.bookID)
+    } catch {
+      fatalError("Failed to create MediaProgress for item \(item.bookID): \(error)")
+    }
 
     super.init(
       id: item.bookID,
@@ -58,13 +66,7 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
       playbackProgress: PlaybackProgressViewModel()
     )
 
-    if let progress = userProgressService.progressByBookID[item.bookID],
-      progress.currentTime > item.currentTime
-    {
-      self.currentTime = progress.currentTime
-    } else {
-      self.currentTime = item.currentTime
-    }
+    self.currentTime = mediaProgress.currentTime
 
     setupDownloadStateBinding()
     onLoad()
@@ -133,14 +135,21 @@ extension BookPlayerModel {
 
       let newPlaySessionInfo = PlaySessionInfo(from: audiobookshelfSession)
 
-      if let serverCurrentTime = audiobookshelfSession.currentTime {
-        currentTime = serverCurrentTime
-        print("Using server currentTime for cross-device sync: \(serverCurrentTime)s")
+      if audiobookshelfSession.currentTime > currentTime {
+        currentTime = audiobookshelfSession.currentTime
+        print(
+          "Using server currentTime for cross-device sync: \(audiobookshelfSession.currentTime)s")
       }
 
       if let item {
         item.playSessionInfo.merge(with: newPlaySessionInfo)
-        item.currentTime = currentTime
+        try? MediaProgress.updateProgress(
+          for: item.bookID,
+          currentTime: currentTime,
+          timeListened: mediaProgress.timeListened,
+          duration: item.playSessionInfo.duration,
+          progress: currentTime / item.playSessionInfo.duration
+        )
         sessionInfo = item.playSessionInfo
         print("Merged fresh session with existing session to preserve local files")
       } else {
@@ -160,7 +169,8 @@ extension BookPlayerModel {
         if cachedSessionInfo.isDownloaded {
           print("Using existing session with local files for offline playback")
           sessionInfo = cachedSessionInfo
-          let cachedCurrentTime = existingItem.currentTime
+          let progress = try? MediaProgress.fetch(bookID: existingItem.bookID)
+          let cachedCurrentTime = progress?.currentTime ?? 0
           if cachedCurrentTime > 0 {
             currentTime = cachedCurrentTime
             print("Using existing currentTime: \(cachedCurrentTime)s")
@@ -246,9 +256,9 @@ extension BookPlayerModel {
   }
 
   private func seekToLastPosition(player: AVPlayer) {
-    if let recentlyPlayed = item, recentlyPlayed.currentTime > 0 {
-      let seekTime = CMTime(seconds: recentlyPlayed.currentTime, preferredTimescale: 1000)
-      let currentTime = recentlyPlayed.currentTime
+    if mediaProgress.currentTime > 0 {
+      let seekTime = CMTime(seconds: mediaProgress.currentTime, preferredTimescale: 1000)
+      let currentTime = mediaProgress.currentTime
       player.seek(to: seekTime) { _ in
         print("Seeked to previously played position: \(currentTime)s")
       }
@@ -268,8 +278,8 @@ extension BookPlayerModel {
     do {
       if let existingItem = try RecentlyPlayedItem.fetch(bookID: id) {
         self.item = existingItem
-        self.currentTime = existingItem.currentTime
-        print("Found existing progress: \(existingItem.currentTime)s")
+        self.currentTime = mediaProgress.currentTime
+        print("Found existing progress: \(mediaProgress.currentTime)s")
       }
     } catch {
       print("Failed to fetch existing recently played item: \(error)")
@@ -550,10 +560,6 @@ extension BookPlayerModel {
       title: title,
       author: author,
       coverURL: coverURL,
-      lastPlayedAt: item?.lastPlayedAt ?? Date(),
-      currentTime: currentTime,
-      timeListened: item?.timeListened ?? 0,
-      duration: displayDuration,
       playSessionInfo: sessionInfo
     )
   }
@@ -653,7 +659,7 @@ extension BookPlayerModel {
     } else if !isNowPlaying && isPlaying {
       if let lastTime = lastPlaybackTime {
         let timeListened = now.timeIntervalSince(lastTime)
-        item?.timeListened += timeListened
+        mediaProgress.timeListened += timeListened
       }
       lastPlaybackTime = nil
     }
@@ -666,11 +672,11 @@ extension BookPlayerModel {
       do {
         try await audiobookshelf.sessions.sync(
           sessionInfo.id,
-          timeListened: item?.timeListened ?? 0,
+          timeListened: mediaProgress.timeListened,
           currentTime: currentTime
         )
 
-        item?.timeListened = 0
+        mediaProgress.timeListened = 0
       } catch {
         print("Failed to sync session progress: \(error)")
       }
@@ -681,8 +687,10 @@ extension BookPlayerModel {
     guard let item else { return }
 
     do {
-      item.currentTime = currentTime
-      item.lastPlayedAt = Date()
+      mediaProgress.currentTime = currentTime
+      mediaProgress.lastPlayedAt = Date()
+      mediaProgress.lastUpdate = Date()
+      try mediaProgress.save()
       try item.save()
     } catch {
       print("Failed to update recently played progress: \(error)")

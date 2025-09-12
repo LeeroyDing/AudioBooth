@@ -4,7 +4,6 @@ import Foundation
 @MainActor
 final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
-  private let userProgressService = UserProgressService.shared
 
   private var fetched: [BookCard.Model] = []
 
@@ -66,7 +65,6 @@ final class LibraryPageModel: LibraryPage.Model {
     hasMorePages = true
     fetched.removeAll()
     books.removeAll()
-    await userProgressService.refresh()
     await loadBooks()
   }
 
@@ -104,10 +102,6 @@ final class LibraryPageModel: LibraryPage.Model {
 
     isLoadingNextPage = true
     isLoading = currentPage == 0
-
-    if currentPage == 0 {
-      await userProgressService.refreshIfNeeded()
-    }
 
     do {
       let filter: String?
@@ -163,7 +157,6 @@ final class LibraryPageModel: LibraryPage.Model {
       hasMorePages = (currentPage * itemsPerPage) < response.total
 
     } catch {
-      print("Failed to fetch library items: \(error)")
       if currentPage == 0 {
         fetched = []
         books = []

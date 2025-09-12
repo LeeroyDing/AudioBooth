@@ -8,9 +8,7 @@ final class PlaySessionInfo {
   var createdAt: Date
   var userId: String
   var libraryItemID: String
-  var sessionType: String?
-  var playMethod: Int?
-  var mediaType: String?
+  var duration: TimeInterval
   var audioTracks: [AudioTrackInfo]?
   var chapters: [ChapterInfo]?
 
@@ -19,9 +17,7 @@ final class PlaySessionInfo {
     self.createdAt = Date()
     self.userId = session.userId
     self.libraryItemID = session.libraryItemId
-    self.sessionType = session.sessionType
-    self.playMethod = session.playMethod
-    self.mediaType = session.mediaType
+    self.duration = session.duration
     self.audioTracks = session.audioTracks?.map(AudioTrackInfo.init)
     self.chapters = session.chapters?.map(ChapterInfo.init)
   }
@@ -128,9 +124,7 @@ extension PlaySessionInfo {
     self.createdAt = newSessionInfo.createdAt
     self.userId = newSessionInfo.userId
     self.libraryItemID = newSessionInfo.libraryItemID
-    self.sessionType = newSessionInfo.sessionType
-    self.playMethod = newSessionInfo.playMethod
-    self.mediaType = newSessionInfo.mediaType
+    self.duration = newSessionInfo.duration
     self.chapters = newSessionInfo.chapters
 
     guard let newTracks = newSessionInfo.audioTracks else {

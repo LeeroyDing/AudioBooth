@@ -5,7 +5,6 @@ import SwiftUI
 @MainActor
 final class HomeViewModel: HomeView.Model {
   private var playerManager = PlayerManager.shared
-  private var userProgressService = UserProgressService.shared
   private var recentItemsTask: Task<Void, Never>?
 
   private var recentlyPlayed: [RecentlyPlayedItem] = [] {
@@ -53,7 +52,8 @@ final class HomeViewModel: HomeView.Model {
     }
 
     for recent in recentsByID.values {
-      if recent.playSessionInfo.isDownloaded || recent.timeListened != 0
+      let progress = try? MediaProgress.fetch(bookID: recent.bookID)
+      if recent.playSessionInfo.isDownloaded || (progress?.timeListened ?? 0) != 0
         || PlayerManager.shared.current?.id == recent.bookID
       {
         recents.append(RecentRowModel(recent: recent))
@@ -86,11 +86,12 @@ final class HomeViewModel: HomeView.Model {
     isLoading = true
 
     do {
-      async let personalizedTask = Audiobookshelf.shared.libraries.fetchPersonalized()
-      async let userProgressTask = userProgressService.refresh()
-      async let syncTask = syncRecentItemsProgress()
+      async let progressSync: Void = MediaProgress.syncFromAPI()
+      async let recentSync: Void = syncRecentItemsProgress()
 
-      let (personalized, _, _) = try await (personalizedTask, userProgressTask, syncTask)
+      _ = try await (progressSync, recentSync)
+
+      let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
 
       var sections = [Section]()
       for section in personalized {
@@ -112,7 +113,6 @@ final class HomeViewModel: HomeView.Model {
 
       self.sections = sections
     } catch {
-      print("Failed to fetch personalized content: \(error)")
       sections = []
     }
 
@@ -125,50 +125,48 @@ final class HomeViewModel: HomeView.Model {
       let currentBookID = PlayerManager.shared.current?.id
 
       for item in recentItems {
+        let progress = try? MediaProgress.fetch(bookID: item.bookID)
         guard item.bookID != currentBookID,
-          item.timeListened > 0
+          (progress?.timeListened ?? 0) > 0
         else { continue }
 
         await syncItemProgress(item)
       }
     } catch {
-      print("Failed to fetch recent items for sync: \(error)")
     }
   }
 
   private func syncItemProgress(_ item: RecentlyPlayedItem) async {
-    let serverProgress = userProgressService.progressByBookID[item.bookID]
-    let localCurrentTime = item.currentTime
-    let serverCurrentTime = serverProgress?.currentTime ?? 0
+    guard let localProgress = try? MediaProgress.fetch(bookID: item.bookID) else { return }
 
-    if localCurrentTime > serverCurrentTime {
-      await syncWithSessionRecreation(item)
+    if localProgress.timeListened > 0 {
+      await syncWithSessionRecreation(item, progress: localProgress)
     } else {
-      item.timeListened = 0
-      print(
-        "Local progress (\(localCurrentTime)s) <= server progress (\(serverCurrentTime)s) for book \(item.bookID), resetting timeListened"
-      )
     }
   }
 
-  private func syncWithSessionRecreation(_ item: RecentlyPlayedItem) async {
+  private func syncWithSessionRecreation(_ item: RecentlyPlayedItem, progress: MediaProgress) async
+  {
     do {
       let sessionInfo = item.playSessionInfo
 
       do {
         try await Audiobookshelf.shared.sessions.sync(
           sessionInfo.id,
-          timeListened: item.timeListened,
-          currentTime: item.currentTime
+          timeListened: progress.timeListened,
+          currentTime: progress.currentTime
         )
 
-        item.timeListened = 0
-        print("Successfully synced progress for book \(item.bookID)")
+        try? MediaProgress.updateProgress(
+          for: item.bookID,
+          currentTime: progress.currentTime,
+          timeListened: 0,
+          duration: progress.duration,
+          progress: progress.progress
+        )
       } catch {
-        print("Session sync failed for book \(item.bookID): \(error)")
 
         do {
-          print("Attempting to recreate session for book \(item.bookID)")
           let newSession = try await Audiobookshelf.shared.sessions.start(
             itemID: item.bookID,
             forceTranscode: false
@@ -179,14 +177,18 @@ final class HomeViewModel: HomeView.Model {
 
           try await Audiobookshelf.shared.sessions.sync(
             newSessionInfo.id,
-            timeListened: item.timeListened,
-            currentTime: item.currentTime
+            timeListened: progress.timeListened,
+            currentTime: progress.currentTime
           )
 
-          item.timeListened = 0
-          print("Successfully recreated session and synced progress for book \(item.bookID)")
+          try? MediaProgress.updateProgress(
+            for: item.bookID,
+            currentTime: progress.currentTime,
+            timeListened: 0,
+            duration: progress.duration,
+            progress: progress.progress
+          )
         } catch {
-          print("Failed to recreate session and sync for book \(item.bookID): \(error)")
         }
       }
     }

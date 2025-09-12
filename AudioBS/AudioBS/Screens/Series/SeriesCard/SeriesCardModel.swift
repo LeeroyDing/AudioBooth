@@ -3,15 +3,10 @@ import SwiftUI
 
 @MainActor
 final class SeriesCardModel: SeriesCard.Model {
-  private let userProgressService = UserProgressService.shared
-
   init(series: Series) {
     let bookCovers = series.books.prefix(10).map(\.coverURL)
 
-    let progress = Self.progress(
-      books: series.books,
-      progressData: userProgressService.progressByBookID
-    )
+    let progress = Self.progress(books: series.books)
 
     super.init(
       id: series.id,
@@ -23,14 +18,11 @@ final class SeriesCardModel: SeriesCard.Model {
     )
   }
 
-  static func progress(
-    books: [Book],
-    progressData: [String: User.MediaProgress]
-  ) -> Double? {
+  static func progress(books: [Book]) -> Double? {
     guard !books.isEmpty else { return nil }
 
     let totalProgress = books.compactMap { book in
-      progressData[book.id]?.progress ?? 0.0
+      (try? MediaProgress.fetch(bookID: book.id))?.progress ?? 0.0
     }.reduce(0, +)
 
     return totalProgress / Double(books.count)

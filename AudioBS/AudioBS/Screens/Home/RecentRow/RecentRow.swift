@@ -218,9 +218,9 @@ extension RecentRow {
     let title: String
     let author: String?
     let coverURL: URL?
-    let progress: Double?
-    let lastPlayed: String?
-    let timeRemaining: String?
+    var progress: Double?
+    var lastPlayed: String?
+    var timeRemaining: String?
 
     var downloadState: DownloadManager.DownloadState
 
