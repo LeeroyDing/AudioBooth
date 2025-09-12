@@ -4,8 +4,10 @@ import Foundation
 @MainActor
 final class BookCardModel: BookCard.Model {
   private var playerManager = PlayerManager.shared
+  private var downloadManager = DownloadManager.shared
 
   private let book: Book
+  private var progressObservationTask: Task<Void, Never>?
 
   init(_ item: Book, sortBy: BooksService.SortBy?) {
     let id = item.id
@@ -47,10 +49,41 @@ final class BookCardModel: BookCard.Model {
       sequence: item.sequence,
       progress: (try? MediaProgress.fetch(bookID: id))?.progress
     )
+
+    startObservingProgress()
+  }
+
+  private func startObservingProgress() {
+    progressObservationTask = Task {
+      for await mediaProgress in MediaProgress.observe(bookID: book.id) {
+        self.progress = mediaProgress?.progress
+      }
+    }
   }
 
   @MainActor
   override func onTapped() {
     playerManager.setCurrent(book)
+  }
+
+  @MainActor
+  override func onDownloadTapped() {
+    downloadManager.startDownload(for: book)
+  }
+
+  @MainActor
+  override func onMarkFinishedTapped(isFinished: Bool) {
+    Task {
+      do {
+        try await Audiobookshelf.shared.libraries.updateBookFinishedStatus(
+          bookID: book.id, isFinished: isFinished)
+        try? MediaProgress.updateFinishedStatus(
+          for: book.id, isFinished: isFinished, duration: book.duration)
+        ToastManager.shared.show(
+          success: isFinished ? "Marked as finished" : "Marked as not finished")
+      } catch {
+        ToastManager.shared.show(error: "Failed to update finished status")
+      }
+    }
   }
 }

@@ -33,6 +33,7 @@ struct BookCard: View {
         }
       }
     )
+    .contextMenu { contextMenu }
   }
 
   var cover: some View {
@@ -92,6 +93,29 @@ struct BookCard: View {
       .frame(height: 4)
     }
   }
+
+  @ViewBuilder
+  var contextMenu: some View {
+    Button {
+      model.onDownloadTapped()
+    } label: {
+      Label("Download", systemImage: "icloud.and.arrow.down")
+    }
+
+    if let progress = model.progress, progress >= 1.0 {
+      Button {
+        model.onMarkFinishedTapped(isFinished: false)
+      } label: {
+        Label("Mark as Not Finished", systemImage: "checkmark.circle.fill")
+      }
+    } else {
+      Button {
+        model.onMarkFinishedTapped(isFinished: true)
+      } label: {
+        Label("Mark as Finished", systemImage: "checkmark.circle")
+      }
+    }
+  }
 }
 
 extension BookCard {
@@ -101,9 +125,11 @@ extension BookCard {
     let details: String?
     let coverURL: URL?
     let sequence: String?
-    let progress: Double?
+    var progress: Double?
 
     @MainActor func onTapped() {}
+    @MainActor func onDownloadTapped() {}
+    @MainActor func onMarkFinishedTapped(isFinished: Bool) {}
 
     init(
       id: String = UUID().uuidString,

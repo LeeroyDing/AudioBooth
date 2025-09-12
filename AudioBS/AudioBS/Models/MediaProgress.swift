@@ -197,13 +197,23 @@ extension MediaProgress {
   }
 
   @MainActor
-  static func updateFinishedStatus(for bookID: String, isFinished: Bool) throws {
+  static func updateFinishedStatus(for bookID: String, isFinished: Bool, duration: TimeInterval = 0)
+    throws
+  {
     if isFinished {
       if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
         existingProgress.progress = 1.0
         existingProgress.isFinished = true
         existingProgress.lastUpdate = Date()
         try existingProgress.save()
+      } else {
+        let newProgress = MediaProgress(
+          bookID: bookID,
+          duration: duration,
+          progress: 1.0,
+          isFinished: true
+        )
+        try newProgress.save()
       }
     } else {
       if let existingProgress = try MediaProgress.fetch(bookID: bookID) {

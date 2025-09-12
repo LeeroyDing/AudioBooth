@@ -4,7 +4,9 @@ import SwiftUI
 
 @MainActor
 final class HomeViewModel: HomeView.Model {
+  private let downloadManager = DownloadManager.shared
   private var playerManager = PlayerManager.shared
+
   private var recentItemsTask: Task<Void, Never>?
 
   private var recentlyPlayed: [RecentlyPlayedItem] = [] {
@@ -53,7 +55,8 @@ final class HomeViewModel: HomeView.Model {
 
     for recent in recentsByID.values {
       let progress = try? MediaProgress.fetch(bookID: recent.bookID)
-      if recent.playSessionInfo.isDownloaded || (progress?.timeListened ?? 0) != 0
+      if downloadManager.downloads[recent.bookID] == .downloading
+        || recent.playSessionInfo.isDownloaded || (progress?.timeListened ?? 0) != 0
         || PlayerManager.shared.current?.id == recent.bookID
       {
         recents.append(RecentRowModel(recent: recent))
