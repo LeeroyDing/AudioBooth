@@ -79,4 +79,29 @@ public final class LibrariesService {
       )
     }
   }
+
+  public func updateBookFinishedStatus(bookID: String, isFinished: Bool) async throws {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first.")
+    }
+
+    struct UpdateFinishedStatusRequest: Codable {
+      let isFinished: Bool
+    }
+
+    let request = NetworkRequest<Data>(
+      path: "/api/me/progress/\(bookID)",
+      method: .patch,
+      body: UpdateFinishedStatusRequest(isFinished: isFinished)
+    )
+
+    do {
+      _ = try await networkService.send(request)
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to update book finished status: \(error.localizedDescription)"
+      )
+    }
+  }
 }

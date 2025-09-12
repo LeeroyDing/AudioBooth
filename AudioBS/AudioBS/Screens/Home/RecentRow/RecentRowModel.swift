@@ -129,6 +129,19 @@ final class RecentRowModel: RecentRow.Model {
     }
   }
 
+  override func onMarkFinishedTapped(isFinished: Bool) {
+    Task {
+      do {
+        try await Audiobookshelf.shared.libraries.updateBookFinishedStatus(
+          bookID: id, isFinished: isFinished)
+
+        userProgressService.updateProgress(for: id, isFinished: isFinished)
+      } catch {
+        print("Failed to update finished status: \(error)")
+      }
+    }
+  }
+
   private static func formatTimeRemaining(from recent: RecentlyPlayedItem) -> String? {
     guard let duration = recent.duration, duration > 0 else { return nil }
     let remainingTime = duration - recent.currentTime

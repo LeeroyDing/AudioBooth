@@ -53,4 +53,21 @@ final class UserProgressService: ObservableObject {
     progressByBookID.removeAll()
     lastUpdated = nil
   }
+
+  func updateProgress(for bookID: String, isFinished: Bool) {
+    if isFinished {
+      if let existingProgress = progressByBookID[bookID] {
+        let updatedProgress = User.MediaProgress(
+          id: existingProgress.id,
+          libraryItemId: existingProgress.libraryItemId,
+          progress: 1.0,
+          currentTime: existingProgress.currentTime,
+          lastUpdate: Int64(Date().timeIntervalSince1970 * 1000)
+        )
+        progressByBookID[bookID] = updatedProgress
+      }
+    } else {
+      progressByBookID.removeValue(forKey: bookID)
+    }
+  }
 }

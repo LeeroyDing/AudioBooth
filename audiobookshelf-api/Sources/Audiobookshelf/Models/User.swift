@@ -11,5 +11,15 @@ extension User {
     public let progress: Double
     public let currentTime: Double
     public let lastUpdate: Int64
+
+    public init(
+      id: String, libraryItemId: String, progress: Double, currentTime: Double, lastUpdate: Int64
+    ) {
+      self.id = id
+      self.libraryItemId = libraryItemId
+      self.progress = progress
+      self.currentTime = currentTime
+      self.lastUpdate = lastUpdate
+    }
   }
 }

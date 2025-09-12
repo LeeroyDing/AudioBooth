@@ -180,6 +180,20 @@ struct RecentRow: View {
     } label: {
       Label("Remove from continue listening", systemImage: "eye.slash")
     }
+
+    if let progress = model.progress, progress >= 1.0 {
+      Button {
+        model.onMarkFinishedTapped(isFinished: false)
+      } label: {
+        Label("Mark as Not Finished", systemImage: "checkmark.circle.fill")
+      }
+    } else {
+      Button {
+        model.onMarkFinishedTapped(isFinished: true)
+      } label: {
+        Label("Mark as Finished", systemImage: "checkmark.circle")
+      }
+    }
   }
 
   @ViewBuilder
@@ -214,6 +228,7 @@ extension RecentRow {
     @MainActor func onTapped() {}
     @MainActor func onDeleteTapped(isFileOnly: Bool) {}
     @MainActor func onDownloadTapped() {}
+    @MainActor func onMarkFinishedTapped(isFinished: Bool) {}
 
     init(
       id: String = UUID().uuidString,
