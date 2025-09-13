@@ -42,8 +42,6 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
       playbackProgress: PlaybackProgressViewModel()
     )
 
-    self.currentTime = mediaProgress.currentTime
-
     setupDownloadStateBinding()
     onLoad()
   }
@@ -65,8 +63,6 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
       timer: TimerPickerSheet.Model(),
       playbackProgress: PlaybackProgressViewModel()
     )
-
-    self.currentTime = mediaProgress.currentTime
 
     setupDownloadStateBinding()
     onLoad()
@@ -135,8 +131,8 @@ extension BookPlayerModel {
 
       let newPlaySessionInfo = PlaySessionInfo(from: audiobookshelfSession)
 
-      if audiobookshelfSession.currentTime > currentTime {
-        currentTime = audiobookshelfSession.currentTime
+      if audiobookshelfSession.currentTime > mediaProgress.currentTime {
+        mediaProgress.currentTime = audiobookshelfSession.currentTime
         print(
           "Using server currentTime for cross-device sync: \(audiobookshelfSession.currentTime)s")
       }
@@ -145,10 +141,10 @@ extension BookPlayerModel {
         item.playSessionInfo.merge(with: newPlaySessionInfo)
         try? MediaProgress.updateProgress(
           for: item.bookID,
-          currentTime: currentTime,
+          currentTime: mediaProgress.currentTime,
           timeListened: mediaProgress.timeListened,
           duration: item.playSessionInfo.duration,
-          progress: currentTime / item.playSessionInfo.duration
+          progress: mediaProgress.currentTime / item.playSessionInfo.duration
         )
         sessionInfo = item.playSessionInfo
         print("Merged fresh session with existing session to preserve local files")
@@ -172,7 +168,7 @@ extension BookPlayerModel {
           let progress = try? MediaProgress.fetch(bookID: existingItem.bookID)
           let cachedCurrentTime = progress?.currentTime ?? 0
           if cachedCurrentTime > 0 {
-            currentTime = cachedCurrentTime
+            mediaProgress.currentTime = cachedCurrentTime
             print("Using existing currentTime: \(cachedCurrentTime)s")
           }
         } else {
@@ -247,10 +243,11 @@ extension BookPlayerModel {
     }
 
     if let playbackProgress = playbackProgress as? PlaybackProgressViewModel {
+      let totalDuration = item?.playSessionInfo.orderedTracks?.reduce(0.0) { $0 + $1.duration }
       playbackProgress.configure(
         player: player,
         chapters: chapters,
-        totalDuration: displayDuration
+        totalDuration: totalDuration
       )
     }
   }
@@ -278,7 +275,6 @@ extension BookPlayerModel {
     do {
       if let existingItem = try RecentlyPlayedItem.fetch(bookID: id) {
         self.item = existingItem
-        self.currentTime = mediaProgress.currentTime
         print("Found existing progress: \(mediaProgress.currentTime)s")
       }
     } catch {
@@ -296,7 +292,6 @@ extension BookPlayerModel {
 
       do {
         let sessionInfo = try await setupSessionInfo()
-        calculateTotalBookDuration()
         let player = try await setupAudioPlayer(sessionInfo: sessionInfo)
         configurePlayerComponents(player: player, sessionInfo: sessionInfo)
         seekToLastPosition(player: player)
@@ -414,15 +409,6 @@ extension BookPlayerModel {
       .store(in: &cancellables)
 
     if let currentItem = player.currentItem {
-      currentItem.publisher(for: \.duration)
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] duration in
-          if duration.isValid && !duration.isIndefinite {
-            self?.totalDuration = CMTimeGetSeconds(duration)
-          }
-        }
-        .store(in: &cancellables)
-
       currentItem.publisher(for: \.status)
         .receive(on: DispatchQueue.main)
         .sink { [weak self] status in
@@ -431,7 +417,6 @@ extension BookPlayerModel {
             self?.isLoading = false
             let duration = currentItem.duration
             if duration.isValid && !duration.isIndefinite {
-              self?.totalDuration = CMTimeGetSeconds(duration)
             }
           case .failed:
             self?.isLoading = false
@@ -460,11 +445,11 @@ extension BookPlayerModel {
 
       Task { @MainActor in
         if time.isValid && !time.isIndefinite {
-          self.currentTime = CMTimeGetSeconds(time)
+          self.mediaProgress.currentTime = CMTimeGetSeconds(time)
 
           if let model = self.chapters as? ChapterPickerSheetViewModel {
             let previous = model.currentIndex
-            model.setCurrentTime(self.currentTime)
+            model.setCurrentTime(self.mediaProgress.currentTime)
             self.timer.maxRemainingChapters = model.chapters.count - model.currentIndex - 1
 
             if case .chapters(let chapters) = self.timer.current {
@@ -480,7 +465,7 @@ extension BookPlayerModel {
           }
 
           if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
-            playbackProgress.updateCurrentTime(self.currentTime)
+            playbackProgress.updateCurrentTime(self.mediaProgress.currentTime)
           }
 
           self.timerSecondsCounter += 1
@@ -494,17 +479,6 @@ extension BookPlayerModel {
         }
       }
     }
-  }
-
-  private func calculateTotalBookDuration() {
-    guard let tracks = item?.playSessionInfo.orderedTracks else {
-      totalBookDuration = nil
-      return
-    }
-
-    let total = tracks.reduce(0.0) { $0 + $1.duration }
-    totalBookDuration = total
-    print("Total book duration: \(total) seconds across \(tracks.count) tracks")
   }
 
   private func createCompositionPlayerItem(from tracks: [AudioTrackInfo])
@@ -673,7 +647,7 @@ extension BookPlayerModel {
         try await audiobookshelf.sessions.sync(
           sessionInfo.id,
           timeListened: mediaProgress.timeListened,
-          currentTime: currentTime
+          currentTime: mediaProgress.currentTime
         )
 
         mediaProgress.timeListened = 0
@@ -687,9 +661,11 @@ extension BookPlayerModel {
     guard let item else { return }
 
     do {
-      mediaProgress.currentTime = currentTime
       mediaProgress.lastPlayedAt = Date()
       mediaProgress.lastUpdate = Date()
+      if mediaProgress.duration > 0 {
+        mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
+      }
       try mediaProgress.save()
       try item.save()
     } catch {

@@ -23,18 +23,17 @@ final class RecentRowModel: RecentRow.Model {
   init(recent: RecentlyPlayedItem) {
     self.item = .recent(recent)
 
-    let progress =
-      (try? MediaProgress.fetch(bookID: recent.bookID)) ?? MediaProgress(bookID: recent.bookID)
-    self.lastPlayedAt = progress.lastPlayedAt
+    let progress = try? MediaProgress.fetch(bookID: recent.bookID)
+    self.lastPlayedAt = progress?.lastPlayedAt
 
     super.init(
       id: recent.bookID,
       title: recent.title,
       author: recent.author,
       coverURL: recent.coverURL,
-      progress: progress.progress,
-      lastPlayed: progress.lastPlayedAt.formatted(.relative(presentation: .named)),
-      timeRemaining: Self.formatTimeRemaining(progress: progress)
+      progress: progress?.progress ?? 0,
+      lastPlayed: progress?.lastPlayedAt.formatted(.relative(presentation: .named)) ?? "Never",
+      timeRemaining: progress.flatMap { Self.formatTimeRemaining(progress: $0) }
     )
 
     setupDownloadStateBinding()
@@ -44,19 +43,17 @@ final class RecentRowModel: RecentRow.Model {
   init(book: Book, onRemoved: @escaping () -> Void) {
     self.item = .book(book)
 
-    let progress =
-      (try? MediaProgress.fetch(bookID: book.id))
-      ?? MediaProgress(bookID: book.id, duration: book.duration)
-    self.lastPlayedAt = progress.lastPlayedAt
+    let progress = try? MediaProgress.fetch(bookID: book.id)
+    self.lastPlayedAt = progress?.lastPlayedAt
 
     super.init(
       id: book.id,
       title: book.title,
       author: book.authorName,
       coverURL: book.coverURL,
-      progress: progress.progress,
-      lastPlayed: progress.lastPlayedAt.formatted(.relative(presentation: .named)),
-      timeRemaining: Self.formatTimeRemaining(from: book, progress: progress)
+      progress: progress?.progress ?? 0,
+      lastPlayed: progress?.lastPlayedAt.formatted(.relative(presentation: .named)) ?? "Never",
+      timeRemaining: progress.flatMap { Self.formatTimeRemaining(from: book, progress: $0) }
     )
 
     setupDownloadStateBinding()
@@ -158,6 +155,10 @@ final class RecentRowModel: RecentRow.Model {
           bookID: id, isFinished: isFinished)
 
         try MediaProgress.updateFinishedStatus(for: id, isFinished: isFinished)
+
+        if playerManager.current?.id == id {
+          playerManager.clearCurrent()
+        }
       } catch {
       }
     }

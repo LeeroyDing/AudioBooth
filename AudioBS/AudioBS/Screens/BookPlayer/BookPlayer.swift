@@ -306,9 +306,6 @@ extension BookPlayer {
     let coverURL: URL?
 
     var isPlaying: Bool
-    var currentTime: TimeInterval
-    var totalDuration: TimeInterval?
-    var totalBookDuration: TimeInterval?
     var isLoading: Bool
     var speed: SpeedPickerSheet.Model
     var timer: TimerPickerSheet.Model
@@ -325,9 +322,6 @@ extension BookPlayer {
       author: String?,
       coverURL: URL?,
       isPlaying: Bool = false,
-      currentTime: TimeInterval = 0.0,
-      totalDuration: TimeInterval? = nil,
-      totalBookDuration: TimeInterval? = nil,
       isLoading: Bool = false,
       speed: SpeedPickerSheet.Model,
       timer: TimerPickerSheet.Model,
@@ -340,9 +334,6 @@ extension BookPlayer {
       self.author = author
       self.coverURL = coverURL
       self.isPlaying = isPlaying
-      self.currentTime = currentTime
-      self.totalDuration = totalDuration
-      self.totalBookDuration = totalBookDuration
       self.isLoading = isLoading
       self.speed = speed
       self.timer = timer
@@ -357,13 +348,6 @@ extension BookPlayer {
     @MainActor func onProgressChanged(to progress: Double) {}
     @MainActor func onDownloadTapped() {}
   }
-}
-
-extension BookPlayer.Model {
-  var displayDuration: TimeInterval? {
-    totalBookDuration ?? totalDuration
-  }
-
 }
 
 extension BookPlayer.Model {

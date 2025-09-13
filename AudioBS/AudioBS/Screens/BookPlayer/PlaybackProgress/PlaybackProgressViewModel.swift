@@ -28,7 +28,9 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   }
 
   func configure(
-    player: AVPlayer?, chapters: ChapterPickerSheet.Model?, totalDuration: TimeInterval?
+    player: AVPlayer?,
+    chapters: ChapterPickerSheet.Model?,
+    totalDuration: TimeInterval?
   ) {
     self.player = player
     self.chapters = chapters

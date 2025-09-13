@@ -36,16 +36,15 @@ struct MiniBookPlayer: View {
 
         if let author = player.author {
           Text(author)
-            .font(.system(size: 12))
+            .font(.caption2)
             .foregroundColor(.secondary)
             .lineLimit(1)
         }
 
-        if let totalDuration = player.displayDuration {
-          ProgressView(value: player.currentTime / totalDuration)
-            .progressViewStyle(LinearProgressViewStyle(tint: .orange))
-            .scaleEffect(x: 1, y: 0.8)
-        }
+        Text(formatTimeRemaining(player.playbackProgress.totalTimeRemaining))
+          .font(.caption)
+          .foregroundColor(.secondary)
+          .fontWeight(.medium)
       }
 
       Spacer()
@@ -92,6 +91,15 @@ struct MiniBookPlayer: View {
     }
     .frame(width: 50, height: 50)
     .clipShape(RoundedRectangle(cornerRadius: 12))
+  }
+
+  private func formatTimeRemaining(_ duration: TimeInterval) -> String {
+    Duration.seconds(duration).formatted(
+      .units(
+        allowed: [.hours, .minutes],
+        width: .narrow
+      )
+    ) + " remaining"
   }
 }
 
