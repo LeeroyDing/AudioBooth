@@ -95,9 +95,11 @@ final class RecentRowModel: RecentRow.Model {
   }
 
   private func setupProgressObservation() {
-    mediaProgressObservation = Task {
+    let id = id
+    mediaProgressObservation = Task { [weak self] in
       for await progress in MediaProgress.observe(bookID: id) {
-        guard !Task.isCancelled, let progress else { continue }
+        guard !Task.isCancelled, let self = self, let progress else { continue }
+        guard !AppStateManager.shared.isInBackground else { continue }
 
         self.progress = progress.progress
         self.lastPlayed = progress.lastPlayedAt.formatted(.relative(presentation: .named))

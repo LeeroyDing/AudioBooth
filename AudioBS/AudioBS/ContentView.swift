@@ -6,6 +6,7 @@ struct ContentView: View {
   @StateObject private var playerManager = PlayerManager.shared
   @State private var toastManager = ToastManager.shared
   @AppStorage("audiobookshelf_selected_library") private var libraryData: Data?
+  @Environment(\.scenePhase) private var scenePhase
 
   @State var miniPlayerHeight: CGFloat = 0.0
   @State private var isKeyboardVisible = false
@@ -91,6 +92,9 @@ struct ContentView: View {
     .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification))
     { _ in
       isKeyboardVisible = false
+    }
+    .onChange(of: scenePhase) { _, newPhase in
+      AppStateManager.shared.updateScenePhase(newPhase)
     }
   }
 

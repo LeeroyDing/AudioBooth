@@ -24,10 +24,10 @@ final class HomeViewModel: HomeView.Model {
   }
 
   private func setupRecentItemsObservation() {
-    recentItemsTask = Task {
+    recentItemsTask = Task { [weak self] in
       for await recents in RecentlyPlayedItem.observeAll() {
         guard !Task.isCancelled else { break }
-        recentlyPlayed = recents
+        self?.recentlyPlayed = recents
       }
     }
   }

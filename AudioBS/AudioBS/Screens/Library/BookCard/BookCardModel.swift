@@ -54,9 +54,10 @@ final class BookCardModel: BookCard.Model {
   }
 
   private func startObservingProgress() {
-    progressObservationTask = Task {
-      for await mediaProgress in MediaProgress.observe(bookID: book.id) {
-        self.progress = mediaProgress?.progress
+    let id = book.id
+    progressObservationTask = Task { [weak self] in
+      for await mediaProgress in MediaProgress.observe(bookID: id) {
+        self?.progress = mediaProgress?.progress
       }
     }
   }

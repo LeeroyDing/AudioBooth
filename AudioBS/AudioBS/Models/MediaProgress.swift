@@ -66,12 +66,14 @@ extension MediaProgress {
   static func observe(bookID: String) -> AsyncStream<MediaProgress?> {
     AsyncStream { continuation in
       let context = ModelContextProvider.shared.context
+      let appStateManager = AppStateManager.shared
       let predicate = #Predicate<MediaProgress> { progress in
         progress.bookID == bookID
       }
       let descriptor = FetchDescriptor<MediaProgress>(predicate: predicate)
 
       let fetchData = {
+        guard !appStateManager.isInBackground else { return }
         do {
           let results = try context.fetch(descriptor)
           continuation.yield(results.first)
@@ -82,18 +84,74 @@ extension MediaProgress {
 
       fetchData()
 
-      let observer = NotificationCenter.default.addObserver(
-        forName: ModelContext.didSave,
-        object: context,
-        queue: .main
-      ) { _ in
+      observeWithNotifications(
+        context: context, bookID: bookID, fetchData: fetchData, continuation: continuation)
+    }
+  }
+
+  @MainActor
+  private static func observeWithNotifications(
+    context: ModelContext,
+    bookID: String,
+    fetchData: @escaping () -> Void,
+    continuation: AsyncStream<MediaProgress?>.Continuation
+  ) {
+    let observer = NotificationCenter.default.addObserver(
+      forName: ModelContext.didSave,
+      object: context,
+      queue: .main
+    ) { notification in
+      guard let userInfo = notification.userInfo else {
         fetchData()
+        return
       }
 
-      continuation.onTermination = { _ in
-        NotificationCenter.default.removeObserver(observer)
+      Task { @MainActor in
+        let hasRelevantChanges = await checkForMediaProgressChanges(
+          userInfo: userInfo, bookID: bookID)
+
+        if hasRelevantChanges {
+          fetchData()
+        }
       }
     }
+
+    continuation.onTermination = { _ in
+      NotificationCenter.default.removeObserver(observer)
+    }
+  }
+
+  @MainActor
+  private static func checkForMediaProgressChanges(userInfo: [AnyHashable: Any], bookID: String)
+    async -> Bool
+  {
+    let context = ModelContextProvider.shared.context
+
+    if let insertedIDs = userInfo["inserted"] as? [PersistentIdentifier] {
+      for persistentID in insertedIDs {
+        if persistentID.entityName == "MediaProgress" {
+          if let progress = context.model(for: persistentID) as? MediaProgress,
+            progress.bookID == bookID
+          {
+            return true
+          }
+        }
+      }
+    }
+
+    if let updatedIDs = userInfo["updated"] as? [PersistentIdentifier] {
+      for persistentID in updatedIDs {
+        if persistentID.entityName == "MediaProgress" {
+          if let progress = context.model(for: persistentID) as? MediaProgress,
+            progress.bookID == bookID
+          {
+            return true
+          }
+        }
+      }
+    }
+
+    return false
   }
 
   @MainActor
@@ -229,22 +287,22 @@ extension MediaProgress {
     let context = ModelContextProvider.shared.context
 
     for apiProgress in userData.mediaProgress {
-      let localProgress = MediaProgress(from: apiProgress)
+      let remote = MediaProgress(from: apiProgress)
 
-      if let existingProgress = try MediaProgress.fetch(bookID: apiProgress.libraryItemId) {
-        existingProgress.id = localProgress.id
+      if let local = try MediaProgress.fetch(bookID: apiProgress.libraryItemId) {
+        local.id = remote.id
 
-        if localProgress.lastUpdate > existingProgress.lastUpdate {
-          existingProgress.lastPlayedAt = localProgress.lastPlayedAt
-          existingProgress.currentTime = localProgress.currentTime
-          existingProgress.timeListened = localProgress.timeListened
-          existingProgress.duration = localProgress.duration
-          existingProgress.progress = localProgress.progress
-          existingProgress.isFinished = localProgress.isFinished
-          existingProgress.lastUpdate = localProgress.lastUpdate
+        if remote.lastUpdate > local.lastUpdate {
+          local.lastPlayedAt = remote.lastPlayedAt
+          local.currentTime = remote.currentTime
+          local.timeListened = remote.timeListened
+          local.duration = remote.duration
+          local.progress = remote.progress
+          local.isFinished = remote.isFinished
+          local.lastUpdate = remote.lastUpdate
         }
       } else {
-        context.insert(localProgress)
+        context.insert(remote)
       }
     }
 

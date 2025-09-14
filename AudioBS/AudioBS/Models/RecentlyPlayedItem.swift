@@ -36,8 +36,10 @@ extension RecentlyPlayedItem {
   static func observeAll() -> AsyncStream<[RecentlyPlayedItem]> {
     AsyncStream { continuation in
       let context = ModelContextProvider.shared.context
+      let appStateManager = AppStateManager.shared
       let descriptor = FetchDescriptor<RecentlyPlayedItem>()
       let fetchData = {
+        guard !appStateManager.isInBackground else { return }
         do {
           let items = try context.fetch(descriptor)
           continuation.yield(items)
