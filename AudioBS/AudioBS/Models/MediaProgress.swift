@@ -234,7 +234,6 @@ extension MediaProgress {
       existingProgress.timeListened = timeListened
       existingProgress.duration = duration
       existingProgress.progress = progress
-      existingProgress.lastPlayedAt = Date()
       existingProgress.lastUpdate = Date()
       existingProgress.isFinished = progress >= 1.0
       try existingProgress.save()

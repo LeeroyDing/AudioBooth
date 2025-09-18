@@ -15,7 +15,8 @@ final class DownloadManager: ObservableObject {
     case downloading
     case downloaded
   }
-  @Published private(set) var downloads: [String: DownloadState] = [:]
+
+  @Published private(set) var downloads: [String: Bool] = [:]
 
   private var downloadTasks: [String: Task<Void, Never>] = [:]
   private let audiobookshelfService: Audiobookshelf
@@ -24,8 +25,8 @@ final class DownloadManager: ObservableObject {
     self.audiobookshelfService = Audiobookshelf.shared
   }
 
-  func downloadState(for bookID: String) -> DownloadState {
-    return downloads[bookID] ?? .notDownloaded
+  func isDownloading(for bookID: String) -> Bool {
+    return downloads[bookID] ?? false
   }
 
   func startDownload(for item: RecentlyPlayedItem) {
@@ -39,7 +40,7 @@ final class DownloadManager: ObservableObject {
     }
 
     let bookID = item.bookID
-    downloads[bookID] = .downloading
+    downloads[bookID] = true
     print("Starting download of \(tracks.count) tracks for book: \(item.title)")
 
     let task = Task {
@@ -98,7 +99,7 @@ final class DownloadManager: ObservableObject {
         }
 
         await MainActor.run {
-          downloads[bookID] = .downloaded
+          downloads.removeValue(forKey: bookID)
           print("Download completed successfully")
           ToastManager.shared.show(success: "Download completed successfully")
 
@@ -109,7 +110,7 @@ final class DownloadManager: ObservableObject {
       } catch {
         print("Download failed: \(error)")
         await MainActor.run {
-          downloads[bookID] = .notDownloaded
+          downloads.removeValue(forKey: bookID)
           ToastManager.shared.show(error: "Download failed")
         }
       }
@@ -122,7 +123,7 @@ final class DownloadManager: ObservableObject {
 
   func startDownload(for book: Book) {
     let bookID = book.id
-    downloads[bookID] = .downloading
+    downloads[bookID] = true
     print("Starting download for book: \(book.title)")
 
     let task = Task {
@@ -143,7 +144,7 @@ final class DownloadManager: ObservableObject {
 
       } catch {
         await MainActor.run {
-          downloads[bookID] = .notDownloaded
+          downloads.removeValue(forKey: bookID)
           ToastManager.shared.show(error: "Failed to start download: \(error.localizedDescription)")
           print("Failed to start download for book \(book.title): \(error)")
         }
@@ -156,7 +157,7 @@ final class DownloadManager: ObservableObject {
   func cancelDownload(for bookID: String) {
     downloadTasks[bookID]?.cancel()
     downloadTasks.removeValue(forKey: bookID)
-    downloads[bookID] = .notDownloaded
+    downloads.removeValue(forKey: bookID)
     print("Download cancelled for book: \(bookID)")
   }
 
@@ -180,7 +181,7 @@ final class DownloadManager: ObservableObject {
           print("Successfully updated database to remove download information")
         }
 
-        downloads[bookID] = .notDownloaded
+        downloads.removeValue(forKey: bookID)
         print("Download deleted successfully for book: \(bookID)")
       } catch {
         print("Failed to delete download: \(error)")

@@ -56,7 +56,7 @@ final class HomeViewModel: HomeView.Model {
 
     for recent in recentsByID.values {
       let progress = try? MediaProgress.fetch(bookID: recent.bookID)
-      if downloadManager.downloads[recent.bookID] == .downloading
+      if downloadManager.downloads[recent.bookID] == true
         || recent.playSessionInfo.isDownloaded || (progress?.timeListened ?? 0) != 0
         || PlayerManager.shared.current?.id == recent.bookID
       {

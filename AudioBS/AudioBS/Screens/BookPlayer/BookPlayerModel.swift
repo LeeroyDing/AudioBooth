@@ -320,8 +320,8 @@ extension BookPlayerModel {
       .map { [weak self] downloads in
         guard let item = self?.item else { return .notDownloaded }
 
-        if let managerState = downloads[item.bookID] {
-          return managerState
+        if downloads[item.bookID] == true {
+          return .downloading
         }
 
         return item.playSessionInfo.isDownloaded ? .downloaded : .notDownloaded

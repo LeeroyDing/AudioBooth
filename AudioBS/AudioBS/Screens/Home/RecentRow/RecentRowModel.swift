@@ -77,8 +77,8 @@ final class RecentRowModel: RecentRow.Model {
       .map { [weak self] downloads in
         guard let self = self else { return .notDownloaded }
 
-        if let managerState = downloads[id] {
-          return managerState
+        if downloads[id] == true {
+          return .downloading
         }
 
         switch self.item {
