@@ -52,6 +52,8 @@ final class MediaProgress {
 }
 
 extension MediaProgress {
+  private static var activeStreams: [String: AsyncStream<MediaProgress?>] = [:]
+
   @MainActor
   static func fetchAll() throws -> [MediaProgress] {
     let context = ModelContextProvider.shared.context
@@ -64,7 +66,11 @@ extension MediaProgress {
 
   @MainActor
   static func observe(bookID: String) -> AsyncStream<MediaProgress?> {
-    AsyncStream { continuation in
+    if let existingStream = activeStreams[bookID] {
+      return existingStream
+    }
+
+    let stream = AsyncStream { continuation in
       let context = ModelContextProvider.shared.context
       let appStateManager = AppStateManager.shared
       let predicate = #Predicate<MediaProgress> { progress in
@@ -86,7 +92,14 @@ extension MediaProgress {
 
       observeWithNotifications(
         context: context, bookID: bookID, fetchData: fetchData, continuation: continuation)
+
+      continuation.onTermination = { _ in
+        activeStreams.removeValue(forKey: bookID)
+      }
     }
+
+    activeStreams[bookID] = stream
+    return stream
   }
 
   @MainActor
@@ -96,28 +109,25 @@ extension MediaProgress {
     fetchData: @escaping () -> Void,
     continuation: AsyncStream<MediaProgress?>.Continuation
   ) {
-    var isProcessingNotification = false
-
     let observer = NotificationCenter.default.addObserver(
       forName: ModelContext.didSave,
       object: context,
       queue: .main
     ) { notification in
-      guard !isProcessingNotification else { return }
       guard let userInfo = notification.userInfo else {
         fetchData()
         return
       }
 
-      isProcessingNotification = true
-      Task { @MainActor in
+      Task.detached {
         let hasRelevantChanges = await checkForMediaProgressChanges(
           userInfo: userInfo, bookID: bookID)
 
         if hasRelevantChanges {
-          fetchData()
+          Task { @MainActor in
+            fetchData()
+          }
         }
-        isProcessingNotification = false
       }
     }
 
