@@ -634,6 +634,7 @@ extension BookPlayerModel {
       if let lastTime = lastPlaybackTime {
         let timeListened = now.timeIntervalSince(lastTime)
         mediaProgress.timeListened += timeListened
+        syncSessionProgress()
       }
       lastPlaybackTime = nil
     }
@@ -661,6 +662,12 @@ extension BookPlayerModel {
     guard let item else { return }
 
     do {
+      if isPlaying, let lastTime = lastPlaybackTime {
+        let timeListened = Date().timeIntervalSince(lastTime)
+        mediaProgress.timeListened += timeListened
+        lastPlaybackTime = Date()
+      }
+
       mediaProgress.lastPlayedAt = Date()
       mediaProgress.lastUpdate = Date()
       if mediaProgress.duration > 0 {
