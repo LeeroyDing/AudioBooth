@@ -69,29 +69,14 @@ struct BookPlayer: View {
   }
 
   private var cover: some View {
-    LazyImage(url: model.coverURL) { state in
-      if let image = state.image {
-        image
-          .resizable()
-          .aspectRatio(1, contentMode: .fit)
-      } else {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(Color.gray.opacity(0.3))
-          .aspectRatio(1, contentMode: .fit)
-          .overlay {
-            Image(systemName: "book.closed")
-              .foregroundColor(.gray)
-              .font(.title2)
-          }
+    CoverImage(url: model.coverURL)
+      .frame(maxWidth: 280, maxHeight: 280)
+      .clipShape(RoundedRectangle(cornerRadius: 16))
+      .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+      .padding(30)
+      .overlay(alignment: .topLeading) {
+        timerOverlay
       }
-    }
-    .frame(maxWidth: 280, maxHeight: 280)
-    .clipShape(RoundedRectangle(cornerRadius: 16))
-    .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
-    .padding(30)
-    .overlay(alignment: .topLeading) {
-      timerOverlay
-    }
   }
 
   @ViewBuilder

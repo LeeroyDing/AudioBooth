@@ -49,23 +49,8 @@ struct MiniBookPlayer: View {
   }
 
   private var cover: some View {
-    LazyImage(url: player.coverURL) { state in
-      if let image = state.image {
-        image
-          .resizable()
-          .aspectRatio(1, contentMode: .fill)
-      } else {
-        Rectangle()
-          .fill(Color.gray.opacity(0.3))
-          .overlay {
-            Image(systemName: "book.closed")
-              .foregroundColor(.gray)
-              .font(.system(size: 16))
-          }
-      }
-    }
-    .aspectRatio(1, contentMode: .fit)
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    CoverImage(url: player.coverURL)
+      .clipShape(RoundedRectangle(cornerRadius: 12))
   }
 
   @ViewBuilder
@@ -124,7 +109,7 @@ struct LegacyMiniBookPlayer: View {
           Label("Stop", systemImage: "xmark.circle")
         }
       }
-
+      .frame(maxHeight: 56)
   }
 
   @ViewBuilder
@@ -176,24 +161,8 @@ struct LegacyMiniBookPlayer: View {
   }
 
   private var cover: some View {
-    LazyImage(url: player.coverURL) { state in
-      if let image = state.image {
-        image
-          .resizable()
-          .aspectRatio(1, contentMode: .fill)
-      } else {
-        Rectangle()
-          .fill(Color.gray.opacity(0.3))
-          .overlay {
-            Image(systemName: "book.closed")
-              .foregroundColor(.gray)
-              .font(.system(size: 16))
-          }
-      }
-    }
-    .frame(maxHeight: 40)
-    .aspectRatio(1, contentMode: .fit)
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    CoverImage(url: player.coverURL)
+      .clipShape(RoundedRectangle(cornerRadius: 12))
   }
 
   private func formatTimeRemaining(_ duration: TimeInterval) -> String {

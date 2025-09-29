@@ -37,29 +37,10 @@ struct BookCard: View {
   }
 
   var cover: some View {
-    LazyImage(url: model.coverURL) { state in
-      if let image = state.image {
-        image
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(maxWidth: .infinity, alignment: .center)
-      } else {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(Color.gray.opacity(0.3))
-          .aspectRatio(1, contentMode: .fit)
-          .overlay {
-            Image(systemName: "book.closed")
-              .foregroundColor(.gray)
-              .font(.title2)
-          }
-      }
-    }
-    .overlay(alignment: .bottom) {
-      progressBar
-    }
-    .clipShape(RoundedRectangle(cornerRadius: 8))
-    .shadow(radius: 2)
-    .aspectRatio(1, contentMode: .fit)
+    CoverImage(url: model.coverURL)
+      .overlay(alignment: .bottom) { progressBar }
+      .clipShape(RoundedRectangle(cornerRadius: 8))
+      .shadow(radius: 2)
   }
 
   var title: some View {

@@ -62,27 +62,12 @@ struct RecentRow: View {
   }
 
   var cover: some View {
-    LazyImage(url: model.coverURL) { state in
-      if let image = state.image {
-        image
-          .resizable()
-          .aspectRatio(1, contentMode: .fit)
-      } else {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(Color.gray.opacity(0.3))
-          .aspectRatio(1, contentMode: .fit)
-          .overlay {
-            Image(systemName: "book.closed")
-              .foregroundColor(.gray)
-              .font(.title2)
-          }
+    CoverImage(url: model.coverURL)
+      .frame(width: 100, height: 100)
+      .overlay(alignment: .bottom) {
+        progressBar
       }
-    }
-    .frame(width: 100, height: 100)
-    .overlay(alignment: .bottom) {
-      progressBar
-    }
-    .clipShape(RoundedRectangle(cornerRadius: 8))
+      .clipShape(RoundedRectangle(cornerRadius: 8))
   }
 
   var title: some View {
