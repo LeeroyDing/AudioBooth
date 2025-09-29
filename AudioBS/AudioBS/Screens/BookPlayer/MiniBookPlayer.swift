@@ -191,6 +191,7 @@ struct LegacyMiniBookPlayer: View {
           }
       }
     }
+    .frame(maxHeight: 40)
     .aspectRatio(1, contentMode: .fit)
     .clipShape(RoundedRectangle(cornerRadius: 12))
   }
