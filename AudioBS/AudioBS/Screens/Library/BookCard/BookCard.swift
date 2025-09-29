@@ -129,9 +129,9 @@ extension BookCard {
     let sequence: String?
     var progress: Double?
 
-    @MainActor func onTapped() {}
-    @MainActor func onDownloadTapped() {}
-    @MainActor func onMarkFinishedTapped(isFinished: Bool) {}
+    func onTapped() {}
+    func onDownloadTapped() {}
+    func onMarkFinishedTapped(isFinished: Bool) {}
 
     init(
       id: String = UUID().uuidString,

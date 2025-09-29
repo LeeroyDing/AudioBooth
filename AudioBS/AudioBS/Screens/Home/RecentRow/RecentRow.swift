@@ -225,11 +225,11 @@ extension RecentRow {
 
     var downloadState: DownloadManager.DownloadState
 
-    @MainActor func onAppear() {}
-    @MainActor func onTapped() {}
-    @MainActor func onDeleteTapped(isFileOnly: Bool) {}
-    @MainActor func onDownloadTapped() {}
-    @MainActor func onMarkFinishedTapped(isFinished: Bool) {}
+    func onAppear() {}
+    func onTapped() {}
+    func onDeleteTapped(isFileOnly: Bool) {}
+    func onDownloadTapped() {}
+    func onMarkFinishedTapped(isFinished: Bool) {}
 
     init(
       id: String = UUID().uuidString,

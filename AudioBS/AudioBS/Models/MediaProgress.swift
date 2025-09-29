@@ -54,7 +54,6 @@ final class MediaProgress {
 extension MediaProgress {
   private static var activeStreams: [String: AsyncStream<MediaProgress?>] = [:]
 
-  @MainActor
   static func fetchAll() throws -> [MediaProgress] {
     let context = ModelContextProvider.shared.context
     let descriptor = FetchDescriptor<MediaProgress>(
@@ -64,7 +63,6 @@ extension MediaProgress {
     return results
   }
 
-  @MainActor
   static func observe(bookID: String) -> AsyncStream<MediaProgress?> {
     if let existingStream = activeStreams[bookID] {
       return existingStream
@@ -102,7 +100,6 @@ extension MediaProgress {
     return stream
   }
 
-  @MainActor
   private static func observeWithNotifications(
     context: ModelContext,
     bookID: String,
@@ -124,7 +121,7 @@ extension MediaProgress {
           userInfo: userInfo, bookID: bookID)
 
         if hasRelevantChanges {
-          Task { @MainActor in
+          Task {
             fetchData()
           }
         }
@@ -136,7 +133,6 @@ extension MediaProgress {
     }
   }
 
-  @MainActor
   private static func checkForMediaProgressChanges(userInfo: [AnyHashable: Any], bookID: String)
     async -> Bool
   {
@@ -169,7 +165,6 @@ extension MediaProgress {
     return false
   }
 
-  @MainActor
   static func fetch(bookID: String) throws -> MediaProgress? {
     let context = ModelContextProvider.shared.context
     let predicate = #Predicate<MediaProgress> { progress in
@@ -181,7 +176,6 @@ extension MediaProgress {
     return results.first
   }
 
-  @MainActor
   func save() throws {
     let context = ModelContextProvider.shared.context
 
@@ -201,14 +195,12 @@ extension MediaProgress {
     try context.save()
   }
 
-  @MainActor
   func delete() throws {
     let context = ModelContextProvider.shared.context
     context.delete(self)
     try context.save()
   }
 
-  @MainActor
   static func deleteAll() throws {
     let context = ModelContextProvider.shared.context
     let descriptor = FetchDescriptor<MediaProgress>()
@@ -221,7 +213,6 @@ extension MediaProgress {
     try context.save()
   }
 
-  @MainActor
   static func getOrCreate(for bookID: String, duration: TimeInterval = 0) throws -> MediaProgress {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
       return existingProgress
@@ -236,7 +227,6 @@ extension MediaProgress {
     }
   }
 
-  @MainActor
   static func updateProgress(
     for bookID: String,
     currentTime: TimeInterval,
@@ -268,7 +258,6 @@ extension MediaProgress {
     }
   }
 
-  @MainActor
   static func updateFinishedStatus(for bookID: String, isFinished: Bool, duration: TimeInterval = 0)
     throws
   {
@@ -294,7 +283,6 @@ extension MediaProgress {
     }
   }
 
-  @MainActor
   static func syncFromAPI() async throws {
     let userData = try await Audiobookshelf.shared.authentication.fetchMe()
 

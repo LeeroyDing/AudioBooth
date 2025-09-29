@@ -54,8 +54,8 @@ extension LibrariesView {
     var isLoading: Bool
     var selected: Row?
 
-    @MainActor func onAppear() {}
-    @MainActor func onRowTapped(_ row: Row) {}
+    func onAppear() {}
+    func onRowTapped(_ row: Row) {}
 
     init(
       rows: [Row] = [],

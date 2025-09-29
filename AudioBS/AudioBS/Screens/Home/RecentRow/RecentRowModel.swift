@@ -3,7 +3,6 @@ import Combine
 import SwiftData
 import SwiftUI
 
-@MainActor
 final class RecentRowModel: RecentRow.Model {
   enum Item {
     case recent(RecentlyPlayedItem)
@@ -62,7 +61,6 @@ final class RecentRowModel: RecentRow.Model {
     self.onRemoved = onRemoved
   }
 
-  @MainActor
   override func onTapped() {
     switch item {
     case .recent(let recentItem):

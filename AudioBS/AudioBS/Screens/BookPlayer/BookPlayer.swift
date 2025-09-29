@@ -342,11 +342,11 @@ extension BookPlayer {
       self.downloadState = downloadState
     }
 
-    @MainActor func onTogglePlaybackTapped() {}
-    @MainActor func onSkipForwardTapped() {}
-    @MainActor func onSkipBackwardTapped() {}
-    @MainActor func onProgressChanged(to progress: Double) {}
-    @MainActor func onDownloadTapped() {}
+    func onTogglePlaybackTapped() {}
+    func onSkipForwardTapped() {}
+    func onSkipBackwardTapped() {}
+    func onProgressChanged(to progress: Double) {}
+    func onDownloadTapped() {}
   }
 }
 

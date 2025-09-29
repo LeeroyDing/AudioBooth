@@ -1,7 +1,6 @@
 import Audiobookshelf
 import SwiftUI
 
-@MainActor
 final class AuthorsPageModel: AuthorsPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
 

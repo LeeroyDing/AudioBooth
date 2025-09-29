@@ -1,7 +1,7 @@
 import SwiftUI
 
 @Observable
-@MainActor
+
 final class ToastManager {
   static let shared = ToastManager()
 

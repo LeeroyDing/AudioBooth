@@ -2,7 +2,6 @@ import Audiobookshelf
 import Foundation
 import SwiftUI
 
-@MainActor
 final class SettingsViewModel: SettingsView.Model {
   private let audiobookshelf = Audiobookshelf.shared
   private var oidcAuthManager: OIDCAuthenticationManager?

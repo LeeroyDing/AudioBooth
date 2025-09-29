@@ -104,9 +104,9 @@ extension SpeedPickerSheet {
       self.playbackSpeed = playbackSpeed
     }
 
-    @MainActor func onSpeedIncrease() {}
-    @MainActor func onSpeedDecrease() {}
-    @MainActor func onSpeedChanged(_ speed: Float) {}
+    func onSpeedIncrease() {}
+    func onSpeedDecrease() {}
+    func onSpeedChanged(_ speed: Float) {}
   }
 }
 

@@ -4,7 +4,6 @@ import Combine
 import Foundation
 import SwiftData
 
-@MainActor
 final class DownloadManager: ObservableObject {
   static let shared = DownloadManager()
 
@@ -167,7 +166,7 @@ final class DownloadManager: ObservableObject {
   }
 
   func deleteDownload(for bookID: String) {
-    Task { @MainActor in
+    Task {
       let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         .first!
       let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
@@ -203,7 +202,7 @@ final class DownloadManager: ObservableObject {
   }
 
   func cleanupOrphanedDownloads() {
-    Task { @MainActor in
+    Task {
       do {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
           .first!

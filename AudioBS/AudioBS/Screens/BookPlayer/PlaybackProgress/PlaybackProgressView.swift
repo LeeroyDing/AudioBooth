@@ -93,7 +93,7 @@ extension PlaybackProgressView {
       self.isLoading = isLoading
     }
 
-    @MainActor func onProgressChanged(_ progress: Double) {}
+    func onProgressChanged(_ progress: Double) {}
   }
 }
 

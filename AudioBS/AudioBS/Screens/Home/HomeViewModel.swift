@@ -2,7 +2,6 @@ import Audiobookshelf
 import SwiftData
 import SwiftUI
 
-@MainActor
 final class HomeViewModel: HomeView.Model {
   private let downloadManager = DownloadManager.shared
   private var playerManager = PlayerManager.shared
@@ -129,11 +128,11 @@ final class HomeViewModel: HomeView.Model {
         }
 
       case .series(let items):
-        let series = items.map(SeriesCardModel.init)
+        let series = items.map { SeriesCardModel(series: $0) }
         sections.append(.init(title: section.label, items: .series(series)))
 
       case .authors(let items):
-        let authors = items.map(AuthorCardModel.init)
+        let authors = items.map { AuthorCardModel(author: $0) }
         sections.append(.init(title: section.label, items: .authors(authors)))
 
       case .unknown:

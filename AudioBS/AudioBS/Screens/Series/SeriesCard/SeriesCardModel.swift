@@ -1,7 +1,6 @@
 import Audiobookshelf
 import SwiftUI
 
-@MainActor
 final class SeriesCardModel: SeriesCard.Model {
   init(series: Series) {
     let bookCovers = series.books.prefix(10).map(\.coverURL)

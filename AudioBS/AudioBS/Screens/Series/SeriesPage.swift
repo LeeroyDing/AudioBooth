@@ -67,8 +67,8 @@ extension SeriesPage {
     var series: [SeriesCard.Model]
     var search: SearchView.Model = SearchView.Model()
 
-    @MainActor func onAppear() {}
-    @MainActor func refresh() async {}
+    func onAppear() {}
+    func refresh() async {}
 
     init(
       isLoading: Bool = false,

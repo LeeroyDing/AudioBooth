@@ -2,7 +2,6 @@ import AVFoundation
 import Foundation
 import SwiftUI
 
-@MainActor
 final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private weak var player: AVPlayer?
   private var sleepTimer: Timer?
@@ -64,9 +63,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     sleepTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
       guard let self else { return }
-      Task { @MainActor in
-        self.updateSleepTimer()
-      }
+      self.updateSleepTimer()
     }
 
     RunLoop.current.add(sleepTimer!, forMode: .common)

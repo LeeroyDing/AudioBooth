@@ -1,7 +1,6 @@
 import AVFoundation
 import SwiftUI
 
-@MainActor
 final class SpeedPickerSheetViewModel: SpeedPickerSheet.Model {
   let player: AVPlayer
 

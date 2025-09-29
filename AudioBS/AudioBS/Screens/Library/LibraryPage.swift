@@ -134,11 +134,11 @@ extension LibraryPage {
     var books: [BookCard.Model]
     var search: SearchView.Model
 
-    @MainActor func onAppear() {}
-    @MainActor func refresh() async {}
-    @MainActor func onSortByTapped(_ sortBy: BooksService.SortBy) {}
-    @MainActor func onSearchChanged(_ searchText: String) {}
-    @MainActor func loadNextPageIfNeeded() {}
+    func onAppear() {}
+    func refresh() async {}
+    func onSortByTapped(_ sortBy: BooksService.SortBy) {}
+    func onSearchChanged(_ searchText: String) {}
+    func loadNextPageIfNeeded() {}
 
     init(
       isLoading: Bool = false,

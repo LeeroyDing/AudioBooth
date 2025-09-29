@@ -3,7 +3,6 @@ import Foundation
 import SafariServices
 import UIKit
 
-@MainActor
 final class BookCardModel: BookCard.Model {
   private var playerManager = PlayerManager.shared
   private var downloadManager = DownloadManager.shared
@@ -64,7 +63,6 @@ final class BookCardModel: BookCard.Model {
     }
   }
 
-  @MainActor
   override func onTapped() {
     switch book.media {
     case .audiobook:
@@ -88,12 +86,10 @@ final class BookCardModel: BookCard.Model {
     }
   }
 
-  @MainActor
   override func onDownloadTapped() {
     downloadManager.startDownload(for: book)
   }
 
-  @MainActor
   override func onMarkFinishedTapped(isFinished: Bool) {
     Task {
       do {

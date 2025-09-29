@@ -17,14 +17,12 @@ final class LibrariesViewModel: LibrariesView.Model {
     super.init(selected: row)
   }
 
-  @MainActor
   override func onAppear() {
     Task {
       await fetchLibraries()
     }
   }
 
-  @MainActor
   override func onRowTapped(_ row: Row) {
     guard
       row.id != selected?.id,

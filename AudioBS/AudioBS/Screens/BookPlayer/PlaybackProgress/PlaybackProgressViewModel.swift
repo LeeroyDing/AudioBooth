@@ -1,7 +1,6 @@
 import AVFoundation
 import SwiftUI
 
-@MainActor
 final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var player: AVPlayer?
   private var chapters: ChapterPickerSheet.Model?

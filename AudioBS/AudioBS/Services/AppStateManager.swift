@@ -1,7 +1,6 @@
 import Combine
 import SwiftUI
 
-@MainActor
 final class AppStateManager: ObservableObject {
   static let shared = AppStateManager()
 

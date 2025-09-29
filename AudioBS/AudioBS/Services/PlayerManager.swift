@@ -2,7 +2,6 @@ import Audiobookshelf
 import Combine
 import SwiftUI
 
-@MainActor
 final class PlayerManager: ObservableObject {
   @Published var current: BookPlayer.Model?
   @Published var isShowingFullPlayer = false

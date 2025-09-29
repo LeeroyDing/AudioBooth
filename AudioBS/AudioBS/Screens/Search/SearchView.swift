@@ -176,7 +176,7 @@ extension SearchView {
     var series: [SeriesCard.Model] = []
     var authors: [AuthorCard.Model] = []
 
-    @MainActor func onSearchChanged(_ searchText: String) {}
+    func onSearchChanged(_ searchText: String) {}
   }
 }
 

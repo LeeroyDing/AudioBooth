@@ -1,7 +1,6 @@
 import Audiobookshelf
 import Foundation
 
-@MainActor
 final class AuthorCardModel: AuthorCard.Model {
   init(author: Author) {
     super.init(

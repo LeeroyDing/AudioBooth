@@ -90,7 +90,7 @@ extension ChapterPickerSheet {
       self.currentIndex = currentIndex
     }
 
-    @MainActor func onChapterTapped(at index: Int) {}
+    func onChapterTapped(at index: Int) {}
   }
 }
 

@@ -195,8 +195,8 @@ extension HomeView {
     }
     var sections: [Section]
 
-    @MainActor func onAppear() {}
-    @MainActor func refresh() async {}
+    func onAppear() {}
+    func refresh() async {}
 
     init(
       isLoading: Bool = false,

@@ -7,7 +7,6 @@ import Nuke
 import SwiftData
 import SwiftUI
 
-@MainActor
 final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   private let audiobookshelf = Audiobookshelf.shared
 
@@ -436,39 +435,37 @@ extension BookPlayerModel {
       [weak self] time in
       guard let self else { return }
 
-      Task { @MainActor in
-        if time.isValid && !time.isIndefinite {
-          self.mediaProgress.currentTime = CMTimeGetSeconds(time)
+      if time.isValid && !time.isIndefinite {
+        self.mediaProgress.currentTime = CMTimeGetSeconds(time)
 
-          if let model = self.chapters as? ChapterPickerSheetViewModel {
-            let previous = model.currentIndex
-            model.setCurrentTime(self.mediaProgress.currentTime)
-            self.timer.maxRemainingChapters = model.chapters.count - model.currentIndex - 1
+        if let model = self.chapters as? ChapterPickerSheetViewModel {
+          let previous = model.currentIndex
+          model.setCurrentTime(self.mediaProgress.currentTime)
+          self.timer.maxRemainingChapters = model.chapters.count - model.currentIndex - 1
 
-            if case .chapters(let chapters) = self.timer.current {
-              if previous < model.currentIndex {
-                if chapters > 1 {
-                  self.timer.current = .chapters(chapters - 1)
-                } else {
-                  self.player?.pause()
-                  self.timer.current = .none
-                }
+          if case .chapters(let chapters) = self.timer.current {
+            if previous < model.currentIndex {
+              if chapters > 1 {
+                self.timer.current = .chapters(chapters - 1)
+              } else {
+                self.player?.pause()
+                self.timer.current = .none
               }
             }
           }
-
-          if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
-            playbackProgress.updateCurrentTime(self.mediaProgress.currentTime)
-          }
-
-          self.timerSecondsCounter += 1
-
-          if self.timerSecondsCounter % 20 == 0 {
-            self.updateRecentlyPlayedProgress()
-          }
-
-          self.updateNowPlayingInfo()
         }
+
+        if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
+          playbackProgress.updateCurrentTime(self.mediaProgress.currentTime)
+        }
+
+        self.timerSecondsCounter += 1
+
+        if self.timerSecondsCounter % 20 == 0 {
+          self.updateRecentlyPlayedProgress()
+        }
+
+        self.updateNowPlayingInfo()
       }
     }
   }
@@ -561,9 +558,7 @@ extension BookPlayerModel {
         completedBookID == self.id
       else { return }
 
-      Task { @MainActor in
-        self.refreshPlayerForLocalPlayback()
-      }
+      self.refreshPlayerForLocalPlayback()
     }
   }
 

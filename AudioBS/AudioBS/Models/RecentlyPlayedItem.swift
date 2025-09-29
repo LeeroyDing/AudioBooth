@@ -25,14 +25,13 @@ final class RecentlyPlayedItem {
 }
 
 extension RecentlyPlayedItem {
-  @MainActor
+
   static func fetchAll() throws -> [RecentlyPlayedItem] {
     let context = ModelContextProvider.shared.context
     let descriptor = FetchDescriptor<RecentlyPlayedItem>()
     return try context.fetch(descriptor)
   }
 
-  @MainActor
   static func observeAll() -> AsyncStream<[RecentlyPlayedItem]> {
     AsyncStream { continuation in
       let context = ModelContextProvider.shared.context
@@ -69,7 +68,6 @@ extension RecentlyPlayedItem {
     }
   }
 
-  @MainActor
   static func fetch(bookID: String) throws -> RecentlyPlayedItem? {
     let context = ModelContextProvider.shared.context
     let predicate = #Predicate<RecentlyPlayedItem> { item in
@@ -79,7 +77,6 @@ extension RecentlyPlayedItem {
     return try context.fetch(descriptor).first
   }
 
-  @MainActor
   func save() throws {
     let context = ModelContextProvider.shared.context
 
@@ -95,7 +92,6 @@ extension RecentlyPlayedItem {
     try context.save()
   }
 
-  @MainActor
   func delete() throws {
     cleanupLocalFiles()
 
@@ -104,7 +100,6 @@ extension RecentlyPlayedItem {
     try context.save()
   }
 
-  @MainActor
   func deleteFiles() throws {
     cleanupLocalFiles()
 
@@ -129,7 +124,6 @@ extension RecentlyPlayedItem {
     }
   }
 
-  @MainActor
   static func deleteAll() throws {
     let context = ModelContextProvider.shared.context
     let descriptor = FetchDescriptor<RecentlyPlayedItem>()

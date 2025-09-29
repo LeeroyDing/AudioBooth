@@ -209,12 +209,12 @@ extension SettingsView {
     var library: LibrariesView.Model
     var discoveredServers: [DiscoveredServer]
 
-    @MainActor func onLoginTapped() {}
-    @MainActor func onOIDCLoginTapped() {}
-    @MainActor func onLogoutTapped() {}
-    @MainActor func onClearStorageTapped() {}
-    @MainActor func onDiscoverServersTapped() {}
-    @MainActor func onServerSelected(_ server: DiscoveredServer) {}
+    func onLoginTapped() {}
+    func onOIDCLoginTapped() {}
+    func onLogoutTapped() {}
+    func onClearStorageTapped() {}
+    func onDiscoverServersTapped() {}
+    func onServerSelected(_ server: DiscoveredServer) {}
 
     init(
       isAuthenticated: Bool = false,

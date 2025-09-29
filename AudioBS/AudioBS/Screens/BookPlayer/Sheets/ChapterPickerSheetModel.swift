@@ -1,7 +1,6 @@
 import AVFoundation
 import SwiftUI
 
-@MainActor
 final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   let player: AVPlayer
 

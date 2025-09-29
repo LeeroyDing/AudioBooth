@@ -1,7 +1,6 @@
 import Audiobookshelf
 import Foundation
 
-@MainActor
 final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
 

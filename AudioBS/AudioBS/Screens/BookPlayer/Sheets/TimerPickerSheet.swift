@@ -294,13 +294,13 @@ extension TimerPickerSheet {
 
     init() {}
 
-    @MainActor func onQuickTimerSelected(_ minutes: Int) {}
+    func onQuickTimerSelected(_ minutes: Int) {}
 
-    @MainActor func onChaptersChanged(_ value: Int) {}
+    func onChaptersChanged(_ value: Int) {}
 
-    @MainActor func onOffSelected() {}
+    func onOffSelected() {}
 
-    @MainActor func onStartTimerTapped() {}
+    func onStartTimerTapped() {}
   }
 }
 
