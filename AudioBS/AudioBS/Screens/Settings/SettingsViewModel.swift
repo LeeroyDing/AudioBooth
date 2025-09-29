@@ -30,9 +30,7 @@ final class SettingsViewModel: SettingsView.Model {
     }
 
     isLoading = true
-    let normalizedURL = normalizeServerURL(
-      serverURL.trimmingCharacters(in: .whitespacesAndNewlines))
-    serverURL = normalizedURL
+    let normalizedURL = buildFullServerURL()
 
     Task {
       do {
@@ -59,9 +57,7 @@ final class SettingsViewModel: SettingsView.Model {
       return
     }
 
-    let normalizedURL = normalizeServerURL(
-      serverURL.trimmingCharacters(in: .whitespacesAndNewlines))
-    serverURL = normalizedURL
+    let normalizedURL = buildFullServerURL()
 
     isLoading = true
 
@@ -120,14 +116,14 @@ final class SettingsViewModel: SettingsView.Model {
     library = LibrariesViewModel()
   }
 
-  private func normalizeServerURL(_ url: String) -> String {
-    let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
+  private func buildFullServerURL() -> String {
+    let trimmedURL = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
 
     if trimmedURL.hasPrefix("http://") || trimmedURL.hasPrefix("https://") {
       return trimmedURL
-    } else {
-      return "http://" + trimmedURL
     }
+
+    return serverScheme.rawValue + trimmedURL
   }
 
 }

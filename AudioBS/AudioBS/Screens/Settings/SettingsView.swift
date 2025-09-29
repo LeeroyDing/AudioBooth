@@ -4,6 +4,8 @@ import SwiftUI
 
 struct SettingsView: View {
   @StateModel var model: Model
+  @Environment(\.dismiss) var dismiss
+  @FocusState private var isServerURLFocused: Bool
 
   init(model: Model? = nil) {
     if let model {
@@ -17,10 +19,20 @@ struct SettingsView: View {
     NavigationStack(path: $model.navigationPath) {
       Form {
         Section("Server Configuration") {
+          if !model.isTypingScheme {
+            Picker("Protocol", selection: $model.serverScheme) {
+              Text("https://").tag(SettingsView.Model.ServerScheme.https)
+              Text("http://").tag(SettingsView.Model.ServerScheme.http)
+            }
+            .pickerStyle(.segmented)
+            .disabled(model.isAuthenticated)
+          }
+
           TextField("Server URL", text: $model.serverURL)
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
             .disabled(model.isAuthenticated)
+            .focused($isServerURLFocused)
 
           if !model.isAuthenticated {
             HStack {
@@ -86,6 +98,13 @@ struct SettingsView: View {
           LibrariesView(model: model.library)
         default:
           EmptyView()
+        }
+      }
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button("Close") {
+            dismiss()
+          }
         }
       }
     }
@@ -196,18 +215,30 @@ extension SettingsView {
       case oidc
     }
 
+    enum ServerScheme: String, CaseIterable {
+      case https = "https://"
+      case http = "http://"
+    }
+
     var isLoading: Bool
     var isAuthenticated: Bool
     var isDiscovering: Bool
     var navigationPath = NavigationPath()
 
     var serverURL: String
+    var serverScheme: ServerScheme
     var username: String
     var password: String
     var discoveryPort: String
     var authenticationMethod: AuthenticationMethod
     var library: LibrariesView.Model
     var discoveredServers: [DiscoveredServer]
+
+    var isTypingScheme: Bool {
+      let lowercased = serverURL.lowercased()
+      return lowercased.hasPrefix("https://") || lowercased.hasPrefix("http://")
+        || "https://".hasPrefix(lowercased) || "http://".hasPrefix(lowercased)
+    }
 
     func onLoginTapped() {}
     func onOIDCLoginTapped() {}
@@ -221,6 +252,7 @@ extension SettingsView {
       isLoading: Bool = false,
       isDiscovering: Bool = false,
       serverURL: String = "",
+      serverScheme: ServerScheme = .https,
       username: String = "",
       password: String = "",
       discoveryPort: String = "13378",
@@ -229,6 +261,7 @@ extension SettingsView {
       discoveredServers: [DiscoveredServer] = []
     ) {
       self.serverURL = serverURL
+      self.serverScheme = serverScheme
       self.username = username
       self.password = password
       self.discoveryPort = discoveryPort
