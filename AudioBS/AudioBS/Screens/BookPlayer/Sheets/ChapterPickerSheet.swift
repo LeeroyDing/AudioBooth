@@ -4,7 +4,7 @@ struct ChapterPickerSheet: View {
   @Binding var model: Model
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       ScrollViewReader { proxy in
         List {
           ForEach(Array(model.chapters.enumerated()), id: \.element.id) { index, chapter in

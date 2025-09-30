@@ -12,7 +12,7 @@ struct SeriesCard: View {
   }
 
   var body: some View {
-    NavigationLink(destination: LibraryPage(model: model.library)) {
+    NavigationLink(value: model.library) {
       content
     }
     .buttonStyle(.plain)
@@ -122,8 +122,8 @@ extension SeriesCard {
     var title: String
     var bookCount: Int
     var bookCovers: [URL?]
-    var library: LibraryPage.Model
     var progress: Double?
+    let library: LibraryPage.Model
 
     init(
       id: String = UUID().uuidString,

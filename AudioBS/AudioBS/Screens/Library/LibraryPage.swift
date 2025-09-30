@@ -151,6 +151,16 @@ extension LibraryPage {
   }
 }
 
+extension LibraryPage.Model: Hashable {
+  static func == (lhs: LibraryPage.Model, rhs: LibraryPage.Model) -> Bool {
+    ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(ObjectIdentifier(self))
+  }
+}
+
 extension LibraryPage.Model {
   static var mock: LibraryPage.Model {
     let sampleBooks: [BookCard.Model] = [

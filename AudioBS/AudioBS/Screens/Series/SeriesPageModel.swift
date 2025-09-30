@@ -44,7 +44,9 @@ final class SeriesPageModel: SeriesPage.Model {
         ascending: true
       )
 
-      let seriesCards = response.results.map(SeriesCardModel.init)
+      let seriesCards = response.results.map { series in
+        SeriesCardModel(series: series)
+      }
 
       if currentPage == 0 {
         fetchedSeries = seriesCards

@@ -7,30 +7,29 @@ struct LibrariesView: View {
   @StateObject var model: Model
 
   var body: some View {
-    NavigationView {
-      VStack {
-        List {
-          ForEach(model.rows) { row in
-            Button(
-              action: { model.onRowTapped(row) },
-              label: {
-                HStack {
-                  Text(row.name)
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+    VStack {
+      List {
+        ForEach(model.rows) { row in
+          Button(
+            action: { model.onRowTapped(row) },
+            label: {
+              HStack {
+                Text(row.name)
+                  .font(.headline)
+                  .frame(maxWidth: .infinity, alignment: .leading)
 
-                  if row.id == model.selected?.id {
-                    Image(systemName: "checkmark.circle.fill")
-                      .foregroundColor(.blue)
-                  }
+                if row.id == model.selected?.id {
+                  Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.blue)
                 }
               }
-            )
-            .padding(.vertical, 2)
-          }
+            }
+          )
+          .padding(.vertical, 2)
         }
       }
     }
+    .tint(.primary)
     .navigationTitle("Select Library")
     .navigationBarTitleDisplayMode(.inline)
     .onAppear(perform: model.onAppear)

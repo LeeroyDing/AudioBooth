@@ -5,7 +5,7 @@ struct AuthorCard: View {
   @Bindable var model: Model
 
   var body: some View {
-    NavigationLink(destination: LibraryPage(model: model.library)) {
+    NavigationLink(value: model.library) {
       content
     }
     .buttonStyle(.plain)
@@ -80,7 +80,7 @@ extension AuthorCard {
     var name: String
     var bookCount: Int
     var imageURL: URL?
-    var library: LibraryPage.Model
+    let library: LibraryPage.Model
 
     init(
       id: String = UUID().uuidString,

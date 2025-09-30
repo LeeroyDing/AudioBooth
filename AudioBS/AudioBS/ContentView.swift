@@ -65,37 +65,34 @@ struct ContentView: View {
   private var modernTabView: some View {
     TabView(selection: $selectedTab) {
       Tab("Home", systemImage: "house", value: .home) {
-        NavigationView {
+        NavigationStack {
           HomeView(model: HomeViewModel())
         }
-        .navigationViewStyle(.stack)
       }
 
       if hasSelectedLibrary {
         Tab("Library", systemImage: "books.vertical.fill", value: .library) {
-          NavigationView {
+          NavigationStack {
             LibraryPage(model: LibraryPageModel())
           }
-          .navigationViewStyle(.stack)
         }
 
         Tab("Series", systemImage: "square.stack.3d.up.fill", value: .series) {
-          NavigationView {
+          NavigationStack {
             SeriesPage(model: SeriesPageModel())
           }
         }
 
         Tab("Authors", systemImage: "person.crop.rectangle.stack", value: .authors) {
-          NavigationView {
+          NavigationStack {
             AuthorsPage(model: AuthorsPageModel())
           }
         }
 
         Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
-          NavigationView {
+          NavigationStack {
             SearchPage(model: SearchViewModel())
           }
-          .navigationViewStyle(.stack)
         }
       }
     }
@@ -111,28 +108,26 @@ struct ContentView: View {
   @ViewBuilder
   private var legacyTabView: some View {
     TabView {
-      NavigationView {
+      NavigationStack {
         HomeView(model: HomeViewModel())
           .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
       }
-      .navigationViewStyle(.stack)
       .tabItem {
         Image(systemName: "house")
         Text("Home")
       }
 
       if hasSelectedLibrary {
-        NavigationView {
+        NavigationStack {
           LibraryPage(model: LibraryPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }
-        .navigationViewStyle(.stack)
         .tabItem {
           Image(systemName: "books.vertical.fill")
           Text("Library")
         }
 
-        NavigationView {
+        NavigationStack {
           SeriesPage(model: SeriesPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }
@@ -141,7 +136,7 @@ struct ContentView: View {
           Text("Series")
         }
 
-        NavigationView {
+        NavigationStack {
           AuthorsPage(model: AuthorsPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
         }

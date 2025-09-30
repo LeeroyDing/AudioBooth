@@ -24,6 +24,9 @@ struct SeriesPage: View {
       }
     }
     .navigationTitle("Series")
+    .navigationDestination(for: LibraryPage.Model.self) { library in
+      LibraryPage(model: library)
+    }
     .refreshable {
       await model.refresh()
     }

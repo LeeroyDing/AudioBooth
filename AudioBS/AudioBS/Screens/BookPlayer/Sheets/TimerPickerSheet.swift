@@ -6,7 +6,7 @@ struct TimerPickerSheet: View {
   @State private var isCustomExpended: Bool = false
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       VStack(spacing: 0) {
         VStack(spacing: 24) {
           Text("Timer")

@@ -8,6 +8,9 @@ struct SearchPage: View {
   var body: some View {
     SearchView(model: model)
       .searchable(text: $model.searchText)
+      .navigationDestination(for: LibraryPage.Model.self) { library in
+        LibraryPage(model: library)
+      }
   }
 }
 

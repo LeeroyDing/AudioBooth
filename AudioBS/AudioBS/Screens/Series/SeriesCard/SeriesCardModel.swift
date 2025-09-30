@@ -4,7 +4,6 @@ import SwiftUI
 final class SeriesCardModel: SeriesCard.Model {
   init(series: Series) {
     let bookCovers = series.books.prefix(10).map(\.coverURL)
-
     let progress = Self.progress(books: series.books)
 
     super.init(

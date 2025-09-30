@@ -44,7 +44,9 @@ final class AuthorsPageModel: AuthorsPage.Model {
         ascending: true
       )
 
-      let authorCards = response.results.map(AuthorCardModel.init)
+      let authorCards = response.results.map { author in
+        AuthorCardModel(author: author)
+      }
 
       if currentPage == 0 {
         fetchedAuthors = authorCards

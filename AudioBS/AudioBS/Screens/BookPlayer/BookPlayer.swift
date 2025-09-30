@@ -9,7 +9,7 @@ struct BookPlayer: View {
   @StateObject private var playerManager = PlayerManager.shared
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       ZStack {
         LinearGradient(
           gradient: Gradient(colors: [Color.black, Color.gray.opacity(0.3)]),

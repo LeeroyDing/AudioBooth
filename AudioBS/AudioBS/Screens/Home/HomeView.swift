@@ -31,6 +31,9 @@ struct HomeView: View {
       }
     }
     .navigationTitle(model.title)
+    .navigationDestination(for: LibraryPage.Model.self) { library in
+      LibraryPage(model: library)
+    }
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
         Button {
