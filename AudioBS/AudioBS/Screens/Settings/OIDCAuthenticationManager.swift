@@ -86,7 +86,6 @@ final class OIDCAuthenticationManager: NSObject {
 
     Task {
       do {
-
         try await Audiobookshelf.shared.authentication.loginWithOIDC(
           serverURL: serverURL,
           code: authCode,
@@ -146,62 +145,13 @@ final class OIDCAuthenticationManager: NSObject {
       withResponseHeaderFields: httpResponse.allHeaderFields as! [String: String], for: authURL)
 
     if httpResponse.statusCode == 302,
-      let locationString = httpResponse.allHeaderFields["Location"] as? String
+      let locationString = httpResponse.allHeaderFields["Location"] as? String,
+      let redirectURL = URL(string: locationString)
     {
-
-      guard var redirectComponents = URLComponents(string: locationString) else {
-        throw URLError(.badServerResponse)
-      }
-
-      // Update the redirect_uri parameter to use our custom scheme
-      if var queryItems = redirectComponents.queryItems {
-        for i in 0..<queryItems.count {
-          if queryItems[i].name == "redirect_uri" {
-            queryItems[i].value = "audiobs://oauth"
-            break
-          }
-        }
-        redirectComponents.queryItems = queryItems
-      }
-
-      guard let updatedRedirectURL = redirectComponents.url else {
-        throw URLError(.badServerResponse)
-      }
-
-      if let components = URLComponents(url: updatedRedirectURL, resolvingAgainstBaseURL: false),
-        let queryItems = components.queryItems,
-        let code = queryItems.first(where: { $0.name == "code" })?.value
-      {
-
-        let state = queryItems.first(where: { $0.name == "state" })?.value
-        self.handleDirectCallback(code: code, state: state)
-
-        return (updatedRedirectURL, cookies)
-      }
-
-      return (updatedRedirectURL, cookies)
+      return (redirectURL, cookies)
     }
 
     throw URLError(.badServerResponse)
-  }
-
-  private func handleDirectCallback(code: String, state: String?) {
-    Task {
-      do {
-
-        try await Audiobookshelf.shared.authentication.loginWithOIDC(
-          serverURL: serverURL,
-          code: code,
-          verifier: pkce.verifier,
-          state: state,
-          cookies: capturedCookies
-        )
-
-        delegate?.oidcAuthenticationDidSucceed()
-      } catch {
-        delegate?.oidcAuthentication(didFailWithError: error)
-      }
-    }
   }
 }
 
