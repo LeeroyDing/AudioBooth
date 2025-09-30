@@ -44,7 +44,7 @@ final class SettingsViewModel: SettingsView.Model {
         navigationPath.append("libraries")
       } catch {
         print("Login failed: \(error.localizedDescription)")
-        ToastManager.shared.show(error: "Login failed: \(error.localizedDescription)")
+        Toast(error: "Login failed: \(error.localizedDescription)").show()
         isAuthenticated = false
       }
 
@@ -69,7 +69,7 @@ final class SettingsViewModel: SettingsView.Model {
   }
 
   func showError(_ message: String) {
-    ToastManager.shared.show(error: message)
+    Toast(error: message).show()
     isLoading = false
   }
 
@@ -78,10 +78,10 @@ final class SettingsViewModel: SettingsView.Model {
       do {
         try RecentlyPlayedItem.deleteAll()
         PlayerManager.shared.clearCurrent()
-        ToastManager.shared.show(success: "Storage cleared successfully")
+        Toast(success: "Storage cleared successfully").show()
       } catch {
         print("Failed to clear storage: \(error.localizedDescription)")
-        ToastManager.shared.show(error: "Failed to clear storage: \(error.localizedDescription)")
+        Toast(error: "Failed to clear storage: \(error.localizedDescription)").show()
       }
     }
   }
@@ -134,7 +134,7 @@ extension SettingsViewModel: OIDCAuthenticationDelegate {
     navigationPath.append("libraries")
     isLoading = false
     oidcAuthManager = nil
-    ToastManager.shared.show(success: "Successfully authenticated with SSO")
+    Toast(success: "Successfully authenticated with SSO").show()
   }
 
   func oidcAuthentication(didFailWithError error: Error) {

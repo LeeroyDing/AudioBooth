@@ -4,7 +4,6 @@ import SwiftUI
 
 struct ContentView: View {
   @StateObject private var playerManager = PlayerManager.shared
-  @State private var toastManager = ToastManager.shared
   @AppStorage("audiobookshelf_selected_library") private var libraryData: Data?
   @Environment(\.scenePhase) private var scenePhase
 
@@ -33,17 +32,6 @@ struct ContentView: View {
         BookPlayer(model: .constant(currentPlayer))
           .presentationDetents([.large])
           .presentationDragIndicator(.visible)
-      }
-    }
-    .overlay(alignment: .top) {
-      if let toast = toastManager.currentToast {
-        ToastView(toast: toast) {
-          toastManager.dismissToast()
-        }
-        .transition(.move(edge: .top).combined(with: .opacity))
-        .animation(.spring(duration: 0.4), value: toastManager.currentToast != nil)
-        .zIndex(999)
-        .padding(.top, 50)
       }
     }
     .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification))

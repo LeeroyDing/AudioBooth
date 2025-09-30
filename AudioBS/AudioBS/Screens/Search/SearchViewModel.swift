@@ -55,7 +55,7 @@ final class SearchViewModel: SearchView.Model {
     } catch {
       if !Task.isCancelled {
         print("Failed to perform search: \(error)")
-        ToastManager.shared.show(error: "Search failed")
+        Toast(error: "Search failed").show()
         clearResults()
       }
     }

@@ -190,7 +190,7 @@ extension BookPlayerModel {
     } else {
       guard let serverURL = audiobookshelf.authentication.serverURL else {
         print("No server URL available")
-        ToastManager.shared.show(error: "No server URL available")
+        Toast(error: "No server URL available").show()
         isLoading = false
         PlayerManager.shared.clearCurrent()
         throw Audiobookshelf.AudiobookshelfError.networkError("No server URL available")
@@ -198,7 +198,7 @@ extension BookPlayerModel {
 
       guard let streamingURL = sessionInfo.streamingURL(at: 0, serverURL: serverURL) else {
         print("Failed to get streaming URL - sessionInfo.streamingURL returned nil")
-        ToastManager.shared.show(error: "Failed to get streaming URL")
+        Toast(error: "Failed to get streaming URL").show()
         isLoading = false
         PlayerManager.shared.clearCurrent()
         throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get streaming URL")
@@ -256,7 +256,7 @@ extension BookPlayerModel {
 
   private func handleLoadError(_ error: Error) {
     print("Failed to setup player: \(error)")
-    ToastManager.shared.show(error: "Failed to setup audio player")
+    Toast(error: "Failed to setup audio player").show()
     isLoading = false
     PlayerManager.shared.clearCurrent()
   }
@@ -271,7 +271,7 @@ extension BookPlayerModel {
       }
     } catch {
       print("Failed to fetch existing recently played item: \(error)")
-      ToastManager.shared.show(error: "Failed to load playback progress")
+      Toast(error: "Failed to load playback progress").show()
     }
   }
 
@@ -414,7 +414,7 @@ extension BookPlayerModel {
             self?.isLoading = false
             let errorMessage = currentItem.error?.localizedDescription ?? "Unknown error"
             print("Player item failed: \(errorMessage)")
-            ToastManager.shared.show(error: "Audio playback failed: \(errorMessage)")
+            Toast(error: "Audio playback failed: \(errorMessage)").show()
             PlayerManager.shared.clearCurrent()
           case .unknown:
             self?.isLoading = true
@@ -543,7 +543,7 @@ extension BookPlayerModel {
       }
     } catch {
       print("Failed to save recently played item: \(error)")
-      ToastManager.shared.show(error: "Failed to save playback progress")
+      Toast(error: "Failed to save playback progress").show()
     }
   }
 
@@ -589,7 +589,7 @@ extension BookPlayerModel {
             let streamingURL = sessionInfo.streamingURL(at: 0, serverURL: serverURL)
           else {
             print("Failed to get local streaming URL")
-            ToastManager.shared.show(error: "Failed to get local streaming URL")
+            Toast(error: "Failed to get local streaming URL").show()
             return
           }
           playerItem = AVPlayerItem(url: streamingURL)
@@ -607,7 +607,7 @@ extension BookPlayerModel {
 
       } catch {
         print("Failed to refresh player for local playback: \(error)")
-        ToastManager.shared.show(error: "Failed to switch to downloaded files")
+        Toast(error: "Failed to switch to downloaded files").show()
       }
     }
   }
@@ -675,7 +675,7 @@ extension BookPlayerModel {
         syncSessionProgress()
       } catch {
         print("Failed to update recently played progress: \(error)")
-        ToastManager.shared.show(error: "Failed to update playback progress")
+        Toast(error: "Failed to update playback progress").show()
       }
     }
   }

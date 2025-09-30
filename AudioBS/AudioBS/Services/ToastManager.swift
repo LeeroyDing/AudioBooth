@@ -1,38 +1,9 @@
+import Combine
 import SwiftUI
+import UIKit
 
-@Observable
-
-final class ToastManager {
-  static let shared = ToastManager()
-
-  var currentToast: ToastMessage?
-
-  private init() {}
-
-  func show(error message: String) {
-    currentToast = ToastMessage(message: message, type: .error)
-
-    Task {
-      try? await Task.sleep(for: .seconds(3))
-      dismissToast()
-    }
-  }
-
-  func show(success message: String) {
-    currentToast = ToastMessage(message: message, type: .success)
-
-    Task {
-      try? await Task.sleep(for: .seconds(3))
-      dismissToast()
-    }
-  }
-
-  func dismissToast() {
-    currentToast = nil
-  }
-}
-
-struct ToastMessage {
+@MainActor
+public struct Toast {
   let message: String
   let type: ToastType
 
@@ -40,10 +11,116 @@ struct ToastMessage {
     case error
     case success
   }
+
+  private static var toasts = [UUID: Toast]()
+
+  public init(error message: String) {
+    self.message = message
+    self.type = .error
+  }
+
+  public init(success message: String) {
+    self.message = message
+    self.type = .success
+  }
+
+  public func show() {
+    Toast.toasts.forEach { $0.value.dismiss() }
+
+    let id = UUID()
+    Toast.toasts[id] = self
+
+    Task { @MainActor in
+      let window: UIWindow
+      if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+        window = PassThroughWindow(windowScene: windowScene)
+      } else {
+        window = PassThroughWindow()
+      }
+      window.backgroundColor = .clear
+      window.windowLevel = .alert
+
+      let model = ToastPage.Model()
+      let rootView = ToastPage(toast: self, model: model)
+      let rootViewController = UIHostingController(rootView: rootView)
+      rootViewController.view.backgroundColor = .clear
+      window.rootViewController = rootViewController
+      window.isHidden = false
+
+      try? await Task.sleep(for: .seconds(type == .error ? 5 : 3))
+      model.visible = false
+      try? await Task.sleep(for: .seconds(0.2))
+
+      Toast.toasts[id] = nil
+    }
+  }
+
+  func dismiss() {
+    if let entry = Toast.toasts.first(where: { $0.value.message == message }) {
+      Toast.toasts[entry.key] = nil
+    }
+  }
+
+  private class PassThroughWindow: UIWindow {
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+      guard let hitView = super.hitTest(point, with: event) else { return nil }
+
+      let rootView = rootViewController?.view
+
+      guard hitView == rootView else { return hitView }
+
+      if rootView?.subviews.contains(where: {
+        let convertedPoint = $0.convert(point, from: hitView)
+        let innerView = $0.hitTest(convertedPoint, with: event)
+        return innerView != rootView && innerView != nil
+      }) == true {
+        return hitView
+      } else {
+        return nil
+      }
+    }
+  }
+}
+
+struct ToastPage: View {
+  let toast: Toast
+
+  @ObservedObject var model: Model
+
+  class Model: ObservableObject {
+    @Published var visible: Bool = false
+  }
+
+  var body: some View {
+    GeometryReader { geometry in
+      VStack {
+        if model.visible {
+          ToastView(toast: toast, onDismiss: { model.visible = false })
+            .padding(.top, max(geometry.safeAreaInsets.top, 50))
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+        Spacer()
+      }
+      .ignoresSafeArea()
+      .animation(.spring(duration: 0.4), value: model.visible)
+      .onAppear {
+        DispatchQueue.main.async {
+          model.visible = true
+        }
+      }
+      .gesture(
+        DragGesture(minimumDistance: 3.0, coordinateSpace: .local).onEnded { value in
+          if -100...100 ~= value.translation.width, value.translation.height < 0 {
+            model.visible = false
+          }
+        }
+      )
+    }
+  }
 }
 
 struct ToastView: View {
-  let toast: ToastMessage
+  let toast: Toast
   let onDismiss: () -> Void
 
   var body: some View {
@@ -61,7 +138,7 @@ struct ToastView: View {
       Image(systemName: iconName)
         .foregroundColor(iconColor)
 
-      Text(toast.message)
+      Text(markdown)
         .font(.body)
         .foregroundColor(.primary)
 
@@ -78,13 +155,21 @@ struct ToastView: View {
     .padding(.horizontal)
   }
 
+  var markdown: AttributedString {
+    do {
+      return try AttributedString(markdown: toast.message)
+    } catch {
+      return AttributedString(stringLiteral: toast.message)
+    }
+  }
+
   @ViewBuilder
   private var legacyToast: some View {
     HStack {
       Image(systemName: iconName)
         .foregroundColor(iconColor)
 
-      Text(toast.message)
+      Text(markdown)
         .font(.body)
         .foregroundColor(.white)
 
@@ -137,8 +222,8 @@ struct ToastView: View {
 
 #Preview {
   VStack(spacing: 20) {
-    ToastView(toast: ToastMessage(message: "Something went wrong!", type: .error)) {}
-    ToastView(toast: ToastMessage(message: "Success!", type: .success)) {}
+    ToastView(toast: Toast(error: "Something went wrong!")) {}
+    ToastView(toast: Toast(success: "Success!")) {}
   }
   .padding()
 }

@@ -101,10 +101,11 @@ final class BookCardModel: BookCard.Model {
           bookID: book.id, isFinished: isFinished)
         try? MediaProgress.updateFinishedStatus(
           for: book.id, isFinished: isFinished, duration: book.duration)
-        ToastManager.shared.show(
-          success: isFinished ? "Marked as finished" : "Marked as not finished")
+        Toast(
+          success: isFinished ? "Marked as finished" : "Marked as not finished"
+        ).show()
       } catch {
-        ToastManager.shared.show(error: "Failed to update finished status")
+        Toast(error: "Failed to update finished status").show()
       }
     }
   }

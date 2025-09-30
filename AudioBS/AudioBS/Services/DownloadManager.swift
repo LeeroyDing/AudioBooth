@@ -34,7 +34,7 @@ final class DownloadManager: ObservableObject {
     guard let tracks = sessionInfo.orderedTracks, let serverURL = audiobookshelf.serverURL
     else {
       print("Cannot start download: missing session info or tracks")
-      ToastManager.shared.show(error: "Cannot start download: missing session info")
+      Toast(error: "Cannot start download: missing session info").show()
       return
     }
 
@@ -98,14 +98,14 @@ final class DownloadManager: ObservableObject {
             print("Successfully saved download information to database")
           } catch {
             print("Failed to save download information: \(error)")
-            ToastManager.shared.show(error: "Failed to save download information")
+            Toast(error: "Failed to save download information").show()
           }
         }
 
         await MainActor.run {
           downloads.removeValue(forKey: bookID)
           print("Download completed successfully")
-          ToastManager.shared.show(success: "Download completed successfully")
+          Toast(success: "Download completed successfully").show()
 
           NotificationCenter.default.post(
             name: Notification.Name("DownloadCompleted"), object: bookID)
@@ -115,7 +115,7 @@ final class DownloadManager: ObservableObject {
         print("Download failed: \(error)")
         await MainActor.run {
           downloads.removeValue(forKey: bookID)
-          ToastManager.shared.show(error: "Download failed")
+          Toast(error: "Download failed").show()
         }
       }
 
@@ -149,7 +149,7 @@ final class DownloadManager: ObservableObject {
       } catch {
         await MainActor.run {
           downloads.removeValue(forKey: bookID)
-          ToastManager.shared.show(error: "Failed to start download: \(error.localizedDescription)")
+          Toast(error: "Failed to start download: \(error.localizedDescription)").show()
           print("Failed to start download for book \(book.title): \(error)")
         }
       }
@@ -196,7 +196,7 @@ final class DownloadManager: ObservableObject {
         print("Download deleted successfully for book: \(bookID)")
       } catch {
         print("Failed to delete download directory \(bookDirectory.path): \(error)")
-        ToastManager.shared.show(error: "Failed to delete download: \(error.localizedDescription)")
+        Toast(error: "Failed to delete download: \(error.localizedDescription)").show()
       }
     }
   }

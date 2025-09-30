@@ -45,7 +45,7 @@ final class LibrariesViewModel: LibrariesView.Model {
       self.rows = data.map({ Row(id: $0.id, name: $0.name) })
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     } catch {
-      ToastManager.shared.show(error: "Failed to load libraries")
+      Toast(error: "Failed to load libraries").show()
     }
 
     isLoading = false
