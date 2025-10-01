@@ -22,6 +22,7 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   private var lastSyncAt = Date()
 
   private let downloadManager = DownloadManager.shared
+  private let watchConnectivity = WatchConnectivityManager.shared
 
   private var cover: UIImage?
 
@@ -290,6 +291,7 @@ extension BookPlayerModel {
         saveRecentlyPlayedItem()
 
         isLoading = false
+        sendWatchUpdate()
       } catch {
         handleLoadError(error)
       }
@@ -465,6 +467,10 @@ extension BookPlayerModel {
           self.updateRecentlyPlayedProgress()
         }
 
+        if self.timerSecondsCounter % 2 == 0 {
+          self.sendWatchUpdate()
+        }
+
         self.updateNowPlayingInfo()
       }
     }
@@ -627,6 +633,8 @@ extension BookPlayerModel {
       lastPlaybackAt = nil
     }
     try? mediaProgress.save()
+
+    sendWatchUpdate()
   }
 
   private func syncSessionProgress() {
@@ -708,6 +716,24 @@ extension BookPlayerModel {
         print("Failed to close session: \(error)")
       }
     }
+  }
+
+  private func sendWatchUpdate() {
+    let playbackProgress = self.playbackProgress
+
+    watchConnectivity.sendPlaybackState(
+      isPlaying: isPlaying,
+      progress: playbackProgress.progress,
+      current: playbackProgress.current,
+      remaining: playbackProgress.remaining,
+      total: playbackProgress.total,
+      totalTimeRemaining: playbackProgress.totalTimeRemaining,
+      bookID: id,
+      title: title,
+      author: author,
+      coverURL: coverURL,
+      playbackSpeed: speed.playbackSpeed
+    )
   }
 
 }

@@ -9,6 +9,7 @@ final class PlayerManager: ObservableObject {
   static let shared = PlayerManager()
 
   private static let currentBookIDKey = "currentBookID"
+  private let watchConnectivity = WatchConnectivityManager.shared
 
   private init() {
     Task { @MainActor in
@@ -66,6 +67,7 @@ final class PlayerManager: ObservableObject {
     current = nil
     isShowingFullPlayer = false
     UserDefaults.standard.removeObject(forKey: Self.currentBookIDKey)
+    watchConnectivity.clearPlaybackState()
   }
 
   func showFullPlayer() {

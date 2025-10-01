@@ -5,10 +5,15 @@ import SwiftUI
 final class HomeViewModel: HomeView.Model {
   private let downloadManager = DownloadManager.shared
   private var playerManager = PlayerManager.shared
+  private let watchConnectivity = WatchConnectivityManager.shared
 
   private var recentItemsTask: Task<Void, Never>?
 
-  private var recentlyPlayed: [RecentlyPlayedItem] = []
+  private var recentlyPlayed: [RecentlyPlayedItem] = [] {
+    didSet {
+      watchConnectivity.sendRecentlyPlayedList(recentlyPlayed)
+    }
+  }
 
   private var continueListening: [Book] = [] {
     didSet { refreshRecents() }

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		3F6E94DD2E6395A20039F187 /* Audiobookshelf in Frameworks */ = {isa = PBXBuildFile; productRef = 3F6E94DC2E6395A20039F187 /* Audiobookshelf */; };
 		3FBEA06F2E8CD49400976BA0 /* AudioBS Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3FBEA0832E8CE7D600976BA0 /* Audiobookshelf in Frameworks */ = {isa = PBXBuildFile; productRef = 3FBEA0822E8CE7D600976BA0 /* Audiobookshelf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +73,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FBEA0832E8CE7D600976BA0 /* Audiobookshelf in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -141,6 +143,7 @@
 			);
 			name = "AudioBS Watch App";
 			packageProductDependencies = (
+				3FBEA0822E8CE7D600976BA0 /* Audiobookshelf */,
 			);
 			productName = "AudioBS Mini Watch App";
 			productReference = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */;
@@ -282,7 +285,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10;
 			};
 			name = Debug;
 		};
@@ -314,7 +317,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10;
 			};
 			name = Release;
 		};
@@ -547,6 +550,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		3F6E94DC2E6395A20039F187 /* Audiobookshelf */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Audiobookshelf;
+		};
+		3FBEA0822E8CE7D600976BA0 /* Audiobookshelf */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Audiobookshelf;
 		};

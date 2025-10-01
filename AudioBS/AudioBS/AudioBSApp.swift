@@ -6,6 +6,7 @@ import UIKit
 struct AudioBSApp: App {
   init() {
     DownloadManager.shared.cleanupOrphanedDownloads()
+    _ = WatchConnectivityManager.shared
   }
 
   var body: some Scene {
