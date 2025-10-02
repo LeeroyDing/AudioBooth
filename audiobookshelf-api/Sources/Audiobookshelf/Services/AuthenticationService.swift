@@ -4,9 +4,7 @@ import Nuke
 
 public final class AuthenticationService {
   private let audiobookshelf: Audiobookshelf
-  private let keychain = Keychain(
-    service: "me.jgrenier.AudioBS", accessGroup: "7MM2M9KD2W.me.jgrenier.AudioBS"
-  ).synchronizable(true)
+  private let keychain = Keychain(service: "me.jgrenier.AudioBS")
 
   public var onAuthenticationChanged: ((URL, String)?) -> Void = { _ in }
 

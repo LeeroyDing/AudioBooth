@@ -30,7 +30,7 @@ struct Cover: View {
       EmptyView()
     case .downloading:
       ProgressView()
-        .scaleEffect(0.7)
+        .controlSize(.mini)
         .frame(width: 14, height: 14)
         .foregroundColor(.white)
         .padding(.trailing, 4)
@@ -41,7 +41,7 @@ struct Cover: View {
         }
     case .notDownloaded:
       Image(systemName: "arrow.down.to.line")
-        .font(.system(size: 12, weight: .medium))
+        .font(.system(size: 12, weight: .bold))
         .frame(width: 14, height: 14)
         .foregroundColor(.white)
         .padding(.trailing, 4)

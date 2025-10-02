@@ -47,6 +47,8 @@ public final class Audiobookshelf: @unchecked Sendable {
       configuration.httpAdditionalHeaders = [
         "Authorization": "Bearer \(connection.token)"
       ]
+      configuration.timeoutIntervalForRequest = 30
+      configuration.timeoutIntervalForResource = 60
     }
   }
 

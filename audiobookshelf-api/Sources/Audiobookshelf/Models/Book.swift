@@ -8,7 +8,7 @@ public struct Book: Codable, Sendable {
   public let media: Media
   public let authorName: String?
   public let publishedYear: String?
-  public let size: Int?
+  public let size: Int64?
   public let addedAt: Date
   public let updatedAt: Date
   public let sequence: String?
@@ -72,10 +72,10 @@ public struct Book: Codable, Sendable {
     self.id = try container.decode(String.self, forKey: .id)
     self.libraryID = try container.decode(String.self, forKey: .libraryId)
 
-    let addedAtMs = try container.decode(Int.self, forKey: .addedAt)
+    let addedAtMs = try container.decode(Int64.self, forKey: .addedAt)
     self.addedAt = Date(timeIntervalSince1970: TimeInterval(addedAtMs) / 1000.0)
 
-    let updatedAtMs = try container.decode(Int.self, forKey: .updatedAt)
+    let updatedAtMs = try container.decode(Int64.self, forKey: .updatedAt)
     self.updatedAt = Date(timeIntervalSince1970: TimeInterval(updatedAtMs) / 1000.0)
 
     let mediaContainer = try container.nestedContainer(keyedBy: MediaKeys.self, forKey: .media)
@@ -97,7 +97,7 @@ public struct Book: Codable, Sendable {
     }
     self.authorName = try metadataContainer.decodeIfPresent(String.self, forKey: .authorName)
     self.publishedYear = try metadataContainer.decodeIfPresent(String.self, forKey: .publishedYear)
-    self.size = try mediaContainer.decodeIfPresent(Int.self, forKey: .size)
+    self.size = try mediaContainer.decodeIfPresent(Int64.self, forKey: .size)
 
     let seriesContainer = try? metadataContainer.nestedContainer(
       keyedBy: SeriesKeys.self, forKey: .series)
@@ -108,8 +108,8 @@ public struct Book: Codable, Sendable {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encode(id, forKey: .id)
     try container.encode(libraryID, forKey: .libraryId)
-    try container.encode(Int(addedAt.timeIntervalSince1970 * 1000), forKey: .addedAt)
-    try container.encode(Int(updatedAt.timeIntervalSince1970 * 1000), forKey: .updatedAt)
+    try container.encode(Int64(addedAt.timeIntervalSince1970 * 1000), forKey: .addedAt)
+    try container.encode(Int64(updatedAt.timeIntervalSince1970 * 1000), forKey: .updatedAt)
 
     var mediaContainer = container.nestedContainer(keyedBy: MediaKeys.self, forKey: .media)
     try mediaContainer.encode(duration, forKey: .duration)

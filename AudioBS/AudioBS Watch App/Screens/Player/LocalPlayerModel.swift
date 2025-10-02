@@ -78,7 +78,7 @@ final class LocalPlayerModel: PlayerView.Model {
   }
 
   override func togglePlayback() {
-    guard let player = player else { return }
+    guard let player else { return }
 
     if isPlaying {
       player.rate = 0
@@ -88,14 +88,14 @@ final class LocalPlayerModel: PlayerView.Model {
   }
 
   override func skipForward() {
-    guard let player = player else { return }
+    guard let player else { return }
     let currentTime = player.currentTime()
     let newTime = CMTimeAdd(currentTime, CMTime(seconds: 30, preferredTimescale: 1))
     player.seek(to: newTime)
   }
 
   override func skipBackward() {
-    guard let player = player else { return }
+    guard let player else { return }
     let currentTime = player.currentTime()
     let newTime = CMTimeSubtract(currentTime, CMTime(seconds: 30, preferredTimescale: 1))
     let zeroTime = CMTime(seconds: 0, preferredTimescale: 1)
@@ -103,7 +103,7 @@ final class LocalPlayerModel: PlayerView.Model {
   }
 
   func seekToChapter(at index: Int) {
-    guard let player = player, !chaptersList.isEmpty, index >= 0, index < chaptersList.count else {
+    guard let player, !chaptersList.isEmpty, index >= 0, index < chaptersList.count else {
       return
     }
     let chapter = chaptersList[index]
@@ -296,15 +296,20 @@ extension LocalPlayerModel {
 
 extension LocalPlayerModel {
   private func configureAudioSession() {
-    do {
-      let audioSession = AVAudioSession.sharedInstance()
-      try audioSession.setCategory(.playback, mode: .spokenAudio)
+    Task {
+      do {
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(
+          .playback,
+          mode: .spokenAudio,
+          policy: .longFormAudio,
+          options: []
+        )
 
-      if !audioSession.isOtherAudioPlaying {
-        try audioSession.setActive(true)
+        try await audioSession.activate()
+      } catch {
+        print("Failed to configure audio session: \(error)")
       }
-    } catch {
-      print("Failed to configure audio session: \(error)")
     }
   }
 
@@ -351,7 +356,7 @@ extension LocalPlayerModel {
   }
 
   private func setupPlayerObservers() {
-    guard let player = player else { return }
+    guard let player else { return }
 
     player.publisher(for: \.rate)
       .receive(on: DispatchQueue.main)
@@ -385,7 +390,7 @@ extension LocalPlayerModel {
   }
 
   private func setupTimeObserver() {
-    guard let player = player else { return }
+    guard let player else { return }
 
     let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
     let backgroundQueue = DispatchQueue(label: "timeObserver", qos: .userInitiated)

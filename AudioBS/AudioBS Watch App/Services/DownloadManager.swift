@@ -55,14 +55,23 @@ final class DownloadManager: ObservableObject {
             continue
           }
 
-          print("Starting download of track \(track.index) (\(index + 1)/\(tracks.count))")
+          print(
+            "Starting download of track \(track.index) (\(index + 1)/\(tracks.count)) at \(trackURL)"
+          )
 
           let (tempURL, response) = try await URLSession.shared.download(from: trackURL)
 
-          guard let httpResponse = response as? HTTPURLResponse,
-            let contentType = httpResponse.allHeaderFields["Content-Type"] as? String
+          guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+          }
+
+          guard httpResponse.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+          }
+
+          guard let contentType = httpResponse.allHeaderFields["Content-Type"] as? String,
+            contentType.lowercased().hasPrefix("audio/")
           else {
-            print("ERROR: No Content-Type header for track \(track.index)")
             throw URLError(.badServerResponse)
           }
 

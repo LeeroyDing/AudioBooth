@@ -1,3 +1,4 @@
+import Audiobookshelf
 import Combine
 import Models
 import SwiftUI
@@ -9,18 +10,29 @@ struct ContentView: View {
   @StateObject private var model: Model = Model()
 
   var body: some View {
-    NavigationStack {
-      ContinueListeningView(model: ContinueListeningViewModel())
-        .toolbar {
-          toolbar
-        }
-        .sheet(item: $model.player) { model in
-          PlayerView(model: model)
-        }
-        .onChange(of: playerManager.isShowingFullPlayer) { _, newValue in
-          guard newValue, let model = playerManager.current else { return }
-          self.model.player = model
-        }
+    if Audiobookshelf.shared.authentication.connection == nil {
+      VStack {
+        ProgressView()
+          .controlSize(.large)
+        Text("Authenticating...")
+          .font(.caption)
+          .foregroundColor(.secondary)
+          .padding(.top, 8)
+      }
+    } else {
+      NavigationStack {
+        ContinueListeningView(model: ContinueListeningViewModel())
+          .toolbar {
+            toolbar
+          }
+          .sheet(item: $model.player) { model in
+            PlayerView(model: model)
+          }
+          .onChange(of: playerManager.isShowingFullPlayer) { _, newValue in
+            guard newValue, let model = playerManager.current else { return }
+            self.model.player = model
+          }
+      }
     }
   }
 

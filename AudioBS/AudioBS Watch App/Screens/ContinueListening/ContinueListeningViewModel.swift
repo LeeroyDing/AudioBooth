@@ -116,9 +116,7 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
         do {
           let recentItem: RecentlyPlayedItem
 
-          if let existingItem = try await MainActor.run(body: {
-            try RecentlyPlayedItem.fetch(bookID: bookID)
-          }) {
+          if let existingItem = try RecentlyPlayedItem.fetch(bookID: bookID) {
             recentItem = existingItem
           } else {
             print("No cached item found, creating from server...")

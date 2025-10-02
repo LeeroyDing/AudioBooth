@@ -69,7 +69,7 @@ public final class SessionService {
       path: "/api/items/\(itemID)/play",
       method: .post,
       body: PlayRequest(forceDirectPlay: forceDirectPlay, forceTranscode: false),
-      timeout: 3
+      timeout: 5
     )
 
     do {
