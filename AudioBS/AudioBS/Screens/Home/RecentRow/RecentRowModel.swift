@@ -94,8 +94,8 @@ final class RecentRowModel: RecentRow.Model {
   private func setupProgressObservation() {
     let id = id
     mediaProgressObservation = Task { [weak self] in
-      for await progress in MediaProgress.observe(bookID: id) {
-        guard !Task.isCancelled, let self = self, let progress else { continue }
+      for await progress in MediaProgress.observe(where: \.bookID, equals: id) {
+        guard !Task.isCancelled, let self = self else { continue }
         guard !AppStateManager.shared.isInBackground else { continue }
 
         self.progress = progress.progress

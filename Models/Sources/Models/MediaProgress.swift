@@ -1,4 +1,5 @@
 import Audiobookshelf
+import CoreData
 @preconcurrency import Foundation
 import SwiftData
 
@@ -62,46 +63,31 @@ extension MediaProgress {
     return results
   }
 
-  public static func observe(bookID: String) -> AsyncStream<MediaProgress?> {
-    let stream = AsyncStream { continuation in
-      Task { @MainActor in
-        let ctx = ModelContextProvider.shared.context
-        let predicate = #Predicate<MediaProgress> { progress in
-          progress.bookID == bookID
-        }
-        let descriptor = FetchDescriptor<MediaProgress>(predicate: predicate)
-
-        let fetchData = { @MainActor in
-          do {
-            let results = try ctx.fetch(descriptor)
-            continuation.yield(results.first)
-          } catch {
-            continuation.yield(nil)
-          }
-        }
-
-        fetchData()
-
-        let observer = NotificationCenter.default.addObserver(
-          forName: ModelContext.didSave,
-          object: ctx,
-          queue: .main
-        ) { _ in
-          Task { @MainActor in
-            fetchData()
-          }
-        }
-
-        continuation.onTermination = { @Sendable _ in
-          Task { @MainActor in
-            NotificationCenter.default.removeObserver(observer)
-          }
-        }
-      }
-    }
-
-    return stream
-  }
+  //  public static func observe(bookID: String) -> AsyncStream<MediaProgress> {
+  //    AsyncStream { continuation in
+  //      let task = Task { @MainActor in
+  //        for await notification in NotificationCenter.default.notifications(named: ModelContext.didSave) {
+  //          guard
+  //            let modelContext = notification.object as? ModelContext,
+  //            let userInfo = notification.userInfo
+  //          else { continue }
+  //
+  //          let updates = (userInfo[NSUpdatedObjectsKey] as? [PersistentIdentifier]) ?? []
+  //
+  //          for identifier in updates {
+  //            if let model: MediaProgress = modelContext.registeredModel(for: identifier), model.bookID == bookID {
+  //              nonisolated(unsafe) let model = model
+  //              continuation.yield(model)
+  //            }
+  //          }
+  //        }
+  //      }
+  //
+  //      continuation.onTermination = { _ in
+  //        task.cancel()
+  //      }
+  //    }
+  //  }
 
   public static func fetch(bookID: String) throws -> MediaProgress? {
     let context = ModelContextProvider.shared.context

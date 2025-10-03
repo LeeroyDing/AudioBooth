@@ -32,42 +32,6 @@ extension RecentlyPlayedItem {
     return try context.fetch(descriptor)
   }
 
-  public static func observeAll() -> AsyncStream<[RecentlyPlayedItem]> {
-    AsyncStream { continuation in
-      Task { @MainActor in
-        let ctx = ModelContextProvider.shared.context
-        let descriptor = FetchDescriptor<RecentlyPlayedItem>()
-
-        let fetchData = { @MainActor in
-          do {
-            let items = try ctx.fetch(descriptor)
-            continuation.yield(items)
-          } catch {
-            continuation.yield([])
-          }
-        }
-
-        fetchData()
-
-        let observer = NotificationCenter.default.addObserver(
-          forName: ModelContext.didSave,
-          object: ctx,
-          queue: .main
-        ) { _ in
-          Task { @MainActor in
-            fetchData()
-          }
-        }
-
-        continuation.onTermination = { @Sendable _ in
-          Task { @MainActor in
-            NotificationCenter.default.removeObserver(observer)
-          }
-        }
-      }
-    }
-  }
-
   public static func fetch(bookID: String) throws -> RecentlyPlayedItem? {
     let context = ModelContextProvider.shared.context
     let predicate = #Predicate<RecentlyPlayedItem> { item in
