@@ -86,10 +86,10 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
   func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any])
   {
-    handleAuthCredentials(applicationContext)
-    handleLibrary(applicationContext)
+    Task { @MainActor in
+      handleAuthCredentials(applicationContext)
+      handleLibrary(applicationContext)
 
-    DispatchQueue.main.async {
       if let hasActivePlayer = applicationContext["hasActivePlayer"] as? Bool,
         !hasActivePlayer
       {

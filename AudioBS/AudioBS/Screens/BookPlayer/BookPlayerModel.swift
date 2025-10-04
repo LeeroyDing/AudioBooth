@@ -19,6 +19,7 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   private var itemObservation: Task<Void, Never>?
   private var mediaProgress: MediaProgress
   private var timerSecondsCounter = 0
+  private var pendingPlay: Bool = false
 
   private var lastPlaybackAt: Date?
   private var lastSyncAt = Date()
@@ -73,7 +74,10 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
   }
 
   override func onTogglePlaybackTapped() {
-    guard let player = player else { return }
+    guard let player = player, player.status == .readyToPlay else {
+      pendingPlay = true
+      return
+    }
 
     if isPlaying {
       player.rate = 0
@@ -287,6 +291,11 @@ extension BookPlayerModel {
 
         isLoading = false
         sendWatchUpdate()
+
+        if pendingPlay {
+          player.rate = speed.playbackSpeed
+          pendingPlay = false
+        }
       } catch {
         handleLoadError(error)
       }
@@ -451,8 +460,7 @@ extension BookPlayerModel {
     guard let player = player else { return }
 
     let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-    let backgroundQueue = DispatchQueue(label: "timeObserver", qos: .userInitiated)
-    timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: backgroundQueue) {
+    timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: nil) {
       [weak self] time in
       guard let self else { return }
 

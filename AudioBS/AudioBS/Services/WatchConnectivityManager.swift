@@ -191,11 +191,25 @@ extension WatchConnectivityManager: WCSessionDelegate {
       do {
         if let recentItem = try RecentlyPlayedItem.fetch(bookID: bookID) {
           PlayerManager.shared.setCurrent(recentItem)
+          PlayerManager.shared.current?.onTogglePlaybackTapped()
+          PlayerManager.shared.showFullPlayer()
         } else {
-          print("Recently played item not found for bookID: \(bookID)")
+          print("Recently played item not found locally, fetching from server...")
+          let session = try await Audiobookshelf.shared.sessions.start(
+            itemID: bookID,
+            forceTranscode: false
+          )
+
+          if let book = session.libraryItem {
+            PlayerManager.shared.setCurrent(book)
+            PlayerManager.shared.current?.onTogglePlaybackTapped()
+            PlayerManager.shared.showFullPlayer()
+          } else {
+            print("No library item in session response")
+          }
         }
       } catch {
-        print("Failed to fetch recently played item: \(error)")
+        print("Failed to handle play command: \(error)")
       }
     }
   }

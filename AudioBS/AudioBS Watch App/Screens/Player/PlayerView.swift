@@ -54,7 +54,12 @@ struct PlayerView: View {
       playerManager.isShowingFullPlayer = false
     }
     .overlay {
-      VolumeView()
+      if model.isLocal {
+        VolumeView()
+      }
+    }
+    .sheet(item: $model.playbackDestination) { model in
+      PlaybackDestinationSheet(model: model)
     }
   }
 
@@ -71,15 +76,17 @@ struct PlayerView: View {
       )
     }
 
-    ToolbarItem(placement: .topBarTrailing) {
-      Button(
-        action: {
-          model.options.isPresented = true
-        },
-        label: {
-          Image(systemName: "ellipsis")
-        }
-      )
+    if model.isLocal {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button(
+          action: {
+            model.options.isPresented = true
+          },
+          label: {
+            Image(systemName: "ellipsis")
+          }
+        )
+      }
     }
 
     ToolbarItemGroup(placement: .bottomBar) {
@@ -187,6 +194,7 @@ extension PlayerView {
   class Model: ObservableObject, Identifiable {
     var isLoading: Bool = false
     var isReadyToPlay: Bool = false
+    var isLocal: Bool = false
 
     var isPlaying: Bool
     var progress: Double
@@ -200,6 +208,7 @@ extension PlayerView {
     var chapters: ChapterPickerSheet.Model?
     var downloadState: DownloadManager.DownloadState
     var options: PlayerOptionsSheet.Model
+    var playbackDestination: PlaybackDestinationSheet.Model?
 
     func togglePlayback() {}
     func skipBackward() {}
@@ -208,6 +217,8 @@ extension PlayerView {
 
     init(
       isPlaying: Bool = false,
+      isReadyToPlay: Bool = false,
+      isLocal: Bool = true,
       progress: Double = 0,
       current: Double = 0,
       remaining: Double = 0,
@@ -219,6 +230,8 @@ extension PlayerView {
       downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
       self.isPlaying = isPlaying
+      self.isReadyToPlay = isReadyToPlay
+      self.isLocal = isLocal
       self.progress = progress
       self.current = current
       self.remaining = remaining

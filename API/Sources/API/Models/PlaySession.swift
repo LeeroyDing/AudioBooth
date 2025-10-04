@@ -8,6 +8,7 @@ public struct PlaySession: Codable, Sendable {
   public let duration: Double
   public let audioTracks: [Track]?
   public let chapters: [Chapter]?
+  public let libraryItem: Book?
 
   public struct Track: Codable, Sendable {
     public let index: Int

@@ -115,69 +115,53 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
         }
       }
 
-      await MainActor.run {
-        self.books = items
-      }
+      self.books = items
     } catch {
       print("Failed to fetch continue listening: \(error)")
     }
   }
 
   override func playBook(bookID: String) {
-    #if DEBUG
-      let forceLocalPlayback = true  // Set to false to test with iPhone
-    #else
-      let forceLocalPlayback = false
-    #endif
+    Task {
+      do {
+        let recentItem: RecentlyPlayedItem
 
-    if !forceLocalPlayback && WCSession.default.isReachable {
-      print("iPhone is reachable - sending play command to iPhone")
-      connectivityManager.playBook(bookID: bookID)
-    } else {
-      print(
-        "Playing locally on watch (forced: \(forceLocalPlayback), reachable: \(WCSession.default.isReachable))"
-      )
-      Task {
-        do {
-          let recentItem: RecentlyPlayedItem
+        if let existingItem = try RecentlyPlayedItem.fetch(bookID: bookID) {
+          recentItem = existingItem
+        } else {
+          print("No cached item found, creating from server...")
 
-          if let existingItem = try RecentlyPlayedItem.fetch(bookID: bookID) {
-            recentItem = existingItem
-          } else {
-            print("No cached item found, creating from server...")
+          let session = try await Audiobookshelf.shared.sessions.start(
+            itemID: bookID,
+            forceTranscode: false
+          )
 
-            let session = try await Audiobookshelf.shared.sessions.start(
-              itemID: bookID,
-              forceTranscode: false
-            )
-
-            guard let book = books.first(where: { $0.id == bookID }) else {
-              print("Book not found in continue listening list")
-              return
-            }
-
-            let playSessionInfo = PlaySessionInfo(from: session)
-
-            recentItem = RecentlyPlayedItem(
-              bookID: bookID,
-              title: book.title,
-              author: book.author,
-              coverURL: book.coverURL,
-              playSessionInfo: playSessionInfo
-            )
-
-            try await MainActor.run {
-              try recentItem.save()
-            }
+          guard let book = books.first(where: { $0.id == bookID }) else {
+            print("Book not found in continue listening list")
+            return
           }
 
-          await MainActor.run {
-            playerManager.setCurrent(recentItem)
-            playerManager.isShowingFullPlayer = true
+          let playSessionInfo = PlaySessionInfo(from: session)
+
+          recentItem = RecentlyPlayedItem(
+            bookID: bookID,
+            title: book.title,
+            author: book.author,
+            coverURL: book.coverURL,
+            playSessionInfo: playSessionInfo
+          )
+
+          try await MainActor.run {
+            try recentItem.save()
           }
-        } catch {
-          print("Failed to setup playback: \(error)")
         }
+
+        await MainActor.run {
+          playerManager.setCurrent(recentItem)
+          playerManager.isShowingFullPlayer = true
+        }
+      } catch {
+        print("Failed to setup playback: \(error)")
       }
     }
   }

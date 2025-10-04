@@ -6,11 +6,12 @@ import SwiftUI
 struct ContentView: View {
   @ObservedObject var connectivityManager = WatchConnectivityManager.shared
   @ObservedObject var playerManager = PlayerManager.shared
+  @ObservedObject var libraries = Audiobookshelf.shared.libraries
 
   @StateObject private var model: Model = Model()
 
   var body: some View {
-    if Audiobookshelf.shared.authentication.connection == nil {
+    if Audiobookshelf.shared.authentication.connection == nil || libraries.current == nil {
       VStack {
         ProgressView()
           .controlSize(.large)
@@ -38,18 +39,7 @@ struct ContentView: View {
 
   @ToolbarContentBuilder
   var toolbar: some ToolbarContent {
-    if let localPlayer = playerManager.current {
-      ToolbarItem(placement: .topBarTrailing) {
-        Button(
-          action: {
-            model.player = localPlayer
-          },
-          label: {
-            Image(systemName: "applewatch")
-          }
-        )
-      }
-    } else if connectivityManager.hasActivePlayer {
+    if connectivityManager.hasActivePlayer && !playerManager.isPlaying {
       ToolbarItem(placement: .topBarTrailing) {
         Button(
           action: {
@@ -57,6 +47,17 @@ struct ContentView: View {
           },
           label: {
             Image(systemName: "iphone")
+          }
+        )
+      }
+    } else if let localPlayer = playerManager.current {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button(
+          action: {
+            model.player = localPlayer
+          },
+          label: {
+            Image(systemName: "applewatch")
           }
         )
       }

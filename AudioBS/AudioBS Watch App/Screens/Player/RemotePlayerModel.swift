@@ -6,8 +6,10 @@ final class RemotePlayerModel: PlayerView.Model {
   private let connectivityManager = WatchConnectivityManager.shared
 
   init() {
-    super.init()
+    super.init(isReadyToPlay: true, isLocal: false)
     setupBindings()
+
+    downloadState = .downloaded
   }
 
   private func setupBindings() {

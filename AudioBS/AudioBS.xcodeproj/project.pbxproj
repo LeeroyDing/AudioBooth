@@ -40,7 +40,7 @@
 
 /* Begin PBXFileReference section */
 		3F50E5E22E8DD9700087A5B6 /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Models; path = ../Models; sourceTree = "<group>"; };
-		3F75FB462E7139F700F77C1B /* API */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "API"; path = "../API"; sourceTree = SOURCE_ROOT; };
+		3F75FB462E7139F700F77C1B /* API */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = API; path = ../API; sourceTree = SOURCE_ROOT; };
 		3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBS Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */

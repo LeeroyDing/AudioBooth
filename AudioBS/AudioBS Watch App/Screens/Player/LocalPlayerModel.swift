@@ -4,12 +4,14 @@ import Combine
 import Foundation
 import MediaPlayer
 import Models
+import WatchConnectivity
 
 final class LocalPlayerModel: PlayerView.Model {
   var currentChapterIndex: Int = 0
 
   private let audiobookshelf = Audiobookshelf.shared
   private let downloadManager = DownloadManager.shared
+  private let connectivityManager = WatchConnectivityManager.shared
 
   private var player: AVPlayer?
   private var timeObserver: Any?
@@ -19,6 +21,7 @@ final class LocalPlayerModel: PlayerView.Model {
   private var timerSecondsCounter = 0
   private var chaptersList: [ChapterInfo] = []
   private var total: Double = 0
+  private var hasStartedPlayback: Bool = false
 
   private var lastPlaybackAt: Date?
   private var lastSyncAt = Date()
@@ -32,6 +35,18 @@ final class LocalPlayerModel: PlayerView.Model {
 
     override func onDownloadTapped() {
       playerModel?.onDownloadTapped()
+    }
+  }
+
+  private class LocalPlayerPlaybackDestinationModel: PlaybackDestinationSheet.Model {
+    weak var playerModel: LocalPlayerModel?
+
+    override func onPlayOnWatch() {
+      playerModel?.playOnWatch()
+    }
+
+    override func onPlayOnIPhone() {
+      playerModel?.playOnIPhone()
     }
   }
 
@@ -94,11 +109,34 @@ final class LocalPlayerModel: PlayerView.Model {
   override func togglePlayback() {
     guard let player else { return }
 
+    if !hasStartedPlayback && !isPlaying {
+      if WCSession.default.isReachable {
+        let destinationModel = LocalPlayerPlaybackDestinationModel()
+        destinationModel.playerModel = self
+        playbackDestination = destinationModel
+        return
+      }
+    }
+
     if isPlaying {
       player.rate = 0
     } else {
+      hasStartedPlayback = true
       player.rate = 1.0
     }
+  }
+
+  private func playOnWatch() {
+    guard let player else { return }
+    hasStartedPlayback = true
+    playbackDestination = nil
+    player.rate = 1.0
+  }
+
+  private func playOnIPhone() {
+    playbackDestination = nil
+    connectivityManager.playBook(bookID: item.bookID)
+    PlayerManager.shared.clearCurrent()
   }
 
   override func skipForward() {
