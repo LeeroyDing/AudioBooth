@@ -1,4 +1,4 @@
-import Audiobookshelf
+import API
 import Foundation
 
 final class SearchViewModel: SearchView.Model {

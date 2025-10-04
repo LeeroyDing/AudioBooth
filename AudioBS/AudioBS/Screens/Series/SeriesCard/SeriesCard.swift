@@ -1,4 +1,4 @@
-import Audiobookshelf
+import API
 import SwiftUI
 
 struct SeriesCard: View {

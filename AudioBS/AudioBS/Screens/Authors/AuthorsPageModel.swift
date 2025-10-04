@@ -1,4 +1,4 @@
-import Audiobookshelf
+import API
 import SwiftUI
 
 final class AuthorsPageModel: AuthorsPage.Model {

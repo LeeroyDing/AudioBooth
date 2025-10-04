@@ -15,13 +15,13 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(path: "../audiobookshelf-api")
+    .package(path: "../API")
   ],
   targets: [
     .target(
       name: "Models",
       dependencies: [
-        .product(name: "Audiobookshelf", package: "audiobookshelf-api")
+        .product(name: "API", package: "API")
       ]
     )
   ]

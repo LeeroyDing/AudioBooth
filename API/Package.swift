@@ -3,12 +3,12 @@
 import PackageDescription
 
 let package = Package(
-  name: "audiobookshelf-api",
+  name: "API",
   platforms: [.iOS(.v17), .watchOS(.v10)],
   products: [
     .library(
-      name: "Audiobookshelf",
-      targets: ["Audiobookshelf"]
+      name: "API",
+      targets: ["API"]
     )
   ],
   dependencies: [
@@ -17,7 +17,7 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "Audiobookshelf",
+      name: "API",
       dependencies: [
         .product(name: "KeychainAccess", package: "KeychainAccess"),
         .product(name: "NukeUI", package: "Nuke"),
