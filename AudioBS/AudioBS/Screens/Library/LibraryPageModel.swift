@@ -27,26 +27,25 @@ final class LibraryPageModel: LibraryPage.Model {
     )
   }
 
-  init(series: Series) {
-    self.filter = .series(series.id)
-
-    super.init(
-      isRoot: false,
-      sortBy: nil,
-      title: series.name
-    )
-
-    self.search = SearchViewModel()
-  }
-
-  init(author: Author) {
-    self.filter = .authors(author.id)
-
-    super.init(
-      isRoot: false,
-      sortBy: nil,
-      title: author.name
-    )
+  init(destination: NavigationDestination) {
+    switch destination {
+    case .series(let id, let name):
+      self.filter = .series(id)
+      super.init(
+        isRoot: false,
+        sortBy: nil,
+        title: name
+      )
+    case .author(let id, let name):
+      self.filter = .authors(id)
+      super.init(
+        isRoot: false,
+        sortBy: nil,
+        title: name
+      )
+    case .book:
+      fatalError("LibraryPageModel cannot be initialized with a book destination")
+    }
 
     self.search = SearchViewModel()
   }

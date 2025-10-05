@@ -19,13 +19,33 @@ public final class AudioTrackInfo {
     self.startOffset = streamingTrack.track.startOffset
     self.duration = streamingTrack.track.duration
     self.title = streamingTrack.track.title
-    self.updatedAt = streamingTrack.track.updatedAt.map {
-      Date(timeIntervalSince1970: TimeInterval($0 / 1000))
-    }
+    self.updatedAt = streamingTrack.track.updatedAt
     self.ext = streamingTrack.track.metadata?.ext
     self.size = streamingTrack.track.metadata?.size
     self.streamingURL = streamingTrack.url
     self.relativePath = nil
+  }
+
+  init(
+    index: Int,
+    startOffset: TimeInterval,
+    duration: TimeInterval,
+    title: String? = nil,
+    updatedAt: Date? = nil,
+    ext: String? = nil,
+    size: Int64? = nil,
+    streamingURL: URL? = nil,
+    relativePath: URL? = nil
+  ) {
+    self.index = index
+    self.startOffset = startOffset
+    self.duration = duration
+    self.title = title
+    self.updatedAt = updatedAt
+    self.ext = ext
+    self.size = size
+    self.streamingURL = streamingURL
+    self.relativePath = relativePath
   }
 
   public var localPath: URL? {

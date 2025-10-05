@@ -25,9 +25,6 @@ struct AuthorsPage: View {
       }
     }
     .navigationTitle("Authors")
-    .navigationDestination(for: LibraryPage.Model.self) { library in
-      LibraryPage(model: library)
-    }
     .refreshable {
       await model.refresh()
     }
@@ -86,8 +83,7 @@ extension AuthorsPage.Model {
         imageURL: URL(
           string:
             "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
-        ),
-        library: .mock
+        )
       ),
       AuthorCard.Model(
         name: "Brandon Sanderson",
@@ -95,8 +91,7 @@ extension AuthorsPage.Model {
         imageURL: URL(
           string:
             "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
-        ),
-        library: .mock
+        )
       ),
       AuthorCard.Model(
         name: "Terry Pratchett",
@@ -104,8 +99,7 @@ extension AuthorsPage.Model {
         imageURL: URL(
           string:
             "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Terry_Pratchett_cropped.jpg/220px-Terry_Pratchett_cropped.jpg"
-        ),
-        library: .mock
+        )
       ),
     ]
 

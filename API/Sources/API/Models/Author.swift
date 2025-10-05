@@ -4,8 +4,8 @@ public struct Author: Codable, Sendable {
   public let id: String
   public let name: String
   public let description: String?
-  public let addedAt: Int64?
-  public let updatedAt: Int64?
+  public let addedAt: Date?
+  public let updatedAt: Date?
   public let numBooks: Int?
 
   public var imageURL: URL? {

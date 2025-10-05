@@ -63,15 +63,6 @@ final class RecentRowModel: RecentRow.Model {
     cancellables.removeAll()
   }
 
-  override func onTapped() {
-    switch item {
-    case .recent(let recentItem):
-      PlayerManager.shared.setCurrent(recentItem)
-    case .book(let book):
-      PlayerManager.shared.setCurrent(book)
-    }
-  }
-
   private func setupDownloadStateBinding() {
     let bookID = bookID
     Publishers.CombineLatest(downloadManager.$downloads, downloadManager.$downloadProgress)

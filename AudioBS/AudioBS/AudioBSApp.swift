@@ -34,7 +34,7 @@ struct AudioBSApp: App {
       WatchConnectivityManager.shared.syncLibrary(library)
     }
 
-    Purchases.logLevel = .debug
+    Purchases.logLevel = .error
     Purchases.configure(withAPIKey: "appl_AuBdFKRrOngbJsXGkkxDKGNbGRW")
   }
 

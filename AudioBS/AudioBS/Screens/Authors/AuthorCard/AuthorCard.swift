@@ -5,7 +5,7 @@ struct AuthorCard: View {
   @Bindable var model: Model
 
   var body: some View {
-    NavigationLink(value: model.library) {
+    NavigationLink(value: NavigationDestination.author(id: model.id, name: model.name)) {
       content
     }
     .buttonStyle(.plain)
@@ -80,20 +80,17 @@ extension AuthorCard {
     var name: String
     var bookCount: Int
     var imageURL: URL?
-    let library: LibraryPage.Model
 
     init(
       id: String = UUID().uuidString,
       name: String = "",
       bookCount: Int = 0,
-      imageURL: URL? = nil,
-      library: LibraryPage.Model
+      imageURL: URL? = nil
     ) {
       self.id = id
       self.name = name
       self.bookCount = bookCount
       self.imageURL = imageURL
-      self.library = library
     }
   }
 }
@@ -106,8 +103,7 @@ extension AuthorCard.Model {
       imageURL: URL(
         string:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
-      ),
-      library: .mock
+      )
     )
   }
 }

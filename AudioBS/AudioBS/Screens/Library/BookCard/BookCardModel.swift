@@ -1,8 +1,6 @@
 import API
 import Foundation
 import Models
-import SafariServices
-import UIKit
 
 final class BookCardModel: BookCard.Model {
   private var playerManager = PlayerManager.shared
@@ -48,7 +46,7 @@ final class BookCardModel: BookCard.Model {
       title: item.title,
       details: details,
       coverURL: item.coverURL,
-      sequence: item.sequence,
+      sequence: item.series?.first?.sequence,
       progress: (try? MediaProgress.fetch(bookID: id))?.progress
     )
 
@@ -65,29 +63,6 @@ final class BookCardModel: BookCard.Model {
       for await mediaProgress in MediaProgress.observe(where: \.bookID, equals: id) {
         self?.progress = mediaProgress.progress
       }
-    }
-  }
-
-  override func onTapped() {
-    switch book.media {
-    case .audiobook:
-      playerManager.setCurrent(book)
-    case .ebook:
-      openEbookInSafari()
-    }
-  }
-
-  private func openEbookInSafari() {
-    guard let ebookURL = book.ebookURL else { return }
-
-    let safariViewController = SFSafariViewController(url: ebookURL)
-    safariViewController.modalPresentationStyle = .overFullScreen
-
-    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first,
-      let rootViewController = window.rootViewController
-    {
-      rootViewController.present(safariViewController, animated: true)
     }
   }
 

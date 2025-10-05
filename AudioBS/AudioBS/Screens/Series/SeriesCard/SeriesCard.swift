@@ -12,7 +12,7 @@ struct SeriesCard: View {
   }
 
   var body: some View {
-    NavigationLink(value: model.library) {
+    NavigationLink(value: NavigationDestination.series(id: model.id, name: model.title)) {
       content
     }
     .buttonStyle(.plain)
@@ -107,7 +107,7 @@ struct SeriesCard: View {
       GeometryReader { geometry in
         let progressColor: Color = progress >= 1.0 ? .green : .orange
 
-        RoundedRectangle(cornerRadius: 2)
+        Rectangle()
           .fill(progressColor)
           .frame(width: geometry.size.width * progress, height: 4)
       }
@@ -123,21 +123,18 @@ extension SeriesCard {
     var bookCount: Int
     var bookCovers: [URL?]
     var progress: Double?
-    let library: LibraryPage.Model
 
     init(
       id: String = UUID().uuidString,
       title: String = "",
       bookCount: Int = 0,
       bookCovers: [URL?] = [],
-      library: LibraryPage.Model,
       progress: Double? = nil
     ) {
       self.id = id
       self.title = title
       self.bookCount = bookCount
       self.bookCovers = bookCovers
-      self.library = library
       self.progress = progress
     }
   }
@@ -154,8 +151,7 @@ extension SeriesCard.Model {
     return SeriesCard.Model(
       title: "He Who Fights with Monsters",
       bookCount: 10,
-      bookCovers: mockCovers,
-      library: .mock
+      bookCovers: mockCovers
     )
   }
 }

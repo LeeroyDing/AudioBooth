@@ -66,4 +66,26 @@ public final class BooksService {
     let response = try await networkService.send(request)
     return response.value
   }
+
+  public func fetch(id: String) async throws -> Book {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first.")
+    }
+
+    let query: [String: String] = ["expanded": "1"]
+
+    let request = NetworkRequest<Book>(
+      path: "/api/items/\(id)",
+      method: .get,
+      query: query
+    )
+
+    do {
+      let response = try await networkService.send(request)
+      return response.value
+    } catch {
+      throw error
+    }
+  }
 }

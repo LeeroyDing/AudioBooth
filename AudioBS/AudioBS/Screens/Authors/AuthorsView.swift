@@ -28,8 +28,7 @@ struct AuthorsView: View {
       imageURL: URL(
         string:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
-      ),
-      library: .mock
+      )
     ),
     AuthorCard.Model(
       name: "Brandon Sanderson",
@@ -37,8 +36,7 @@ struct AuthorsView: View {
       imageURL: URL(
         string:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Brandon_Sanderson_sign_books_2.jpg/220px-Brandon_Sanderson_sign_books_2.jpg"
-      ),
-      library: .mock
+      )
     ),
     AuthorCard.Model(
       name: "Terry Pratchett",
@@ -46,8 +44,7 @@ struct AuthorsView: View {
       imageURL: URL(
         string:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Terry_Pratchett_cropped.jpg/220px-Terry_Pratchett_cropped.jpg"
-      ),
-      library: .mock
+      )
     ),
   ]
 

@@ -36,6 +36,7 @@ struct NetworkResponse<T: Decodable> {
 final class NetworkService {
   private let baseURL: URL
   private let session: URLSession
+  private let jsonDecoder: JSONDecoder
 
   init(baseURL: URL, configuration: ((URLSessionConfiguration) -> Void)? = nil) {
     self.baseURL = baseURL
@@ -43,6 +44,14 @@ final class NetworkService {
     let sessionConfig = URLSessionConfiguration.default
     configuration?(sessionConfig)
     self.session = URLSession(configuration: sessionConfig)
+
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .custom { decoder in
+      let container = try decoder.singleValueContainer()
+      let timestamp = try container.decode(Int64.self)
+      return Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
+    }
+    self.jsonDecoder = decoder
   }
 
   func send<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
@@ -64,7 +73,12 @@ final class NetworkService {
     } else if data.isEmpty {
       throw URLError(.cannotDecodeContentData)
     } else {
-      decodedValue = try JSONDecoder().decode(T.self, from: data)
+      do {
+        decodedValue = try jsonDecoder.decode(T.self, from: data)
+      } catch {
+        print("Failed to decode \(T.self): \(error)")
+        throw error
+      }
     }
     return NetworkResponse(value: decodedValue)
   }

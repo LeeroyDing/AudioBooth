@@ -6,38 +6,12 @@ public struct PlaySession: Codable, Sendable {
   public let libraryItemId: String
   public let currentTime: Double
   public let duration: Double
-  public let audioTracks: [Track]?
-  public let chapters: [Chapter]?
+  public let audioTracks: [Book.Media.Track]?
+  public let chapters: [Book.Media.Chapter]?
   public let libraryItem: Book?
 
-  public struct Track: Codable, Sendable {
-    public let index: Int
-    public let startOffset: Double
-    public let duration: Double
-    public let title: String?
-    public let contentUrl: String?
-    public let mimeType: String?
-    public let codec: String?
-    public let metadata: Metadata?
-    public let updatedAt: Int64?
-
-    public struct Metadata: Codable, Sendable {
-      public let filename: String?
-      public let ext: String?
-      public let size: Int64?
-      public let duration: Double?
-    }
-  }
-
-  public struct Chapter: Codable, Sendable {
-    public let id: Int
-    public let start: Double
-    public let end: Double
-    public let title: String
-  }
-
   public struct StreamingTrack {
-    public var track: Track
+    public var track: Book.Media.Track
     public var url: URL
   }
 

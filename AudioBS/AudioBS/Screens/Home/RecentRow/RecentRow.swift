@@ -8,7 +8,7 @@ struct RecentRow: View {
   @State private var showingDeleteConfirmation = false
 
   var body: some View {
-    Button(action: model.onTapped) {
+    NavigationLink(value: NavigationDestination.book(id: model.bookID)) {
       HStack(spacing: 8) {
         cover
 
@@ -45,6 +45,7 @@ struct RecentRow: View {
       .padding()
       .contentShape(Rectangle())
     }
+    .buttonStyle(.plain)
     .contextMenu { contextMenu }
     .onAppear(perform: model.onAppear)
     .onDisappear(perform: model.onDisappear)
@@ -186,7 +187,7 @@ struct RecentRow: View {
       GeometryReader { geometry in
         let progressColor: Color = progress >= 1.0 ? .green : .orange
 
-        RoundedRectangle(cornerRadius: 2)
+        Rectangle()
           .fill(progressColor)
           .frame(width: geometry.size.width * progress, height: 4)
       }
@@ -212,7 +213,6 @@ extension RecentRow {
     func onAppear() {}
     func onDisappear() {}
 
-    func onTapped() {}
     func onDeleteTapped(isFileOnly: Bool) {}
     func onDownloadTapped() {}
     func onMarkFinishedTapped(isFinished: Bool) {}

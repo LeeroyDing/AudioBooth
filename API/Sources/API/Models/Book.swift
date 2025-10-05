@@ -3,30 +3,15 @@ import Foundation
 public struct Book: Codable, Sendable {
   public let id: String
   public let libraryID: String
-  public let title: String
-  public let duration: Double
   public let media: Media
-  public let authorName: String?
-  public let publishedYear: String?
-  public let size: Int64?
   public let addedAt: Date
   public let updatedAt: Date
-  public let sequence: String?
 
   public var coverURL: URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
     var url = serverURL.appendingPathComponent("audiobookshelf/api/items/\(id)/cover")
     url.append(queryItems: [URLQueryItem(name: "raw", value: "1")])
     return url
-  }
-
-  public var numAudioFiles: Int {
-    switch media {
-    case .audiobook(let numFiles):
-      return numFiles
-    case .ebook:
-      return 0
-    }
   }
 
   public var ebookURL: URL? {
@@ -41,106 +26,96 @@ public struct Book: Codable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case id
-    case libraryId
+    case libraryID = "libraryId"
     case media
     case addedAt
     case updatedAt
   }
+}
 
-  private enum MediaKeys: String, CodingKey {
-    case metadata
-    case duration
-    case numAudioFiles
-    case ebookFormat
-    case size
+extension Book {
+  public var title: String { media.metadata.title }
+  public var authorName: String? { media.metadata.authorName }
+  public var publishedYear: String? { media.metadata.publishedYear }
+  public var series: [Media.Series]? { media.metadata.series }
+  public var duration: Double { media.duration ?? 0 }
+  public var size: Int64? { media.size }
+  public var chapters: [Media.Chapter]? { media.chapters }
+  public var tracks: [Media.Track]? { media.tracks }
+
+  public enum MediaType {
+    case audiobook
+    case ebook
   }
 
-  private enum MetadataKeys: String, CodingKey {
-    case title
-    case authorName
-    case series
-    case publishedYear
-  }
-
-  private enum SeriesKeys: String, CodingKey {
-    case sequence
-  }
-
-  public init(from decoder: Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-
-    self.id = try container.decode(String.self, forKey: .id)
-    self.libraryID = try container.decode(String.self, forKey: .libraryId)
-
-    let addedAtMs = try container.decode(Int64.self, forKey: .addedAt)
-    self.addedAt = Date(timeIntervalSince1970: TimeInterval(addedAtMs) / 1000.0)
-
-    let updatedAtMs = try container.decode(Int64.self, forKey: .updatedAt)
-    self.updatedAt = Date(timeIntervalSince1970: TimeInterval(updatedAtMs) / 1000.0)
-
-    let mediaContainer = try container.nestedContainer(keyedBy: MediaKeys.self, forKey: .media)
-    self.duration = try mediaContainer.decodeIfPresent(Double.self, forKey: .duration) ?? 0
-
-    let metadataContainer = try mediaContainer.nestedContainer(
-      keyedBy: MetadataKeys.self, forKey: .metadata)
-    self.title = try metadataContainer.decode(String.self, forKey: .title)
-
-    let numAudioFiles = try mediaContainer.decodeIfPresent(Int.self, forKey: .numAudioFiles) ?? 0
-    let ebookFormat = try mediaContainer.decodeIfPresent(String.self, forKey: .ebookFormat)
-
-    if numAudioFiles > 0 {
-      self.media = .audiobook(numFiles: numAudioFiles)
-    } else if let format = ebookFormat {
-      self.media = .ebook(format: format)
-    } else {
-      self.media = .audiobook(numFiles: 0)
-    }
-    self.authorName = try metadataContainer.decodeIfPresent(String.self, forKey: .authorName)
-    self.publishedYear = try metadataContainer.decodeIfPresent(String.self, forKey: .publishedYear)
-    self.size = try mediaContainer.decodeIfPresent(Int64.self, forKey: .size)
-
-    let seriesContainer = try? metadataContainer.nestedContainer(
-      keyedBy: SeriesKeys.self, forKey: .series)
-    self.sequence = try seriesContainer?.decodeIfPresent(String.self, forKey: .sequence)
-  }
-
-  public func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-    try container.encode(id, forKey: .id)
-    try container.encode(libraryID, forKey: .libraryId)
-    try container.encode(Int64(addedAt.timeIntervalSince1970 * 1000), forKey: .addedAt)
-    try container.encode(Int64(updatedAt.timeIntervalSince1970 * 1000), forKey: .updatedAt)
-
-    var mediaContainer = container.nestedContainer(keyedBy: MediaKeys.self, forKey: .media)
-    try mediaContainer.encode(duration, forKey: .duration)
-
-    switch media {
-    case .audiobook(let numFiles):
-      try mediaContainer.encode(numFiles, forKey: .numAudioFiles)
-    case .ebook(let format):
-      try mediaContainer.encode(0, forKey: .numAudioFiles)
-      try mediaContainer.encode(format, forKey: .ebookFormat)
-    }
-
-    try mediaContainer.encodeIfPresent(size, forKey: .size)
-
-    var metadataContainer = mediaContainer.nestedContainer(
-      keyedBy: MetadataKeys.self, forKey: .metadata)
-    try metadataContainer.encode(title, forKey: .title)
-    try metadataContainer.encodeIfPresent(authorName, forKey: .authorName)
-    try metadataContainer.encodeIfPresent(publishedYear, forKey: .publishedYear)
-
-    if let sequence = sequence {
-      var seriesContainer = metadataContainer.nestedContainer(
-        keyedBy: SeriesKeys.self, forKey: .series)
-      try seriesContainer.encode(sequence, forKey: .sequence)
-    }
+  public var mediaType: MediaType {
+    (tracks?.count ?? 0) > 0 ? .audiobook : .ebook
   }
 }
 
 extension Book {
-  public enum Media: Codable, Sendable {
-    case audiobook(numFiles: Int)
-    case ebook(format: String)
+  public struct Media: Codable, Sendable {
+    public let metadata: Metadata
+    public let duration: Double?
+    public let size: Int64?
+    public let chapters: [Chapter]?
+    public let tracks: [Track]?
+
+    public struct Metadata: Codable, Sendable {
+      public let title: String
+      public let authors: [Author]?
+      public let series: [Series]?
+      public let publishedYear: String?
+      public let authorName: String?
+
+      public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        title = try container.decode(String.self, forKey: .title)
+        authors = try container.decodeIfPresent([Author].self, forKey: .authors)
+        publishedYear = try container.decodeIfPresent(String.self, forKey: .publishedYear)
+        authorName = try container.decodeIfPresent(String.self, forKey: .authorName)
+
+        if let seriesArray = try? container.decode([Series].self, forKey: .series) {
+          series = seriesArray
+        } else if let singleSeries = try? container.decode(Series.self, forKey: .series) {
+          series = [singleSeries]
+        } else {
+          series = nil
+        }
+      }
+    }
+
+    public struct Author: Codable, Sendable {
+      public let id: String
+      public let name: String
+    }
+
+    public struct Series: Codable, Sendable {
+      public let id: String
+      public let name: String
+      public let sequence: String
+    }
+
+    public struct Chapter: Codable, Sendable {
+      public let id: Int
+      public let start: Double
+      public let end: Double
+      public let title: String
+    }
+
+    public struct Track: Codable, Sendable {
+      public let index: Int
+      public let startOffset: Double
+      public let duration: Double
+      public let title: String?
+      public let updatedAt: Date?
+      public let metadata: Metadata?
+
+      public struct Metadata: Codable, Sendable {
+        public let filename: String?
+        public let ext: String?
+        public let size: Int64?
+      }
+    }
   }
 }

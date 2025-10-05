@@ -12,7 +12,6 @@ final class SeriesCardModel: SeriesCard.Model {
       title: series.name,
       bookCount: series.books.count,
       bookCovers: Array(bookCovers),
-      library: LibraryPageModel(series: series),
       progress: progress
     )
   }

@@ -6,34 +6,36 @@ struct BookCard: View {
   @Bindable var model: Model
 
   var body: some View {
-    Button(
-      action: { model.onTapped() },
-      label: {
-        VStack(alignment: .leading, spacing: 8) {
-          cover
-
-          VStack(alignment: .leading, spacing: 4) {
-            title
-            details
-          }
-          .multilineTextAlignment(.leading)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay(alignment: .topTrailing) {
-          if let sequence = model.sequence {
-            Text("#\(sequence)")
-              .font(.caption2)
-              .foregroundStyle(Color.white)
-              .padding(.vertical, 2)
-              .padding(.horizontal, 4)
-              .background(Color.black.opacity(0.6))
-              .clipShape(Capsule())
-              .padding(4)
-          }
-        }
-      }
-    )
+    NavigationLink(value: NavigationDestination.book(id: model.id)) {
+      content
+    }
+    .buttonStyle(.plain)
     .contextMenu { contextMenu }
+  }
+
+  var content: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      cover
+
+      VStack(alignment: .leading, spacing: 4) {
+        title
+        details
+      }
+      .multilineTextAlignment(.leading)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .overlay(alignment: .topTrailing) {
+      if let sequence = model.sequence {
+        Text("#\(sequence)")
+          .font(.caption2)
+          .foregroundStyle(Color.white)
+          .padding(.vertical, 2)
+          .padding(.horizontal, 4)
+          .background(Color.black.opacity(0.6))
+          .clipShape(Capsule())
+          .padding(4)
+      }
+    }
   }
 
   var cover: some View {
@@ -69,7 +71,7 @@ struct BookCard: View {
       GeometryReader { geometry in
         let progressColor: Color = progress >= 1.0 ? .green : .orange
 
-        RoundedRectangle(cornerRadius: 2)
+        Rectangle()
           .fill(progressColor)
           .frame(width: geometry.size.width * progress, height: 4)
       }
@@ -110,7 +112,6 @@ extension BookCard {
     let sequence: String?
     var progress: Double?
 
-    func onTapped() {}
     func onDownloadTapped() {}
     func onMarkFinishedTapped(isFinished: Bool) {}
 
