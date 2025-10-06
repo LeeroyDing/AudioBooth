@@ -139,14 +139,14 @@ struct ContentView: View {
       NavigationStack {
         HomeView(model: HomeViewModel())
           .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-      }
-      .navigationDestination(for: NavigationDestination.self) { destination in
-        switch destination {
-        case .book(let id):
-          BookDetailsView(model: BookDetailsViewModel(bookID: id))
-        case .series, .author:
-          LibraryPage(model: LibraryPageModel(destination: destination))
-        }
+          .navigationDestination(for: NavigationDestination.self) { destination in
+            switch destination {
+            case .book(let id):
+              BookDetailsView(model: BookDetailsViewModel(bookID: id))
+            case .series, .author:
+              LibraryPage(model: LibraryPageModel(destination: destination))
+            }
+          }
       }
       .tabItem {
         Image(systemName: "house")
@@ -157,14 +157,14 @@ struct ContentView: View {
         NavigationStack {
           LibraryPage(model: LibraryPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-        }
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .book(let id):
-            BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .series, .author:
-            LibraryPage(model: LibraryPageModel(destination: destination))
-          }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+              switch destination {
+              case .book(let id):
+                BookDetailsView(model: BookDetailsViewModel(bookID: id))
+              case .series, .author:
+                LibraryPage(model: LibraryPageModel(destination: destination))
+              }
+            }
         }
         .tabItem {
           Image(systemName: "books.vertical.fill")
@@ -174,14 +174,14 @@ struct ContentView: View {
         NavigationStack {
           SeriesPage(model: SeriesPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-        }
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .book(let id):
-            BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .series, .author:
-            LibraryPage(model: LibraryPageModel(destination: destination))
-          }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+              switch destination {
+              case .book(let id):
+                BookDetailsView(model: BookDetailsViewModel(bookID: id))
+              case .series, .author:
+                LibraryPage(model: LibraryPageModel(destination: destination))
+              }
+            }
         }
         .tabItem {
           Image(systemName: "square.stack.3d.up.fill")
@@ -191,14 +191,14 @@ struct ContentView: View {
         NavigationStack {
           AuthorsPage(model: AuthorsPageModel())
             .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-        }
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .book(let id):
-            BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .series, .author:
-            LibraryPage(model: LibraryPageModel(destination: destination))
-          }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+              switch destination {
+              case .book(let id):
+                BookDetailsView(model: BookDetailsViewModel(bookID: id))
+              case .series, .author:
+                LibraryPage(model: LibraryPageModel(destination: destination))
+              }
+            }
         }
         .tabItem {
           Image(systemName: "person.crop.rectangle.stack")
