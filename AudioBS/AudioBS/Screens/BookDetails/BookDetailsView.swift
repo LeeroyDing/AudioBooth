@@ -131,8 +131,6 @@ struct BookDetailsView: View {
         }
         .font(.subheadline)
       }
-
-      downloadStateView
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }
@@ -144,12 +142,9 @@ struct BookDetailsView: View {
       HStack {
         Image(systemName: "arrow.down.circle")
         Text("Downloading: \(progress.formatted(.percent.precision(.fractionLength(0))))")
-        Spacer()
-        Button("Cancel") {
-          model.onDownloadTapped()
-        }
       }
       .font(.subheadline)
+      .frame(maxWidth: .infinity, alignment: .leading)
     case .downloaded, .notDownloaded:
       EmptyView()
     }
@@ -193,6 +188,8 @@ struct BookDetailsView: View {
         }
       }
       .font(.subheadline)
+
+      downloadStateView
     }
   }
 
@@ -237,7 +234,7 @@ struct BookDetailsView: View {
     case .downloading:
       return "Cancel"
     case .downloaded:
-      return "Remove from Device"
+      return "Remove Download"
     case .notDownloaded:
       return "Download"
     }

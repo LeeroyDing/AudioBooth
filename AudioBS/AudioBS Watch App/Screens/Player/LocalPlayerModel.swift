@@ -617,31 +617,4 @@ extension LocalPlayerModel {
       }
     }
   }
-
-  func closeSession() {
-    //    let sessionInfo = item.playSessionInfo
-    //
-    //    Task {
-    //      if mediaProgress.timeListened > 0 {
-    //        do {
-    //          try await audiobookshelf.sessions.sync(
-    //            sessionInfo.id,
-    //            timeListened: mediaProgress.timeListened,
-    //            currentTime: mediaProgress.currentTime
-    //          )
-    //
-    //          mediaProgress.timeListened = 0
-    //        } catch {
-    //          print("Failed to sync session progress: \(error)")
-    //        }
-    //      }
-    //
-    //      do {
-    //        try await audiobookshelf.sessions.close(sessionInfo.id)
-    //        print("Successfully closed session: \(sessionInfo.id)")
-    //      } catch {
-    //        print("Failed to close session: \(error)")
-    //      }
-    //    }
-  }
 }

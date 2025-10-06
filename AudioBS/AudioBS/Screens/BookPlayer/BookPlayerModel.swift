@@ -727,14 +727,20 @@ extension BookPlayerModel {
     }
   }
 
+  func stopPlayer() {
+    player?.rate = 0
+    player = nil
+
+    itemObservation?.cancel()
+    timeObserver = nil
+    cancellables.removeAll()
+  }
+
   func closeSession() {
     guard let session = self.session else {
       print("Session already closed or no session to close")
       return
     }
-
-    player?.rate = 0
-    player = nil
 
     Task {
       if mediaProgress.timeListened > 0 {

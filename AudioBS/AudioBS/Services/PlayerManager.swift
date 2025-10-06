@@ -42,7 +42,7 @@ final class PlayerManager: ObservableObject {
       isShowingFullPlayer = true
     } else {
       if let currentPlayer = current as? BookPlayerModel {
-        currentPlayer.closeSession()
+        currentPlayer.stopPlayer()
       }
       current = BookPlayerModel(book)
       UserDefaults.standard.set(book.bookID, forKey: Self.currentBookIDKey)
@@ -54,7 +54,7 @@ final class PlayerManager: ObservableObject {
       isShowingFullPlayer = true
     } else {
       if let currentPlayer = current as? BookPlayerModel {
-        currentPlayer.closeSession()
+        currentPlayer.stopPlayer()
       }
       current = BookPlayerModel(book)
       UserDefaults.standard.set(book.id, forKey: Self.currentBookIDKey)
@@ -63,6 +63,7 @@ final class PlayerManager: ObservableObject {
 
   func clearCurrent() {
     if let currentPlayer = current as? BookPlayerModel {
+      currentPlayer.stopPlayer()
       currentPlayer.closeSession()
     }
     current = nil

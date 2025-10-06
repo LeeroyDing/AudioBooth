@@ -41,9 +41,6 @@ final class PlayerManager: ObservableObject {
   }
 
   func clearCurrent() {
-    if let localPlayer = current as? LocalPlayerModel {
-      localPlayer.closeSession()
-    }
     current = nil
     UserDefaults.standard.removeObject(forKey: Self.currentBookIDKey)
   }
