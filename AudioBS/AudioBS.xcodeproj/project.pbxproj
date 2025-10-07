@@ -57,11 +57,21 @@
 			);
 			target = 3FC8DC6D2E638F5E00A4B080 /* AudioBS */;
 		};
+		3F3AF6E32E94D1720052C80D /* Exceptions for "AudioBS Watch App" folder in "AudioBS Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3FBEA0662E8CD49300976BA0 /* AudioBS Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F3AF6E32E94D1720052C80D /* Exceptions for "AudioBS Watch App" folder in "AudioBS Watch App" target */,
+			);
 			path = "AudioBS Watch App";
 			sourceTree = "<group>";
 		};
@@ -286,7 +296,7 @@
 				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "AudioBS-Watch-App-Info.plist";
+				INFOPLIST_FILE = "AudioBS Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
@@ -320,7 +330,7 @@
 				CURRENT_PROJECT_VERSION = 6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "AudioBS-Watch-App-Info.plist";
+				INFOPLIST_FILE = "AudioBS Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
