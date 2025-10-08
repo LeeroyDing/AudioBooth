@@ -40,10 +40,16 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
   }
 
   func onPreviousChapterTapped() {
-    guard currentIndex > 0 else { return }
-    let previousChapter = chapters[currentIndex - 1]
-    currentIndex -= 1
-    player.seek(to: CMTime(seconds: previousChapter.start + 0.1, preferredTimescale: 1000))
+    let currentChapter = chapters[currentIndex]
+    let timeInCurrentChapter = currentTime - currentChapter.start
+
+    if timeInCurrentChapter < 2.0 && currentIndex > 0 {
+      let previousChapter = chapters[currentIndex - 1]
+      currentIndex -= 1
+      player.seek(to: CMTime(seconds: previousChapter.start + 0.1, preferredTimescale: 1000))
+    } else {
+      player.seek(to: CMTime(seconds: currentChapter.start + 0.1, preferredTimescale: 1000))
+    }
   }
 
   func onNextChapterTapped() {
