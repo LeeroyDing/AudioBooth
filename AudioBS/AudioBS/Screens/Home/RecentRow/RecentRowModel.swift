@@ -5,38 +5,18 @@ import SwiftData
 import SwiftUI
 
 final class RecentRowModel: RecentRow.Model {
-  enum Item {
-    case recent(LocalBook)
-    case book(Book)
-  }
-
-  var item: Item
+  private let book: Book
 
   private var downloadManager: DownloadManager { .shared }
   private var playerManager: PlayerManager { .shared }
   private var cancellables = Set<AnyCancellable>()
   private var mediaProgressObservation: Task<Void, Never>?
-  private var itemObservation: Task<Void, Never>?
+  private var localBookObservation: Task<Void, Never>?
 
   private var onRemoved: (() -> Void)?
 
-  init(recent: LocalBook) {
-    self.item = .recent(recent)
-
-    super.init(
-      bookID: recent.bookID,
-      title: recent.title,
-      author: recent.authorNames,
-      coverURL: recent.coverURL,
-      progress: 0,
-      lastPlayedAt: nil,
-      timeRemaining: nil,
-      downloadState: recent.isDownloaded ? .downloaded : .notDownloaded
-    )
-  }
-
   init(book: Book, onRemoved: @escaping () -> Void) {
-    self.item = .book(book)
+    self.book = book
 
     super.init(
       bookID: book.id,
@@ -54,51 +34,47 @@ final class RecentRowModel: RecentRow.Model {
   override func onAppear() {
     setupDownloadStateBinding()
     setupProgressObservation()
-    setupItemObservation()
+    setupLocalBookObservation()
   }
 
   override func onDisappear() {
     mediaProgressObservation?.cancel()
-    itemObservation?.cancel()
+    localBookObservation?.cancel()
     cancellables.removeAll()
   }
 
   private func setupDownloadStateBinding() {
     let bookID = bookID
-    Publishers.CombineLatest(downloadManager.$downloads, downloadManager.$downloadProgress)
-      .map { [weak self] downloads, progress in
-        guard let self = self else { return .notDownloaded }
-
-        if let progress = progress[bookID] {
-          return .downloading(progress: progress)
+    downloadManager.$downloadProgress
+      .map { progress -> DownloadManager.DownloadState? in
+        if let downloadProgress = progress[bookID] {
+          return .downloading(progress: downloadProgress)
         }
-
-        switch self.item {
-        case .recent(let recentItem):
-          return recentItem.isDownloaded ? .downloaded : .notDownloaded
-        case .book:
-          return .notDownloaded
-        }
+        return nil
       }
       .sink { [weak self] downloadState in
-        self?.downloadState = downloadState
+        if let downloadState = downloadState {
+          self?.downloadState = downloadState
+          print(downloadState)
+        } else {
+          self?.downloadState = .notDownloaded
+        }
       }
       .store(in: &cancellables)
   }
 
-  private func setupItemObservation() {
+  private func setupLocalBookObservation() {
     let bookID = bookID
-    itemObservation = Task { [weak self] in
-      for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
+    localBookObservation = Task { [weak self] in
+      for await localBook in LocalBook.observe(where: \.bookID, equals: bookID) {
         guard !Task.isCancelled, let self = self else { continue }
-
-        self.item = .recent(updatedItem)
 
         if let progress = downloadManager.downloadProgress[bookID] {
           self.downloadState = .downloading(progress: progress)
+        } else if localBook.isDownloaded {
+          self.downloadState = .downloaded
         } else {
-          self.downloadState =
-            updatedItem.isDownloaded ? .downloaded : .notDownloaded
+          self.downloadState = .notDownloaded
         }
       }
     }
@@ -113,54 +89,41 @@ final class RecentRowModel: RecentRow.Model {
 
         self.progress = progress.progress
         self.lastPlayedAt = progress.lastPlayedAt
-
-        switch item {
-        case .recent:
-          self.timeRemaining = Self.formatTimeRemaining(progress: progress)
-        case .book(let book):
-          self.timeRemaining = Self.formatTimeRemaining(from: book, progress: progress)
-        }
+        self.timeRemaining = Self.formatTimeRemaining(from: self.book, progress: progress)
       }
     }
   }
 
   override func onDownloadTapped() {
-    switch downloadState {
-    case .downloading:
-      downloadManager.cancelDownload(for: bookID)
-    case .downloaded:
-      downloadManager.deleteDownload(for: bookID)
-    case .notDownloaded:
-      switch item {
-      case .recent(let recentItem):
-        downloadManager.startDownload(for: recentItem.bookID)
-      case .book(let book):
-        downloadManager.startDownload(for: book.id)
-      }
-    }
+    downloadManager.startDownload(for: bookID)
+    downloadState = .downloading(progress: 0)
   }
 
-  override func onDeleteTapped(isFileOnly: Bool) {
-    Task {
-      do {
-        if case .recent(let recent) = item {
-          if isFileOnly {
-            downloadManager.deleteDownload(for: bookID)
-          } else {
-            downloadManager.deleteDownload(for: bookID)
-            try recent.delete()
-          }
-        }
+  override func onCancelDownloadTapped() {
+    downloadManager.cancelDownload(for: bookID)
+    downloadState = .notDownloaded
+  }
 
-        if !isFileOnly, let progress = try? MediaProgress.fetch(bookID: bookID),
-          let id = progress.id
-        {
-          try? await Audiobookshelf.shared.sessions.removeFromContinueListening(id)
-          onRemoved?()
-        }
-      } catch {
-        print(error)
-      }
+  override func onRemoveFromDeviceTapped() {
+    downloadManager.deleteDownload(for: bookID)
+
+    if let localBook = try? LocalBook.fetch(bookID: bookID) {
+      try? localBook.delete()
+    }
+
+    downloadState = .notDownloaded
+
+  }
+
+  override func onRemoveFromListTapped() {
+    guard
+      let progress = try? MediaProgress.fetch(bookID: bookID),
+      let id = progress.id
+    else { return }
+
+    Task {
+      try? await Audiobookshelf.shared.sessions.removeFromContinueListening(id)
+      onRemoved?()
     }
   }
 
@@ -180,18 +143,6 @@ final class RecentRowModel: RecentRow.Model {
     }
   }
 
-  private static func formatTimeRemaining(progress: MediaProgress) -> String? {
-    guard progress.duration > 0 else { return nil }
-    let remainingTime = progress.duration - progress.currentTime
-    guard remainingTime > 0 else { return nil }
-    return Duration.seconds(remainingTime).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
-      )
-    ) + " left"
-  }
-
   private static func formatTimeRemaining(from book: Book, progress: MediaProgress) -> String? {
     guard progress.progress > 0,
       progress.progress < 1.0
@@ -204,14 +155,5 @@ final class RecentRowModel: RecentRow.Model {
         width: .narrow
       )
     ) + " left"
-  }
-}
-
-extension RecentRowModel.Item {
-  var id: String {
-    switch self {
-    case .recent(let recentItem): recentItem.bookID
-    case .book(let book): book.id
-    }
   }
 }

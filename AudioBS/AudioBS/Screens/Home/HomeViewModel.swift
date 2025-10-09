@@ -9,7 +9,7 @@ final class HomeViewModel: HomeView.Model {
 
   private var recentItemsTask: Task<Void, Never>?
 
-  private var recentlyPlayed: [LocalBook] = []
+  private var availableOffline: [LocalBook] = []
 
   private var continueListening: [Book] = [] {
     didSet { refreshRecents() }
@@ -32,10 +32,11 @@ final class HomeViewModel: HomeView.Model {
   }
 
   override func onReset(_ shouldRefresh: Bool) {
-    recentlyPlayed = []
+    availableOffline = []
     continueListening = []
-    sections = []
-    recents = []
+    others = []
+    recents = nil
+    offline = nil
     isLoading = false
 
     if shouldRefresh {
@@ -49,65 +50,58 @@ extension HomeViewModel {
     recentItemsTask = Task { [weak self] in
       for await recents in LocalBook.observeAll() {
         guard !Task.isCancelled else { break }
-        self?.recentlyPlayed = recents
-        self?.syncRecents()
+        self?.availableOffline = recents
+        self?.refreshRecents()
       }
     }
-  }
-
-  private func syncRecents() {
-    let ids = Set(recentlyPlayed.map(\.bookID) + continueListening.map(\.id))
-
-    recents.removeAll { recent in !ids.contains(recent.bookID) }
-
-    let existingIDs = Set(recents.map(\.bookID))
-    for recent in recentlyPlayed where !existingIDs.contains(recent.bookID) {
-      recents.append(RecentRowModel(recent: recent))
-    }
-
-    recents.sort(by: >)
   }
 
   private func refreshRecents() {
-    var recents: [RecentRowModel] = []
-
-    var recentsByID = Dictionary(uniqueKeysWithValues: recentlyPlayed.map { ($0.bookID, $0) })
+    var recentItems: [RecentRowModel] = []
 
     for book in continueListening {
-      if let recent = recentsByID[book.id] {
-        recents.append(RecentRowModel(recent: recent))
-        recentsByID.removeValue(forKey: book.id)
-      } else {
-        recents.append(
-          RecentRowModel(
-            book: book,
-            onRemoved: { [weak self] in
-              guard let self else { return }
-              self.continueListening = self.continueListening.filter({ $0.id != book.id })
-            }
-          )
+      recentItems.append(
+        RecentRowModel(
+          book: book,
+          onRemoved: { [weak self] in
+            guard let self else { return }
+            self.continueListening = self.continueListening.filter({ $0.id != book.id })
+          }
         )
-      }
+      )
     }
 
-    for recent in recentsByID.values {
-      if downloadManager.downloads[recent.bookID] == true
-        || recent.isDownloaded
-        || PlayerManager.shared.current?.id == recent.bookID
+    let sortedRecents = recentItems.sorted(by: >)
+
+    if !sortedRecents.isEmpty {
+      self.recents = Section(title: "Continue Listening", items: .recents(sortedRecents))
+    } else {
+      self.recents = nil
+    }
+
+    var offline = [BookCard.Model]()
+
+    for book in availableOffline {
+      if [false, nil].contains(downloadManager.downloads[book.bookID]), !book.isDownloaded,
+        PlayerManager.shared.current?.id != book.bookID
       {
-        recents.append(RecentRowModel(recent: recent))
-      } else {
-        try? recent.delete()
+        try? book.delete()
+      } else if book.isDownloaded {
+        offline.append(BookCardModel(book))
       }
     }
 
-    self.recents = recents.sorted(by: >)
+    if !offline.isEmpty {
+      self.offline = Section(title: "Available Offline", items: .books(offline))
+    } else {
+      self.offline = nil
+    }
   }
 
-  private func processSections(_ personalizedSections: [Personalized.Section]) {
+  private func processSections(_ personalized: [Personalized.Section]) {
     var sections = [Section]()
 
-    for section in personalizedSections {
+    for section in personalized {
       switch section.entities {
       case .books(let items):
         if section.id == "continue-listening" {
@@ -131,7 +125,7 @@ extension HomeViewModel {
       }
     }
 
-    self.sections = sections
+    self.others = sections
   }
 
 }
@@ -146,7 +140,7 @@ extension HomeViewModel {
   }
 
   private func fetchRemoteContent() async {
-    if sections.isEmpty {
+    if others.isEmpty {
       isLoading = true
     }
 

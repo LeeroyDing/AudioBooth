@@ -5,8 +5,6 @@ import SwiftUI
 struct RecentRow: View {
   @Bindable var model: Model
 
-  @State private var showingDeleteConfirmation = false
-
   var body: some View {
     NavigationLink(value: NavigationDestination.book(id: model.bookID)) {
       HStack(spacing: 8) {
@@ -42,23 +40,20 @@ struct RecentRow: View {
           progressInfo
         }
       }
-      .padding()
+      .padding(.horizontal, 12)
+      .padding(.vertical, 8)
+      .background(Color(.systemGray6))
+      .clipShape(RoundedRectangle(cornerRadius: 8))
+      .overlay(
+        RoundedRectangle(cornerRadius: 8)
+          .stroke(.gray.opacity(0.3), lineWidth: 1)
+      )
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
     .contextMenu { contextMenu }
     .onAppear(perform: model.onAppear)
     .onDisappear(perform: model.onDisappear)
-    .alert("Remove from continue listening", isPresented: $showingDeleteConfirmation) {
-      Button("Cancel", role: .cancel) {}
-      Button("Remove", role: .destructive) {
-        model.onDeleteTapped(isFileOnly: false)
-      }
-    } message: {
-      Text(
-        "This book has offline files. Removing it from continue listening will also remove the offline capability for this book."
-      )
-    }
   }
 
   var cover: some View {
@@ -138,7 +133,7 @@ struct RecentRow: View {
     switch model.downloadState {
     case .downloading:
       Button {
-        model.onDownloadTapped()
+        model.onCancelDownloadTapped()
       } label: {
         Label("Cancel Download", systemImage: "stop.circle")
       }
@@ -150,18 +145,14 @@ struct RecentRow: View {
       }
     case .downloaded:
       Button(role: .destructive) {
-        model.onDeleteTapped(isFileOnly: true)
+        model.onRemoveFromDeviceTapped()
       } label: {
         Label("Remove from Device", systemImage: "trash")
       }
     }
 
     Button {
-      if model.downloadState == .downloaded {
-        showingDeleteConfirmation = true
-      } else {
-        model.onDeleteTapped(isFileOnly: false)
-      }
+      model.onRemoveFromListTapped()
     } label: {
       Label("Remove from continue listening", systemImage: "eye.slash")
     }
@@ -213,8 +204,11 @@ extension RecentRow {
     func onAppear() {}
     func onDisappear() {}
 
-    func onDeleteTapped(isFileOnly: Bool) {}
     func onDownloadTapped() {}
+    func onCancelDownloadTapped() {}
+    func onRemoveFromDeviceTapped() {}
+
+    func onRemoveFromListTapped() {}
     func onMarkFinishedTapped(isFinished: Bool) {}
 
     init(

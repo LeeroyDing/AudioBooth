@@ -2,7 +2,6 @@ import Foundation
 
 public struct Book: Codable, Sendable {
   public let id: String
-  public let libraryID: String
   public let media: Media
   public let addedAt: Date
   public let updatedAt: Date
@@ -26,14 +25,6 @@ public struct Book: Codable, Sendable {
     var url = serverURL.appendingPathComponent("api/items/\(id)/ebook")
     url.append(queryItems: [URLQueryItem(name: "token", value: token)])
     return url
-  }
-
-  private enum CodingKeys: String, CodingKey {
-    case id
-    case libraryID = "libraryId"
-    case media
-    case addedAt
-    case updatedAt
   }
 }
 

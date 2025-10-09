@@ -6,8 +6,16 @@ struct BookCard: View {
   @Bindable var model: Model
 
   var body: some View {
-    NavigationLink(value: NavigationDestination.book(id: model.id)) {
-      content
+    Group {
+      if case .downloading = model.downloadState {
+        Button(action: model.onCancelDownloadTapped) {
+          content
+        }
+      } else {
+        NavigationLink(value: NavigationDestination.book(id: model.id)) {
+          content
+        }
+      }
     }
     .buttonStyle(.plain)
     .contextMenu { contextMenu }
@@ -36,13 +44,30 @@ struct BookCard: View {
           .padding(4)
       }
     }
+    .contentShape(Rectangle())
   }
 
   var cover: some View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) { progressBar }
+      .overlay {
+        if case .downloading(let progress) = model.downloadState {
+          Color.black.opacity(0.6).overlay {
+            ProgressView(value: progress, total: 1.0)
+              .progressViewStyle(GaugeProgressViewStyle(lineWidth: 5))
+              .frame(width: 50, height: 50)
+              .overlay {
+                Color.blue.padding()
+              }
+          }
+        }
+      }
       .clipShape(RoundedRectangle(cornerRadius: 8))
-      .shadow(radius: 2)
+      .overlay(
+        RoundedRectangle(cornerRadius: 8)
+          .stroke(.gray.opacity(0.3), lineWidth: 1)
+      )
+      .contentShape(Rectangle())
   }
 
   var title: some View {
@@ -81,10 +106,33 @@ struct BookCard: View {
 
   @ViewBuilder
   var contextMenu: some View {
-    Button {
-      model.onDownloadTapped()
-    } label: {
-      Label("Download", systemImage: "icloud.and.arrow.down")
+    if let downloadState = model.downloadState {
+      switch downloadState {
+      case .downloaded:
+        Button(role: .destructive) {
+          model.onRemoveFromDeviceTapped()
+        } label: {
+          Label("Remove from Device", systemImage: "trash")
+        }
+      case .downloading:
+        Button(role: .destructive) {
+          model.onCancelDownloadTapped()
+        } label: {
+          Label("Cancel Download", systemImage: "xmark.circle")
+        }
+      case .notDownloaded:
+        Button {
+          model.onDownloadTapped()
+        } label: {
+          Label("Download", systemImage: "icloud.and.arrow.down")
+        }
+      }
+    } else {
+      Button {
+        model.onDownloadTapped()
+      } label: {
+        Label("Download", systemImage: "icloud.and.arrow.down")
+      }
     }
 
     if let progress = model.progress, progress >= 1.0 {
@@ -111,8 +159,11 @@ extension BookCard {
     let coverURL: URL?
     let sequence: String?
     var progress: Double?
+    var downloadState: DownloadManager.DownloadState?
 
     func onDownloadTapped() {}
+    func onCancelDownloadTapped() {}
+    func onRemoveFromDeviceTapped() {}
     func onMarkFinishedTapped(isFinished: Bool) {}
 
     init(
@@ -121,7 +172,8 @@ extension BookCard {
       details: String?,
       coverURL: URL?,
       sequence: String? = nil,
-      progress: Double? = nil
+      progress: Double? = nil,
+      downloadState: DownloadManager.DownloadState? = nil
     ) {
       self.id = id
       self.title = title
@@ -129,6 +181,7 @@ extension BookCard {
       self.coverURL = coverURL
       self.sequence = sequence
       self.progress = progress
+      self.downloadState = downloadState
     }
   }
 }
@@ -142,35 +195,38 @@ extension BookCard.Model {
 }
 
 #Preview("BookCard") {
-  LazyVGrid(
-    columns: [
-      GridItem(spacing: 12, alignment: .top),
-      GridItem(spacing: 12, alignment: .top),
-      GridItem(spacing: 12, alignment: .top),
-    ],
-    spacing: 20,
-  ) {
-    BookCard(
-      model: BookCard.Model(
-        title: "The Lord of the Rings",
-        details: "J.R.R. Tolkien",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg")
+  NavigationStack {
+    LazyVGrid(
+      columns: [
+        GridItem(spacing: 12, alignment: .top),
+        GridItem(spacing: 12, alignment: .top),
+        GridItem(spacing: 12, alignment: .top),
+      ],
+      spacing: 20,
+    ) {
+      BookCard(
+        model: BookCard.Model(
+          title: "The Lord of the Rings",
+          details: "J.R.R. Tolkien",
+          coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
+          downloadState: .downloading(progress: 0.5)
+        )
       )
-    )
-    BookCard(
-      model: BookCard.Model(
-        title: "Dune",
-        details: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+      BookCard(
+        model: BookCard.Model(
+          title: "Dune",
+          details: "Frank Herbert",
+          coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg")
+        )
       )
-    )
-    BookCard(
-      model: BookCard.Model(
-        title: "The Foundation",
-        details: "Isaac Asimov",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")
+      BookCard(
+        model: BookCard.Model(
+          title: "The Foundation",
+          details: "Isaac Asimov",
+          coverURL: URL(string: "https://m.media-amazon.com/images/I/51I5xPlDi9L._SL500_.jpg")
+        )
       )
-    )
+    }
+    .padding()
   }
-  .padding()
 }

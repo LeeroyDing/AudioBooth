@@ -12,21 +12,27 @@ struct HomeView: View {
   var body: some View {
     ScrollView {
       VStack(spacing: 24) {
-        if !model.recents.isEmpty {
-          recentsContent
+        if let recents = model.recents {
+          sectionContent(recents)
         }
 
-        if model.isLoading && model.sections.isEmpty {
+        if let offline = model.offline {
+          sectionContent(offline)
+        }
+
+        if model.isLoading && model.others.isEmpty {
           ProgressView("Loading...")
             .frame(maxWidth: .infinity, maxHeight: 200)
-        } else if model.sections.isEmpty && !model.isLoading {
-          if model.recents.isEmpty {
+        } else if model.others.isEmpty && !model.isLoading {
+          if model.recents == nil && model.offline == nil {
             emptyState
           } else {
             emptyPersonalizedState
           }
         } else {
-          personalizedContent
+          ForEach(model.others, id: \.title) { section in
+            sectionContent(section)
+          }
         }
       }
     }
@@ -95,71 +101,55 @@ struct HomeView: View {
     .frame(maxWidth: .infinity, minHeight: 100)
   }
 
-  private var recentsContent: some View {
+  @ViewBuilder
+  private func sectionContent(_ section: HomeView.Model.Section) -> some View {
     VStack(alignment: .leading, spacing: 12) {
-      Text("Continue Listening")
+      Text(section.title)
         .font(.title2)
         .fontWeight(.semibold)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal)
 
-      VStack(spacing: 0) {
-        ForEach(model.recents) { item in
-          RecentRow(model: item)
-
-          if item.id != model.recents.last?.id {
-            Divider()
-              .padding(.leading, 84)
+      switch section.items {
+      case .recents(let items):
+        VStack(spacing: 8) {
+          ForEach(items) { item in
+            RecentRow(model: item)
           }
         }
-      }
-      .background(Color(.systemGray6))
-      .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-    .padding(.horizontal)
-  }
+        .padding(.horizontal)
 
-  private var personalizedContent: some View {
-    ForEach(model.sections, id: \.title) { section in
-      VStack(alignment: .leading, spacing: 12) {
-        Text(section.title)
-          .font(.title2)
-          .fontWeight(.semibold)
-          .frame(maxWidth: .infinity, alignment: .leading)
+      case .books(let items):
+        ScrollView(.horizontal, showsIndicators: false) {
+          LazyHStack(spacing: 16) {
+            ForEach(items, id: \.id) { book in
+              BookCard(model: book)
+                .frame(width: 120)
+            }
+          }
           .padding(.horizontal)
+        }
 
-        switch section.items {
-        case .books(let items):
-          ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-              ForEach(items, id: \.id) { book in
-                BookCard(model: book)
-                  .frame(width: 140)
-              }
+      case .series(let items):
+        ScrollView(.horizontal, showsIndicators: false) {
+          LazyHStack(spacing: 16) {
+            ForEach(items, id: \.id) { series in
+              SeriesCard(model: series, titleFont: .footnote)
+                .frame(width: 240)
             }
-            .padding(.horizontal)
           }
+          .padding(.horizontal)
+        }
 
-        case .series(let items):
-          ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-              ForEach(items, id: \.id) { series in
-                SeriesCard(model: series, titleFont: .footnote)
-                  .frame(width: 280)
-              }
+      case .authors(let items):
+        ScrollView(.horizontal, showsIndicators: false) {
+          LazyHStack(spacing: 16) {
+            ForEach(items, id: \.id) { author in
+              AuthorCard(model: author)
+                .frame(width: 80)
             }
-            .padding(.horizontal)
           }
-
-        case .authors(let items):
-          ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-              ForEach(items, id: \.id) { author in
-                AuthorCard(model: author)
-                  .frame(width: 100)
-              }
-            }
-            .padding(.horizontal)
-          }
+          .padding(.horizontal)
         }
       }
     }
@@ -172,8 +162,6 @@ extension HomeView {
     var isRoot: Bool
     var title: String
 
-    var recents: [RecentRow.Model]
-
     struct Section {
       let title: String
 
@@ -181,10 +169,14 @@ extension HomeView {
         case books([BookCard.Model])
         case series([SeriesCard.Model])
         case authors([AuthorCard.Model])
+        case recents([RecentRow.Model])
       }
       let items: Items
     }
-    var sections: [Section]
+
+    var recents: Section?
+    var offline: Section?
+    var others: [Section]
 
     func onAppear() {}
     func refresh() async {}
@@ -194,14 +186,16 @@ extension HomeView {
       isLoading: Bool = false,
       isRoot: Bool = true,
       title: String = "Home",
-      recents: [RecentRow.Model] = [],
-      sections: [Section] = []
+      recents: Section? = nil,
+      offline: Section? = nil,
+      others: [Section] = []
     ) {
       self.isLoading = isLoading
       self.isRoot = isRoot
       self.title = title
       self.recents = recents
-      self.sections = sections
+      self.offline = offline
+      self.others = others
     }
   }
 }
@@ -223,52 +217,11 @@ extension HomeView.Model {
         progress: 0.12,
         lastPlayedAt: Date().addingTimeInterval(-7200)
       ),
-      RecentRow.Model(
-        title: "Dune",
-        author: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12,
-        lastPlayedAt: Date().addingTimeInterval(-7200)
-      ),
-      RecentRow.Model(
-        title: "Dune",
-        author: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12,
-        lastPlayedAt: Date().addingTimeInterval(-7200)
-      ),
-      RecentRow.Model(
-        title: "Dune",
-        author: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12,
-        lastPlayedAt: Date().addingTimeInterval(-7200)
-      ),
-      RecentRow.Model(
-        title: "Dune",
-        author: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12,
-        lastPlayedAt: Date().addingTimeInterval(-7200)
-      ),
-      RecentRow.Model(
-        title: "Dune",
-        author: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12,
-        lastPlayedAt: Date().addingTimeInterval(-7200)
-      ),
-      RecentRow.Model(
-        title: "Dune",
-        author: "Frank Herbert",
-        coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
-        progress: 0.12,
-        lastPlayedAt: Date().addingTimeInterval(-7200)
-      ),
-
     ]
 
-    return HomeView.Model(recents: sampleRecentItems)
+    return HomeView.Model(
+      recents: Section(title: "Continue Listening", items: .recents(sampleRecentItems))
+    )
   }
 }
 
