@@ -91,9 +91,8 @@ extension HomeViewModel {
     }
 
     for recent in recentsByID.values {
-      let progress = try? MediaProgress.fetch(bookID: recent.bookID)
       if downloadManager.downloads[recent.bookID] == true
-        || recent.isDownloaded || (progress?.timeListened ?? 0) != 0
+        || recent.isDownloaded
         || PlayerManager.shared.current?.id == recent.bookID
       {
         recents.append(RecentRowModel(recent: recent))
