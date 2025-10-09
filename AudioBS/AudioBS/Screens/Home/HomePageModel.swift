@@ -3,7 +3,7 @@ import Models
 import SwiftData
 import SwiftUI
 
-final class HomeViewModel: HomeView.Model {
+final class HomePageModel: HomePage.Model {
   private let downloadManager = DownloadManager.shared
   private var playerManager = PlayerManager.shared
 
@@ -45,7 +45,7 @@ final class HomeViewModel: HomeView.Model {
   }
 }
 
-extension HomeViewModel {
+extension HomePageModel {
   private func setupRecentItemsObservation() {
     recentItemsTask = Task { [weak self] in
       for await recents in LocalBook.observeAll() {
@@ -130,7 +130,7 @@ extension HomeViewModel {
 
 }
 
-extension HomeViewModel {
+extension HomePageModel {
   private func loadCachedContent() {
     guard let personalized = Audiobookshelf.shared.libraries.getCachedPersonalized() else {
       return

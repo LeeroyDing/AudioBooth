@@ -3,13 +3,30 @@ import Combine
 import SwiftData
 import SwiftUI
 
-struct HomeView: View {
-  @StateObject var model: Model
-  @State private var showingDeleteConfirmation = false
-  @State private var showingSettings = false
+struct HomePage: View {
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
 
+  @StateObject var model: Model
+  @State private var showingSettings = false
+
+  @State private var path = NavigationPath()
+
   var body: some View {
+    NavigationStack(path: $path) {
+      content
+        .environment(\.navigationPath, $path)
+        .navigationDestination(for: NavigationDestination.self) { destination in
+          switch destination {
+          case .book(let id):
+            BookDetailsView(model: BookDetailsViewModel(bookID: id))
+          case .series, .author:
+            LibraryPage(model: LibraryPageModel(destination: destination))
+          }
+        }
+    }
+  }
+
+  var content: some View {
     ScrollView {
       VStack(spacing: 24) {
         if let recents = model.recents {
@@ -102,7 +119,7 @@ struct HomeView: View {
   }
 
   @ViewBuilder
-  private func sectionContent(_ section: HomeView.Model.Section) -> some View {
+  private func sectionContent(_ section: HomePage.Model.Section) -> some View {
     VStack(alignment: .leading, spacing: 12) {
       Text(section.title)
         .font(.title2)
@@ -156,7 +173,7 @@ struct HomeView: View {
   }
 }
 
-extension HomeView {
+extension HomePage {
   @Observable class Model: ObservableObject {
     var isLoading: Bool
     var isRoot: Bool
@@ -200,8 +217,8 @@ extension HomeView {
   }
 }
 
-extension HomeView.Model {
-  static var mock: HomeView.Model {
+extension HomePage.Model {
+  static var mock: HomePage.Model {
     let sampleRecentItems: [RecentRow.Model] = [
       RecentRow.Model(
         title: "The Lord of the Rings",
@@ -219,20 +236,20 @@ extension HomeView.Model {
       ),
     ]
 
-    return HomeView.Model(
+    return HomePage.Model(
       recents: Section(title: "Continue Listening", items: .recents(sampleRecentItems))
     )
   }
 }
 
-#Preview("HomeView - Loading") {
-  HomeView(model: .init(isLoading: true))
+#Preview("HomePage - Loading") {
+  HomePage(model: .init(isLoading: true))
 }
 
-#Preview("HomeView - Empty") {
-  HomeView(model: .init())
+#Preview("HomePage - Empty") {
+  HomePage(model: .init())
 }
 
-#Preview("HomeView - With Recent Items") {
-  HomeView(model: .mock)
+#Preview("HomePage - With Recent Items") {
+  HomePage(model: .mock)
 }

@@ -53,74 +53,24 @@ struct ContentView: View {
   private var modernTabView: some View {
     TabView(selection: $selectedTab) {
       Tab("Home", systemImage: "house", value: .home) {
-        NavigationStack {
-          HomeView(model: HomeViewModel())
-            .navigationDestination(for: NavigationDestination.self) { destination in
-              switch destination {
-              case .book(let id):
-                BookDetailsView(model: BookDetailsViewModel(bookID: id))
-              case .series, .author:
-                LibraryPage(model: LibraryPageModel(destination: destination))
-              }
-            }
-        }
+        HomePage(model: HomePageModel())
       }
 
       if hasSelectedLibrary {
         Tab("Library", systemImage: "books.vertical.fill", value: .library) {
-          NavigationStack {
-            LibraryPage(model: LibraryPageModel())
-              .navigationDestination(for: NavigationDestination.self) { destination in
-                switch destination {
-                case .book(let id):
-                  BookDetailsView(model: BookDetailsViewModel(bookID: id))
-                case .series, .author:
-                  LibraryPage(model: LibraryPageModel(destination: destination))
-                }
-              }
-          }
+          LibraryRootPage()
         }
 
         Tab("Series", systemImage: "square.stack.3d.up.fill", value: .series) {
-          NavigationStack {
-            SeriesPage(model: SeriesPageModel())
-              .navigationDestination(for: NavigationDestination.self) { destination in
-                switch destination {
-                case .book(let id):
-                  BookDetailsView(model: BookDetailsViewModel(bookID: id))
-                case .series, .author:
-                  LibraryPage(model: LibraryPageModel(destination: destination))
-                }
-              }
-          }
+          SeriesPage(model: SeriesPageModel())
         }
 
         Tab("Authors", systemImage: "person.crop.rectangle.stack", value: .authors) {
-          NavigationStack {
-            AuthorsPage(model: AuthorsPageModel())
-              .navigationDestination(for: NavigationDestination.self) { destination in
-                switch destination {
-                case .book(let id):
-                  BookDetailsView(model: BookDetailsViewModel(bookID: id))
-                case .series, .author:
-                  LibraryPage(model: LibraryPageModel(destination: destination))
-                }
-              }
-          }
+          AuthorsPage(model: AuthorsPageModel())
         }
 
         Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
-          NavigationStack {
-            SearchPage(model: SearchViewModel())
-              .navigationDestination(for: NavigationDestination.self) { destination in
-                switch destination {
-                case .book(let id):
-                  BookDetailsView(model: BookDetailsViewModel(bookID: id))
-                case .series, .author:
-                  LibraryPage(model: LibraryPageModel(destination: destination))
-                }
-              }
-          }
+          SearchPage(model: SearchViewModel())
         }
       }
     }
@@ -136,74 +86,34 @@ struct ContentView: View {
   @ViewBuilder
   private var legacyTabView: some View {
     TabView {
-      NavigationStack {
-        HomeView(model: HomeViewModel())
-          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-          .navigationDestination(for: NavigationDestination.self) { destination in
-            switch destination {
-            case .book(let id):
-              BookDetailsView(model: BookDetailsViewModel(bookID: id))
-            case .series, .author:
-              LibraryPage(model: LibraryPageModel(destination: destination))
-            }
-          }
-      }
-      .tabItem {
-        Image(systemName: "house")
-        Text("Home")
-      }
+      HomePage(model: HomePageModel())
+        .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+        .tabItem {
+          Image(systemName: "house")
+          Text("Home")
+        }
 
       if hasSelectedLibrary {
-        NavigationStack {
-          LibraryPage(model: LibraryPageModel())
-            .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-            .navigationDestination(for: NavigationDestination.self) { destination in
-              switch destination {
-              case .book(let id):
-                BookDetailsView(model: BookDetailsViewModel(bookID: id))
-              case .series, .author:
-                LibraryPage(model: LibraryPageModel(destination: destination))
-              }
-            }
-        }
-        .tabItem {
-          Image(systemName: "books.vertical.fill")
-          Text("Library")
-        }
+        LibraryRootPage()
+          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+          .tabItem {
+            Image(systemName: "books.vertical.fill")
+            Text("Library")
+          }
 
-        NavigationStack {
-          SeriesPage(model: SeriesPageModel())
-            .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-            .navigationDestination(for: NavigationDestination.self) { destination in
-              switch destination {
-              case .book(let id):
-                BookDetailsView(model: BookDetailsViewModel(bookID: id))
-              case .series, .author:
-                LibraryPage(model: LibraryPageModel(destination: destination))
-              }
-            }
-        }
-        .tabItem {
-          Image(systemName: "square.stack.3d.up.fill")
-          Text("Series")
-        }
+        SeriesPage(model: SeriesPageModel())
+          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+          .tabItem {
+            Image(systemName: "square.stack.3d.up.fill")
+            Text("Series")
+          }
 
-        NavigationStack {
-          AuthorsPage(model: AuthorsPageModel())
-            .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
-            .navigationDestination(for: NavigationDestination.self) { destination in
-              switch destination {
-              case .book(let id):
-                BookDetailsView(model: BookDetailsViewModel(bookID: id))
-              case .series, .author:
-                LibraryPage(model: LibraryPageModel(destination: destination))
-              }
-            }
-        }
-        .tabItem {
-          Image(systemName: "person.crop.rectangle.stack")
-          Text("Authors")
-        }
+        AuthorsPage(model: AuthorsPageModel())
+          .safeAreaInset(edge: .bottom) { miniPlayerOffsetView }
+          .tabItem {
+            Image(systemName: "person.crop.rectangle.stack")
+            Text("Authors")
+          }
       }
 
     }

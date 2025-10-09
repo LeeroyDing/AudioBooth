@@ -3,8 +3,24 @@ import SwiftUI
 
 struct SeriesPage: View {
   @StateObject var model: Model
+  @State private var path = NavigationPath()
 
   var body: some View {
+    NavigationStack(path: $path) {
+      content
+        .environment(\.navigationPath, $path)
+        .navigationDestination(for: NavigationDestination.self) { destination in
+          switch destination {
+          case .book(let id):
+            BookDetailsView(model: BookDetailsViewModel(bookID: id))
+          case .series, .author:
+            LibraryPage(model: LibraryPageModel(destination: destination))
+          }
+        }
+    }
+  }
+
+  var content: some View {
     Group {
       if !model.search.searchText.isEmpty {
         SearchView(model: model.search)
@@ -19,7 +35,7 @@ struct SeriesPage: View {
             description: Text("Your library appears to have no series or no library is selected.")
           )
         } else {
-          content
+          seriesContent
         }
       }
     }
@@ -33,7 +49,7 @@ struct SeriesPage: View {
     .onAppear(perform: model.onAppear)
   }
 
-  var content: some View {
+  var seriesContent: some View {
     ScrollView {
       LazyVStack {
         SeriesView(series: model.series)

@@ -4,10 +4,22 @@ import SwiftUI
 
 struct SearchPage: View {
   @StateObject var model: SearchView.Model
+  @State private var path = NavigationPath()
 
   var body: some View {
-    SearchView(model: model)
-      .searchable(text: $model.searchText)
+    NavigationStack(path: $path) {
+      SearchView(model: model)
+        .searchable(text: $model.searchText)
+        .environment(\.navigationPath, $path)
+        .navigationDestination(for: NavigationDestination.self) { destination in
+          switch destination {
+          case .book(let id):
+            BookDetailsView(model: BookDetailsViewModel(bookID: id))
+          case .series, .author:
+            LibraryPage(model: LibraryPageModel(destination: destination))
+          }
+        }
+    }
   }
 }
 

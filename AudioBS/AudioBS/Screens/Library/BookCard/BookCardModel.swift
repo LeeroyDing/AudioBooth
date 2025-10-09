@@ -31,10 +31,6 @@ final class BookCardModel: BookCard.Model {
       progress: (try? MediaProgress.fetch(bookID: id))?.progress,
       downloadState: item.isDownloaded ? .downloaded : .notDownloaded
     )
-
-    startObservingProgress()
-    startObservingDownloadState()
-    startObservingLocalBook()
   }
 
   init(_ item: Book, sortBy: BooksService.SortBy?) {
@@ -76,15 +72,18 @@ final class BookCardModel: BookCard.Model {
       coverURL: item.coverURL,
       sequence: item.series?.first?.sequence
     )
+  }
 
+  override func onAppear() {
     startObservingProgress()
     startObservingDownloadState()
     startObservingLocalBook()
   }
 
-  isolated deinit {
+  override func onDisappear() {
     progressObservationTask?.cancel()
     localBookObservationTask?.cancel()
+    cancellables.removeAll()
   }
 
   private func startObservingProgress() {

@@ -4,21 +4,22 @@ import SwiftUI
 
 struct BookCard: View {
   @Bindable var model: Model
+  @Environment(\.navigationPath) private var navigationPath
 
   var body: some View {
-    Group {
+    Button {
       if case .downloading = model.downloadState {
-        Button(action: model.onCancelDownloadTapped) {
-          content
-        }
+        model.onCancelDownloadTapped()
       } else {
-        NavigationLink(value: NavigationDestination.book(id: model.id)) {
-          content
-        }
+        navigationPath?.wrappedValue.append(NavigationDestination.book(id: model.id))
       }
+    } label: {
+      content
     }
     .buttonStyle(.plain)
     .contextMenu { contextMenu }
+    .onAppear(perform: model.onAppear)
+    .onDisappear(perform: model.onDisappear)
   }
 
   var content: some View {
@@ -160,6 +161,9 @@ extension BookCard {
     let sequence: String?
     var progress: Double?
     var downloadState: DownloadManager.DownloadState?
+
+    func onAppear() {}
+    func onDisappear() {}
 
     func onDownloadTapped() {}
     func onCancelDownloadTapped() {}

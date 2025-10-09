@@ -3,8 +3,24 @@ import SwiftUI
 
 struct AuthorsPage: View {
   @StateObject var model: Model
+  @State private var path = NavigationPath()
 
   var body: some View {
+    NavigationStack(path: $path) {
+      content
+        .environment(\.navigationPath, $path)
+        .navigationDestination(for: NavigationDestination.self) { destination in
+          switch destination {
+          case .book(let id):
+            BookDetailsView(model: BookDetailsViewModel(bookID: id))
+          case .series, .author:
+            LibraryPage(model: LibraryPageModel(destination: destination))
+          }
+        }
+    }
+  }
+
+  var content: some View {
     Group {
       if !model.searchViewModel.searchText.isEmpty {
         SearchView(model: model.searchViewModel)
@@ -20,7 +36,7 @@ struct AuthorsPage: View {
               "Your library appears to have no authors or no library is selected.")
           )
         } else {
-          content
+          authorsContent
         }
       }
     }
@@ -34,7 +50,7 @@ struct AuthorsPage: View {
     .onAppear(perform: model.onAppear)
   }
 
-  var content: some View {
+  var authorsContent: some View {
     ScrollView {
       LazyVStack {
         AuthorsView(authors: model.authors)
