@@ -21,12 +21,12 @@ final class PlayerManager: ObservableObject {
   private func restoreLastPlayer() async {
     guard current == nil,
       let savedBookID = UserDefaults.standard.string(forKey: Self.currentBookIDKey),
-      let recent = try? LocalBook.fetch(bookID: savedBookID)
+      let book = try? LocalBook.fetch(bookID: savedBookID)
     else {
       return
     }
 
-    setCurrent(recent)
+    setCurrent(book)
   }
 
   var hasActivePlayer: Bool {

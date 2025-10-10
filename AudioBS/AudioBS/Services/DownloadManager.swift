@@ -131,11 +131,11 @@ final class DownloadManager: NSObject, ObservableObject {
           return
         }
 
-        let recentItem = LocalBook(from: playSession.libraryItem)
+        let book = LocalBook(from: playSession.libraryItem)
 
-        try recentItem.save()
+        try book.save()
 
-        startDownload(for: recentItem, session: session)
+        startDownload(for: book, session: session)
 
       } catch {
         downloads.removeValue(forKey: bookID)

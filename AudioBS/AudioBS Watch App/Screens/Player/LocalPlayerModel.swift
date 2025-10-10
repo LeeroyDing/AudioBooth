@@ -378,7 +378,6 @@ extension LocalPlayerModel {
         let player = try await setupAudioPlayer()
         configurePlayerComponents(player: player)
         seekToLastPosition(player: player)
-        saveLocalBook()
 
         isLoading = false
       } catch {
@@ -512,7 +511,7 @@ extension LocalPlayerModel {
         self.timerSecondsCounter += 1
 
         if self.timerSecondsCounter % 20 == 0 {
-          self.updateRecentlyPlayedProgress()
+          self.updateMediaProgress()
         }
 
         DispatchQueue.main.async {
@@ -545,14 +544,6 @@ extension LocalPlayerModel {
     }
   }
 
-  private func saveLocalBook() {
-    do {
-      try item.save()
-    } catch {
-      print("Failed to save recently played item: \(error)")
-    }
-  }
-
   private func handlePlaybackStateChange(_ isNowPlaying: Bool) {
     let now = Date()
 
@@ -567,7 +558,9 @@ extension LocalPlayerModel {
       }
       lastPlaybackAt = nil
     }
+
     try? mediaProgress.save()
+    try? item.save()
   }
 
   private func syncSessionProgress() {
@@ -594,8 +587,7 @@ extension LocalPlayerModel {
     }
   }
 
-  private func updateRecentlyPlayedProgress() {
-
+  private func updateMediaProgress() {
     Task { @MainActor in
       do {
         if isPlaying, let lastTime = lastPlaybackAt {
@@ -610,11 +602,10 @@ extension LocalPlayerModel {
           mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
         }
         try mediaProgress.save()
-        try item.save()
 
         syncSessionProgress()
       } catch {
-        print("Failed to update recently played progress: \(error)")
+        print("Failed to update played progress: \(error)")
       }
     }
   }

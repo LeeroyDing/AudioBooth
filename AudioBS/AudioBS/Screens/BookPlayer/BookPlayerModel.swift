@@ -255,7 +255,7 @@ extension BookPlayerModel {
         print("Found existing progress: \(mediaProgress.currentTime)s")
       }
     } catch {
-      print("Failed to fetch existing recently played item: \(error)")
+      print("Failed to fetch local book item: \(error)")
       Toast(error: "Failed to load playback progress").show()
     }
   }
@@ -281,7 +281,6 @@ extension BookPlayerModel {
           let player = try await setupAudioPlayer()
           configurePlayerComponents(player: player)
           seekToLastPosition(player: player)
-          saveLocalBook()
 
           isLoading = false
           sendWatchUpdate()
@@ -309,7 +308,6 @@ extension BookPlayerModel {
           let player = try await setupAudioPlayer()
           configurePlayerComponents(player: player)
           seekToLastPosition(player: player)
-          saveLocalBook()
 
           isLoading = false
           sendWatchUpdate()
@@ -514,7 +512,7 @@ extension BookPlayerModel {
         self.timerSecondsCounter += 1
 
         if self.timerSecondsCounter % 20 == 0 {
-          self.updateRecentlyPlayedProgress()
+          self.updateMediaProgress()
         }
 
         if self.timerSecondsCounter % 2 == 0 {
@@ -570,19 +568,6 @@ extension BookPlayerModel {
     }
 
     return AVPlayerItem(asset: composition)
-  }
-
-  private func saveLocalBook() {
-    guard let item else {
-      return
-    }
-
-    do {
-      try item.save()
-    } catch {
-      print("Failed to save recently played item: \(error)")
-      Toast(error: "Failed to save playback progress").show()
-    }
   }
 
   private func isPlayerUsingRemoteURL() -> Bool {
@@ -663,11 +648,14 @@ extension BookPlayerModel {
       if let last = lastPlaybackAt {
         let timeListened = now.timeIntervalSince(last)
         mediaProgress.timeListened += timeListened
+        mediaProgress.lastPlayedAt = Date()
         syncSessionProgress()
       }
       lastPlaybackAt = nil
     }
+
     try? mediaProgress.save()
+    try? item?.save()
 
     sendWatchUpdate()
   }
@@ -696,9 +684,7 @@ extension BookPlayerModel {
     }
   }
 
-  private func updateRecentlyPlayedProgress() {
-    guard let item else { return }
-
+  private func updateMediaProgress() {
     Task { @MainActor in
       do {
         if isPlaying, let lastTime = lastPlaybackAt {
@@ -713,11 +699,10 @@ extension BookPlayerModel {
           mediaProgress.progress = mediaProgress.currentTime / mediaProgress.duration
         }
         try mediaProgress.save()
-        try item.save()
 
         syncSessionProgress()
       } catch {
-        print("Failed to update recently played progress: \(error)")
+        print("Failed to update playback progress: \(error)")
         Toast(error: "Failed to update playback progress").show()
       }
     }

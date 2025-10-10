@@ -210,12 +210,12 @@ extension WatchConnectivityManager: WCSessionDelegate {
   private func handlePlayCommand(bookID: String) {
     Task { @MainActor in
       do {
-        if let recentItem = try LocalBook.fetch(bookID: bookID) {
-          PlayerManager.shared.setCurrent(recentItem)
+        if let book = try LocalBook.fetch(bookID: bookID) {
+          PlayerManager.shared.setCurrent(book)
           PlayerManager.shared.current?.onTogglePlaybackTapped()
           PlayerManager.shared.showFullPlayer()
         } else {
-          print("Recently played item not found locally, fetching from server...")
+          print("Book not found locally, fetching from server...")
           let session = try await Audiobookshelf.shared.sessions.start(
             itemID: bookID,
             forceTranscode: false

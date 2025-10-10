@@ -17,40 +17,40 @@ final class ContinueListeningViewModel: ContinueListeningView.Model {
 
   private func observeChanges() {
     Task { @MainActor in
-      for await recentItems in LocalBook.observeAll() {
-        updateBooks(from: recentItems)
+      for await books in LocalBook.observeAll() {
+        updateBooks(from: books)
       }
     }
   }
 
   private func loadCachedBooks() {
     do {
-      let recentItems = try LocalBook.fetchAll()
-      updateBooks(from: recentItems)
+      let books = try LocalBook.fetchAll()
+      updateBooks(from: books)
     } catch {
       print("Failed to load cached books: \(error)")
     }
   }
 
-  private func updateBooks(from recentItems: [LocalBook]) {
-    let items = recentItems.compactMap { item -> BookItem? in
-      guard let mediaProgress = try? MediaProgress.getOrCreate(for: item.bookID) else {
+  private func updateBooks(from books: [LocalBook]) {
+    let items = books.compactMap { book -> BookItem? in
+      guard let mediaProgress = try? MediaProgress.getOrCreate(for: book.bookID) else {
         return nil
       }
 
-      let timeRemaining = max(0, item.duration - mediaProgress.currentTime)
+      let timeRemaining = max(0, book.duration - mediaProgress.currentTime)
 
       return BookItem(
-        id: item.bookID,
-        title: item.title,
-        author: item.authorNames,
-        coverURL: item.coverURL,
+        id: book.bookID,
+        title: book.title,
+        author: book.authorNames,
+        coverURL: book.coverURL,
         timeRemaining: timeRemaining,
-        isDownloaded: item.isDownloaded
+        isDownloaded: book.isDownloaded
       )
     }
 
-    books = items
+    self.books = items
   }
 
   override func fetch() async {

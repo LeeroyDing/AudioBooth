@@ -7,17 +7,17 @@ final class HomePageModel: HomePage.Model {
   private let downloadManager = DownloadManager.shared
   private var playerManager = PlayerManager.shared
 
-  private var recentItemsTask: Task<Void, Never>?
+  private var availableOfflineTask: Task<Void, Never>?
 
   private var availableOffline: [LocalBook] = []
 
-  private var continueListening: [Book] = [] {
-    didSet { refreshRecents() }
+  private var books: [Book] = [] {
+    didSet { refreshContinueListening() }
   }
 
   init() {
     super.init()
-    setupRecentItemsObservation()
+    setupLocalBooksObservation()
     loadCachedContent()
   }
 
@@ -33,9 +33,9 @@ final class HomePageModel: HomePage.Model {
 
   override func onReset(_ shouldRefresh: Bool) {
     availableOffline = []
-    continueListening = []
+    books = []
     others = []
-    recents = nil
+    continueListening = nil
     offline = nil
     isLoading = false
 
@@ -46,37 +46,38 @@ final class HomePageModel: HomePage.Model {
 }
 
 extension HomePageModel {
-  private func setupRecentItemsObservation() {
-    recentItemsTask = Task { [weak self] in
-      for await recents in LocalBook.observeAll() {
+  private func setupLocalBooksObservation() {
+    availableOfflineTask = Task { [weak self] in
+      for await books in LocalBook.observeAll() {
         guard !Task.isCancelled else { break }
-        self?.availableOffline = recents
-        self?.refreshRecents()
+        self?.availableOffline = books
+        self?.refreshContinueListening()
       }
     }
   }
 
-  private func refreshRecents() {
-    var recentItems: [RecentRowModel] = []
+  private func refreshContinueListening() {
+    var books: [ContinueListeningRowModel] = []
 
-    for book in continueListening {
-      recentItems.append(
-        RecentRowModel(
+    for book in self.books {
+      books.append(
+        ContinueListeningRowModel(
           book: book,
           onRemoved: { [weak self] in
             guard let self else { return }
-            self.continueListening = self.continueListening.filter({ $0.id != book.id })
+            self.books = self.books.filter({ $0.id != book.id })
           }
         )
       )
     }
 
-    let sortedRecents = recentItems.sorted(by: >)
+    let sorted = books.sorted(by: >)
 
-    if !sortedRecents.isEmpty {
-      self.recents = Section(title: "Continue Listening", items: .recents(sortedRecents))
+    if !sorted.isEmpty {
+      self.continueListening = Section(
+        title: "Continue Listening", items: .continueListening(sorted))
     } else {
-      self.recents = nil
+      self.continueListening = nil
     }
 
     var offline = [BookCard.Model]()
@@ -105,7 +106,7 @@ extension HomePageModel {
       switch section.entities {
       case .books(let items):
         if section.id == "continue-listening" {
-          continueListening = items
+          books = items
           continue
         } else {
           let books = items.map({ BookCardModel($0, sortBy: .title) })

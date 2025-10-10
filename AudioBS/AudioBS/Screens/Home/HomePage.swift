@@ -28,19 +28,19 @@ struct HomePage: View {
   var content: some View {
     ScrollView {
       VStack(spacing: 24) {
-        if let recents = model.recents {
-          sectionContent(recents)
+        if let section = model.continueListening {
+          sectionContent(section)
         }
 
-        if let offline = model.offline {
-          sectionContent(offline)
+        if let section = model.offline {
+          sectionContent(section)
         }
 
         if model.isLoading && model.others.isEmpty {
           ProgressView("Loading...")
             .frame(maxWidth: .infinity, maxHeight: 200)
         } else if model.others.isEmpty && !model.isLoading {
-          if model.recents == nil && model.offline == nil {
+          if model.continueListening == nil && model.offline == nil {
             emptyState
           } else {
             emptyPersonalizedState
@@ -127,10 +127,10 @@ struct HomePage: View {
         .padding(.horizontal)
 
       switch section.items {
-      case .recents(let items):
+      case .continueListening(let items):
         VStack(spacing: 8) {
           ForEach(items) { item in
-            RecentRow(model: item)
+            ContinueListeningRow(model: item)
           }
         }
         .padding(.horizontal)
@@ -182,15 +182,15 @@ extension HomePage {
       let title: String
 
       enum Items {
+        case continueListening([ContinueListeningRow.Model])
         case books([BookCard.Model])
         case series([SeriesCard.Model])
         case authors([AuthorCard.Model])
-        case recents([RecentRow.Model])
       }
       let items: Items
     }
 
-    var recents: Section?
+    var continueListening: Section?
     var offline: Section?
     var others: [Section]
 
@@ -202,14 +202,14 @@ extension HomePage {
       isLoading: Bool = false,
       isRoot: Bool = true,
       title: String = "Home",
-      recents: Section? = nil,
+      continueListening: Section? = nil,
       offline: Section? = nil,
       others: [Section] = []
     ) {
       self.isLoading = isLoading
       self.isRoot = isRoot
       self.title = title
-      self.recents = recents
+      self.continueListening = continueListening
       self.offline = offline
       self.others = others
     }
@@ -218,15 +218,15 @@ extension HomePage {
 
 extension HomePage.Model {
   static var mock: HomePage.Model {
-    let sampleRecentItems: [RecentRow.Model] = [
-      RecentRow.Model(
+    let books: [ContinueListeningRow.Model] = [
+      ContinueListeningRow.Model(
         title: "The Lord of the Rings",
         author: "J.R.R. Tolkien",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
         progress: 0.45,
         lastPlayedAt: Date().addingTimeInterval(-3600)
       ),
-      RecentRow.Model(
+      ContinueListeningRow.Model(
         title: "Dune",
         author: "Frank Herbert",
         coverURL: URL(string: "https://m.media-amazon.com/images/I/41rrXYM-wHL._SL500_.jpg"),
@@ -236,7 +236,7 @@ extension HomePage.Model {
     ]
 
     return HomePage.Model(
-      recents: Section(title: "Continue Listening", items: .recents(sampleRecentItems))
+      continueListening: Section(title: "Continue Listening", items: .continueListening(books))
     )
   }
 }
@@ -249,6 +249,6 @@ extension HomePage.Model {
   HomePage(model: .init())
 }
 
-#Preview("HomePage - With Recent Items") {
+#Preview("HomePage - With Continue Listening") {
   HomePage(model: .mock)
 }

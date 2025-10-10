@@ -1,8 +1,7 @@
 import API
-import Combine
 import SwiftUI
 
-struct RecentRow: View {
+struct ContinueListeningRow: View {
   @Bindable var model: Model
 
   var body: some View {
@@ -53,7 +52,6 @@ struct RecentRow: View {
     .buttonStyle(.plain)
     .contextMenu { contextMenu }
     .onAppear(perform: model.onAppear)
-    .onDisappear(perform: model.onDisappear)
   }
 
   var cover: some View {
@@ -85,8 +83,6 @@ struct RecentRow: View {
 
   var progressInfo: some View {
     HStack {
-      source
-
       if let progress = model.progress {
         Text(progress.formatted(.percent.precision(.fractionLength(0))))
           .font(.caption)
@@ -96,79 +92,26 @@ struct RecentRow: View {
       Spacer()
 
       if let lastPlayedAt = model.lastPlayedAt {
-        Text(lastPlayedAt, style: .relative)
-          .font(.caption)
-          .foregroundColor(.secondary)
-          .monospacedDigit()
-      }
-    }
-  }
-
-  var source: some View {
-    HStack(spacing: 8) {
-      switch model.downloadState {
-      case .downloading(let progress):
-        Image(systemName: "internaldrive.fill")
-          .font(.caption)
-          .foregroundColor(.blue)
-          .hidden()
-          .overlay {
-            ProgressView(value: progress, total: 1.0)
-              .progressViewStyle(.gauge)
-          }
-      case .downloaded:
-        Image(systemName: "internaldrive.fill")
-          .font(.caption)
-          .foregroundColor(.blue)
-      case .notDownloaded:
-        Image(systemName: "icloud.and.arrow.down")
-          .font(.caption)
-          .foregroundColor(.secondary)
+        if lastPlayedAt == .distantFuture {
+          Text("Playing now")
+            .font(.caption)
+            .foregroundColor(.blue)
+        } else {
+          Text(lastPlayedAt, style: .relative)
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .monospacedDigit()
+        }
       }
     }
   }
 
   @ViewBuilder
   var contextMenu: some View {
-    switch model.downloadState {
-    case .downloading:
-      Button {
-        model.onCancelDownloadTapped()
-      } label: {
-        Label("Cancel Download", systemImage: "stop.circle")
-      }
-    case .notDownloaded:
-      Button {
-        model.onDownloadTapped()
-      } label: {
-        Label("Download", systemImage: "icloud.and.arrow.down")
-      }
-    case .downloaded:
-      Button(role: .destructive) {
-        model.onRemoveFromDeviceTapped()
-      } label: {
-        Label("Remove from Device", systemImage: "trash")
-      }
-    }
-
     Button {
       model.onRemoveFromListTapped()
     } label: {
       Label("Remove from continue listening", systemImage: "eye.slash")
-    }
-
-    if let progress = model.progress, progress >= 1.0 {
-      Button {
-        model.onMarkFinishedTapped(isFinished: false)
-      } label: {
-        Label("Mark as Not Finished", systemImage: "checkmark.circle.fill")
-      }
-    } else {
-      Button {
-        model.onMarkFinishedTapped(isFinished: true)
-      } label: {
-        Label("Mark as Finished", systemImage: "checkmark.circle")
-      }
     }
   }
 
@@ -188,7 +131,7 @@ struct RecentRow: View {
 
 }
 
-extension RecentRow {
+extension ContinueListeningRow {
   @Observable
   class Model: Comparable, Identifiable {
     let bookID: String
@@ -199,17 +142,8 @@ extension RecentRow {
     var lastPlayedAt: Date?
     var timeRemaining: String?
 
-    var downloadState: DownloadManager.DownloadState
-
     func onAppear() {}
-    func onDisappear() {}
-
-    func onDownloadTapped() {}
-    func onCancelDownloadTapped() {}
-    func onRemoveFromDeviceTapped() {}
-
     func onRemoveFromListTapped() {}
-    func onMarkFinishedTapped(isFinished: Bool) {}
 
     init(
       bookID: String = UUID().uuidString,
@@ -218,8 +152,7 @@ extension RecentRow {
       coverURL: URL?,
       progress: Double?,
       lastPlayedAt: Date?,
-      timeRemaining: String? = nil,
-      downloadState: DownloadManager.DownloadState = .notDownloaded
+      timeRemaining: String? = nil
     ) {
       self.bookID = bookID
       self.title = title
@@ -228,14 +161,13 @@ extension RecentRow {
       self.progress = progress
       self.lastPlayedAt = lastPlayedAt
       self.timeRemaining = timeRemaining
-      self.downloadState = downloadState
     }
 
-    static func == (lhs: RecentRow.Model, rhs: RecentRow.Model) -> Bool {
+    static func == (lhs: ContinueListeningRow.Model, rhs: ContinueListeningRow.Model) -> Bool {
       lhs.id == rhs.id
     }
 
-    static func < (lhs: RecentRow.Model, rhs: RecentRow.Model) -> Bool {
+    static func < (lhs: ContinueListeningRow.Model, rhs: ContinueListeningRow.Model) -> Bool {
       switch (lhs.lastPlayedAt, rhs.lastPlayedAt) {
       case (.none, .none): false
       case (.some, .none): false
@@ -246,8 +178,8 @@ extension RecentRow {
   }
 }
 
-extension RecentRow.Model {
-  static let mock = RecentRow.Model(
+extension ContinueListeningRow.Model {
+  static let mock = ContinueListeningRow.Model(
     title: "The Lord of the Rings",
     author: "J.R.R. Tolkien",
     coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
@@ -257,9 +189,9 @@ extension RecentRow.Model {
   )
 }
 
-#Preview("RecentRow") {
+#Preview("ContinueListeningRow") {
   ScrollView {
-    RecentRow(model: .mock)
+    ContinueListeningRow(model: .mock)
       .padding()
   }
 }
