@@ -45,8 +45,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     context["totalTimeRemaining"] = totalTimeRemaining
     context["bookID"] = bookID
     context["title"] = title
-    context["author"] = author ?? ""
-    context["coverURL"] = coverURL?.absoluteString ?? ""
+    context["author"] = author
+    context["coverURL"] = watchCompatibleCoverURL(from: coverURL)
     context["playbackSpeed"] = playbackSpeed
     context["hasActivePlayer"] = true
 
@@ -55,6 +55,14 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     } catch {
       print("Failed to send playback state to watch: \(error)")
     }
+  }
+
+  private func watchCompatibleCoverURL(from url: URL?) -> String? {
+    guard let url = url else { return nil }
+
+    var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+    components?.queryItems = [URLQueryItem(name: "format", value: "jpg")]
+    return components?.url?.absoluteString ?? url.absoluteString
   }
 
   func clearPlaybackState() {

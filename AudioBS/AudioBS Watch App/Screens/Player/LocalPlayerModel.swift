@@ -27,6 +27,8 @@ final class LocalPlayerModel: PlayerView.Model {
   private var lastPlaybackAt: Date?
   private var lastSyncAt = Date()
 
+  private var itemObservation: Task<Void, Never>?
+
   private class LocalPlayerOptionsModel: PlayerOptionsSheet.Model {
     weak var playerModel: LocalPlayerModel?
 
@@ -128,7 +130,7 @@ final class LocalPlayerModel: PlayerView.Model {
   private func setupOptionsModel() {
     let optionsModel = LocalPlayerOptionsModel(
       hasChapters: chapters != nil,
-      downloadState: downloadState
+      downloadState: .notDownloaded
     )
     optionsModel.playerModel = self
     options = optionsModel
@@ -198,33 +200,48 @@ final class LocalPlayerModel: PlayerView.Model {
   }
 
   override func onDownloadTapped() {
-    switch downloadState {
+    switch options.downloadState {
     case .downloading:
       downloadManager.cancelDownload(for: item.bookID)
+      options.downloadState = .notDownloaded
+
     case .downloaded:
       downloadManager.deleteDownload(for: item.bookID)
+      options.downloadState = .notDownloaded
+
     case .notDownloaded:
       downloadManager.startDownload(for: item)
+      options.downloadState = .downloading(progress: 0)
     }
   }
 
   private func setupDownloadStateBinding() {
-    Publishers.CombineLatest(downloadManager.$downloads, downloadManager.$downloadProgress)
-      .map { [weak self] downloads, progress -> DownloadManager.DownloadState in
-        guard let self = self else { return .notDownloaded }
+    downloadManager.$currentProgress
+      .receive(on: DispatchQueue.main)
+      .map { [weak self] progressDict in
+        guard let item = self?.item else { return .notDownloaded }
 
-        if downloads[item.bookID] == true {
-          let downloadProgress = progress[item.bookID] ?? 0.0
-          return .downloading(progress: downloadProgress)
+        if let progress = progressDict[item.bookID] {
+          return .downloading(progress: progress)
         }
 
         return item.isDownloaded ? .downloaded : .notDownloaded
       }
       .sink { [weak self] downloadState in
-        self?.downloadState = downloadState
         self?.options.downloadState = downloadState
       }
       .store(in: &cancellables)
+
+    let bookID = item.bookID
+    itemObservation = Task { [weak self] in
+      for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
+        guard !Task.isCancelled, let self else { continue }
+
+        self.item = updatedItem
+
+        self.options.downloadState = item.isDownloaded ? .downloaded : .notDownloaded
+      }
+    }
   }
 }
 

@@ -1,9 +1,10 @@
+import Combine
 import SwiftUI
 
 struct PlayerOptionsSheet: View {
   @Environment(\.dismiss) private var dismiss
 
-  @Binding var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     List {
@@ -36,7 +37,8 @@ struct PlayerOptionsSheet: View {
 }
 
 extension PlayerOptionsSheet {
-  @Observable class Model: Identifiable {
+  @Observable
+  class Model: ObservableObject, Identifiable {
     let id = UUID()
 
     var isPresented: Bool = false
@@ -59,11 +61,9 @@ extension PlayerOptionsSheet {
 #Preview {
   NavigationStack {
     PlayerOptionsSheet(
-      model: .constant(
-        PlayerOptionsSheet.Model(
-          hasChapters: true,
-          downloadState: .notDownloaded
-        )
+      model: PlayerOptionsSheet.Model(
+        hasChapters: true,
+        downloadState: .notDownloaded
       )
     )
   }

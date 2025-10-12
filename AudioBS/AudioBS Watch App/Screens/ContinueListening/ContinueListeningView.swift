@@ -27,39 +27,7 @@ struct ContinueListeningView: View {
           Button {
             model.playBook(bookID: item.id)
           } label: {
-            HStack(spacing: 12) {
-              Cover(url: item.coverURL, state: .downloaded)
-                .frame(width: 50, height: 50)
-
-              VStack(alignment: .leading, spacing: 4) {
-                Text(item.title)
-                  .font(.caption2)
-                  .fontWeight(.medium)
-                  .lineLimit(2)
-                  .frame(maxWidth: .infinity, alignment: .leading)
-
-                if !item.author.isEmpty {
-                  Text(item.author)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                }
-
-                if item.timeRemaining > 0 {
-                  Text(formatTimeRemaining(item.timeRemaining))
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
-                    .lineLimit(1)
-                }
-              }
-            }
-            .padding()
-            .background(Color(red: 0.1, green: 0.1, blue: 0.2))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(
-              RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(red: 0.2, green: 0.2, blue: 0.4), lineWidth: 1)
-            )
+            ContinueListeningRow(item: item)
           }
           .buttonStyle(.plain)
         }
@@ -80,23 +48,15 @@ struct ContinueListeningView: View {
     .disabled(model.isLoading)
     .padding(.top)
   }
-
-  private func formatTimeRemaining(_ duration: Double) -> String {
-    Duration.seconds(duration).formatted(
-      .units(
-        allowed: [.hours, .minutes],
-        width: .narrow
-      )
-    ) + " left"
-  }
 }
 
 extension ContinueListeningView {
-  @Observable class Model: ObservableObject {
+  @Observable
+  class Model: ObservableObject {
     struct BookItem: Identifiable {
       let id: String
       let title: String
-      let author: String
+      let author: String?
       let coverURL: URL?
       let timeRemaining: Double
       let isDownloaded: Bool
@@ -112,6 +72,55 @@ extension ContinueListeningView {
       self.books = books
       self.isLoading = isLoading
     }
+  }
+}
+
+private struct ContinueListeningRow: View {
+  let item: ContinueListeningView.Model.BookItem
+
+  var body: some View {
+    HStack(spacing: 12) {
+      Cover(url: item.coverURL, state: .downloaded)
+        .frame(width: 50, height: 50)
+
+      VStack(alignment: .leading, spacing: 4) {
+        Text(item.title)
+          .font(.caption2)
+          .fontWeight(.medium)
+          .lineLimit(2)
+          .frame(maxWidth: .infinity, alignment: .leading)
+
+        if let author = item.author {
+          Text(author)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+
+        if item.timeRemaining > 0 {
+          Text(formatTimeRemaining(item.timeRemaining))
+            .font(.footnote)
+            .foregroundStyle(.orange)
+            .lineLimit(1)
+        }
+      }
+    }
+    .padding()
+    .background(Color(red: 0.1, green: 0.1, blue: 0.2))
+    .clipShape(RoundedRectangle(cornerRadius: 16))
+    .overlay(
+      RoundedRectangle(cornerRadius: 16)
+        .stroke(Color(red: 0.2, green: 0.2, blue: 0.4), lineWidth: 1)
+    )
+  }
+
+  private func formatTimeRemaining(_ duration: Double) -> String {
+    Duration.seconds(duration).formatted(
+      .units(
+        allowed: [.hours, .minutes],
+        width: .narrow
+      )
+    ) + " left"
   }
 }
 

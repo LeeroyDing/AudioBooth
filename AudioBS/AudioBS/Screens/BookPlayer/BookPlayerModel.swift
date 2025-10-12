@@ -116,10 +116,10 @@ final class BookPlayerModel: BookPlayer.Model, ObservableObject {
       downloadManager.cancelDownload(for: id)
 
     case .downloaded:
-      downloadState = .notDownloaded
       downloadManager.deleteDownload(for: id)
 
     case .notDownloaded:
+      downloadState = .downloading(progress: 0)
       downloadManager.startDownload(for: item.bookID)
     }
   }

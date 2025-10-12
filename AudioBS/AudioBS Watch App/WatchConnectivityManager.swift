@@ -14,7 +14,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   @Published var totalTimeRemaining: Double = 0
   @Published var bookID: String = ""
   @Published var title: String = ""
-  @Published var author: String = ""
+  @Published var author: String?
   @Published var coverURL: URL?
   @Published var playbackSpeed: Float = 1.0
   @Published var hasActivePlayer: Bool = false
@@ -137,9 +137,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
         self.author = author
       }
 
-      if let coverURLString = applicationContext["coverURL"] as? String,
-        !coverURLString.isEmpty
-      {
+      if let coverURLString = applicationContext["coverURL"] as? String {
         self.coverURL = URL(string: coverURLString)
       } else {
         self.coverURL = nil

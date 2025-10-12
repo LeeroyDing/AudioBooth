@@ -221,14 +221,19 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   override func onDownloadTapped() {
     switch downloadState {
     case .downloading:
+      downloadState = .notDownloaded
       downloadManager.cancelDownload(for: bookID)
+
     case .downloaded:
+      downloadState = .notDownloaded
       downloadManager.deleteDownload(for: bookID)
+
     case .notDownloaded:
       if book == nil {
         Toast(error: "Cannot download without network connection").show()
         return
       }
+      downloadState = .downloading(progress: 0)
       downloadManager.startDownload(for: bookID)
     }
   }

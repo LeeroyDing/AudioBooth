@@ -34,7 +34,7 @@ final class DownloadManager: NSObject, ObservableObject {
 
     let operation = DownloadOperation(bookID: bookID)
     activeOperations[bookID] = operation
-    currentProgress.removeValue(forKey: bookID)
+    currentProgress[bookID] = 0
 
     let progressTask = Task { @MainActor [weak self] in
       for await progress in operation.progress {
@@ -221,7 +221,8 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
       self.session = session
 
-      let book = LocalBook(from: playSession.libraryItem)
+      let existingItem = try? LocalBook.fetch(bookID: bookID)
+      let book = existingItem ?? LocalBook(from: playSession.libraryItem)
       self.book = book
       self.totalBytes = book.orderedTracks.reduce(0) { $0 + ($1.size ?? 0) }
 
@@ -255,6 +256,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
       try await withCheckedThrowingContinuation { continuation in
         let downloadTask = downloadSession.downloadTask(with: trackURL)
+        downloadTask.countOfBytesClientExpectsToReceive = Int64(track.size ?? 500_000_000)
 
         self.currentTrack = downloadTask
         self.continuation = continuation

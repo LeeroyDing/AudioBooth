@@ -9,8 +9,6 @@ final class RemotePlayerModel: PlayerView.Model {
   init() {
     super.init(isReadyToPlay: true, isLocal: false)
     setupBindings()
-
-    downloadState = .downloaded
   }
 
   private func setupBindings() {

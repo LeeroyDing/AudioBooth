@@ -12,17 +12,17 @@ struct PlayerView: View {
   var body: some View {
     VStack(spacing: 6) {
       Button(action: {
-        if model.downloadState != .downloaded {
+        if model.options.downloadState != .downloaded {
           model.onDownloadTapped()
         }
       }) {
         Cover(
           url: model.coverURL,
-          state: model.downloadState
+          state: model.options.downloadState
         )
       }
       .buttonStyle(.plain)
-      .allowsHitTesting(model.downloadState == .notDownloaded)
+      .allowsHitTesting(model.options.downloadState == .notDownloaded)
 
       content
 
@@ -38,7 +38,7 @@ struct PlayerView: View {
       toolbar
     }
     .sheet(isPresented: $model.options.isPresented) {
-      PlayerOptionsSheet(model: $model.options)
+      PlayerOptionsSheet(model: model.options)
     }
     .sheet(
       isPresented: Binding(
@@ -142,8 +142,8 @@ struct PlayerView: View {
           .fontWeight(.medium)
           .multilineTextAlignment(.center)
 
-        if !model.author.isEmpty {
-          Text("by \(model.author)")
+        if let author = model.author {
+          Text("by \(author)")
             .font(.footnote)
             .foregroundStyle(.secondary)
         }
@@ -203,10 +203,9 @@ extension PlayerView {
     var totalTimeRemaining: Double
 
     var title: String
-    var author: String
+    var author: String?
     var coverURL: URL?
     var chapters: ChapterPickerSheet.Model?
-    var downloadState: DownloadManager.DownloadState
     var options: PlayerOptionsSheet.Model
     var playbackDestination: PlaybackDestinationSheet.Model?
 
@@ -224,10 +223,9 @@ extension PlayerView {
       remaining: Double = 0,
       totalTimeRemaining: Double = 0,
       title: String = "",
-      author: String = "",
+      author: String? = nil,
       coverURL: URL? = nil,
-      chapters: ChapterPickerSheet.Model? = nil,
-      downloadState: DownloadManager.DownloadState = .notDownloaded
+      chapters: ChapterPickerSheet.Model? = nil
     ) {
       self.isPlaying = isPlaying
       self.isReadyToPlay = isReadyToPlay
@@ -240,10 +238,9 @@ extension PlayerView {
       self.author = author
       self.coverURL = coverURL
       self.chapters = chapters
-      self.downloadState = downloadState
       self.options = PlayerOptionsSheet.Model(
         hasChapters: chapters != nil,
-        downloadState: downloadState
+        downloadState: .downloaded
       )
     }
   }
