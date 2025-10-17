@@ -80,20 +80,72 @@ extension HomePageModel {
       self.continueListening = nil
     }
 
-    var offline = [BookCard.Model]()
+    var offlineBooks = [(model: BookCard.Model, book: LocalBook)]()
 
     for book in availableOffline {
       if !downloadManager.isDownloading(for: book.bookID),
         !book.isDownloaded,
-        PlayerManager.shared.current?.id != book.bookID
+        playerManager.current?.id != book.bookID
       {
         try? book.delete()
       } else if book.isDownloaded {
-        offline.append(BookCardModel(book))
+        let model = BookCardModel(book)
+        offlineBooks.append((model, book))
       }
     }
 
-    if !offline.isEmpty {
+    if !offlineBooks.isEmpty {
+      let currentBookID = playerManager.current?.id
+      let currentBook = availableOffline.first { $0.bookID == currentBookID }
+      let currentSeriesID = currentBook?.series.first?.id
+      let currentSequence = currentBook?.series.first?.sequence
+
+      offlineBooks.sort { pair1, pair2 in
+        let series1 = pair1.book.series.first
+        let series2 = pair2.book.series.first
+
+        guard let s1 = series1 else { return false }
+        guard let s2 = series2 else { return true }
+
+        let isBook1InCurrentSeries = s1.id == currentSeriesID
+        let isBook2InCurrentSeries = s2.id == currentSeriesID
+
+        if isBook1InCurrentSeries && !isBook2InCurrentSeries {
+          return true
+        }
+        if !isBook1InCurrentSeries && isBook2InCurrentSeries {
+          return false
+        }
+
+        if isBook1InCurrentSeries && isBook2InCurrentSeries, let currentSeq = currentSequence {
+          let seq1Value = Double(s1.sequence) ?? 0
+          let seq2Value = Double(s2.sequence) ?? 0
+          let currentSeqValue = Double(currentSeq) ?? 0
+
+          let isBook1CurrentOrAfter = seq1Value >= currentSeqValue
+          let isBook2CurrentOrAfter = seq2Value >= currentSeqValue
+
+          if isBook1CurrentOrAfter && isBook2CurrentOrAfter {
+            return seq1Value < seq2Value
+          }
+
+          if !isBook1CurrentOrAfter && !isBook2CurrentOrAfter {
+            return seq1Value > seq2Value
+          }
+
+          return isBook1CurrentOrAfter
+        }
+
+        if s1.name != s2.name {
+          return s1.name < s2.name
+        }
+
+        let seq1Value = Double(s1.sequence) ?? 0
+        let seq2Value = Double(s2.sequence) ?? 0
+        return seq1Value < seq2Value
+      }
+
+      let offline = offlineBooks.map { $0.model }
       self.offline = Section(title: "Available Offline", items: .books(offline))
     } else {
       self.offline = nil
