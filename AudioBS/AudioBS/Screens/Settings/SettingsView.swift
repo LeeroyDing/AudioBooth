@@ -97,6 +97,10 @@ struct SettingsView: View {
         switch destination {
         case "libraries":
           LibrariesView(model: model.library)
+        case "mediaProgress":
+          if let model = model.mediaProgressList {
+            MediaProgressListView(model: model)
+          }
         default:
           EmptyView()
         }
@@ -200,6 +204,13 @@ struct SettingsView: View {
   @ViewBuilder
   var development: some View {
     Section("Development") {
+      NavigationLink(value: "mediaProgress") {
+        HStack {
+          Image(systemName: "chart.line.uptrend.xyaxis")
+          Text("Media Progress")
+        }
+      }
+
       Button("Clear Persistent Storage", action: model.onClearStorageTapped)
         .foregroundColor(.red)
 
@@ -237,6 +248,7 @@ extension SettingsView {
     var library: LibrariesView.Model
     var tipJar: TipJarView.Model
     var discoveredServers: [DiscoveredServer]
+    var mediaProgressList: MediaProgressListView.Model?
 
     var isTypingScheme: Bool {
       let lowercased = serverURL.lowercased()
@@ -270,7 +282,8 @@ extension SettingsView {
       authenticationMethod: AuthenticationMethod = .usernamePassword,
       library: LibrariesView.Model,
       tipJar: TipJarView.Model = .mock,
-      discoveredServers: [DiscoveredServer] = []
+      discoveredServers: [DiscoveredServer] = [],
+      mediaProgressList: MediaProgressListView.Model? = nil
     ) {
       self.serverURL = serverURL
       self.serverScheme = serverScheme
@@ -284,6 +297,7 @@ extension SettingsView {
       self.library = library
       self.tipJar = tipJar
       self.discoveredServers = discoveredServers
+      self.mediaProgressList = mediaProgressList
     }
   }
 }

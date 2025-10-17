@@ -18,7 +18,8 @@ final class SettingsViewModel: SettingsView.Model {
       username: "",
       password: "",
       library: LibrariesViewModel(),
-      tipJar: TipJarViewModel()
+      tipJar: TipJarViewModel(),
+      mediaProgressList: MediaProgressListViewModel()
     )
 
   }

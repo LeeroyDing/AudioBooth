@@ -15,10 +15,12 @@ struct NetworkRequest<T: Decodable> {
   let query: [String: String]?
   let headers: [String: String]?
   let timeout: TimeInterval?
+  let discretionary: Bool
 
   init(
     path: String, method: HTTPMethod = .get, body: (any Encodable)? = nil,
-    query: [String: String]? = nil, headers: [String: String]? = nil, timeout: TimeInterval? = nil
+    query: [String: String]? = nil, headers: [String: String]? = nil, timeout: TimeInterval? = nil,
+    discretionary: Bool = false
   ) {
     self.path = path
     self.method = method
@@ -26,6 +28,7 @@ struct NetworkRequest<T: Decodable> {
     self.query = query
     self.headers = headers
     self.timeout = timeout
+    self.discretionary = discretionary
   }
 }
 
@@ -35,38 +38,65 @@ struct NetworkResponse<T: Decodable> {
 
 final class NetworkService {
   private let baseURL: URL
-  private let session: URLSession
-  private let jsonDecoder: JSONDecoder
+  private let headersProvider: () -> [String: String]
 
-  init(baseURL: URL, configuration: ((URLSessionConfiguration) -> Void)? = nil) {
-    self.baseURL = baseURL
-
+  private let session: URLSession = {
     let config = URLSessionConfiguration.default
+    config.timeoutIntervalForRequest = 30
+    config.timeoutIntervalForResource = 60
 
     #if os(watchOS)
       config.timeoutIntervalForResource = 300
-      config.allowsCellularAccess = true
-      config.waitsForConnectivity = true
       config.allowsExpensiveNetworkAccess = true
       config.allowsConstrainedNetworkAccess = true
+      config.allowsCellularAccess = true
     #endif
 
-    configuration?(config)
-    self.session = URLSession(configuration: config)
+    return URLSession(configuration: config)
+  }()
 
+  private let discretionarySession: URLSession = {
+    let discretionaryConfig = URLSessionConfiguration.default
+    discretionaryConfig.timeoutIntervalForRequest = 30
+    discretionaryConfig.timeoutIntervalForResource = 60
+
+    #if os(watchOS)
+      discretionaryConfig.timeoutIntervalForResource = 300
+      discretionaryConfig.allowsExpensiveNetworkAccess = true
+      discretionaryConfig.allowsConstrainedNetworkAccess = true
+      discretionaryConfig.allowsCellularAccess = true
+      discretionaryConfig.waitsForConnectivity = true
+    #endif
+
+    #if os(iOS)
+      discretionaryConfig.sessionSendsLaunchEvents = true
+      discretionaryConfig.isDiscretionary = true
+      discretionaryConfig.shouldUseExtendedBackgroundIdleMode = true
+    #endif
+
+    return URLSession(configuration: discretionaryConfig)
+  }()
+
+  private let decoder: JSONDecoder = {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .custom { decoder in
       let container = try decoder.singleValueContainer()
       let timestamp = try container.decode(Int64.self)
       return Date(timeIntervalSince1970: TimeInterval(timestamp / 1000))
     }
-    self.jsonDecoder = decoder
+    return decoder
+  }()
+
+  init(baseURL: URL, headersProvider: @escaping () -> [String: String] = { [:] }) {
+    self.baseURL = baseURL
+    self.headersProvider = headersProvider
   }
 
   func send<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
     let urlRequest = try buildURLRequest(from: request)
 
-    let (data, response) = try await session.data(for: urlRequest)
+    let selectedSession = request.discretionary ? discretionarySession : session
+    let (data, response) = try await selectedSession.data(for: urlRequest)
 
     guard let httpResponse = response as? HTTPURLResponse else {
       throw URLError(.badServerResponse)
@@ -83,7 +113,7 @@ final class NetworkService {
       throw URLError(.cannotDecodeContentData)
     } else {
       do {
-        decodedValue = try jsonDecoder.decode(T.self, from: data)
+        decodedValue = try decoder.decode(T.self, from: data)
       } catch {
         print("Failed to decode \(T.self): \(error)")
         throw error
@@ -106,6 +136,10 @@ final class NetworkService {
     var urlRequest = URLRequest(url: url)
     urlRequest.httpMethod = request.method.rawValue
     urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    for (key, value) in headersProvider() {
+      urlRequest.setValue(value, forHTTPHeaderField: key)
+    }
 
     if let headers = request.headers {
       for (key, value) in headers {

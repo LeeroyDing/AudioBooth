@@ -108,7 +108,8 @@ public final class SessionService {
       path: "/api/session/\(id)/sync",
       method: .post,
       body: SyncRequest(timeListened: Int(timeListened), currentTime: currentTime),
-      timeout: timeout
+      timeout: timeout,
+      discretionary: true
     )
 
     do {

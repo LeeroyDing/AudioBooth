@@ -43,14 +43,11 @@ public final class Audiobookshelf: @unchecked Sendable {
       return
     }
 
-    networkService = NetworkService(baseURL: connection.serverURL) { configuration in
-      configuration.httpAdditionalHeaders = [
-        "Authorization": "Bearer \(connection.token)"
-      ]
-      configuration.timeoutIntervalForRequest = 30
-      configuration.timeoutIntervalForResource = 60
-      configuration.waitsForConnectivity = true
-      configuration.allowsCellularAccess = true
+    networkService = NetworkService(baseURL: connection.serverURL) { [weak self] in
+      guard let token = self?.authentication.connection?.token else {
+        return [:]
+      }
+      return ["Authorization": "Bearer \(token)"]
     }
   }
 
