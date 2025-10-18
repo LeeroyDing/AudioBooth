@@ -725,9 +725,7 @@ extension BookPlayerModel {
 
         if isSessionNotFoundError(error) {
           print("Session not found (404) - triggering recovery")
-          await MainActor.run {
-            handleStreamFailure(error: error)
-          }
+          handleStreamFailure(error: error)
         }
       }
     }
@@ -804,11 +802,9 @@ extension BookPlayerModel {
     let currentTime = player.currentTime()
     let wasPlaying = isPlaying
 
-    await MainActor.run {
-      player.pause()
-      isLoading = true
-      Toast(message: "Reconnecting...").show()
-    }
+    player.pause()
+    isLoading = true
+    Toast(message: "Reconnecting...").show()
 
     let delay = min(pow(2.0, Double(recoveryAttempts - 1)), 8.0)
     if delay > 0 {
@@ -841,43 +837,39 @@ extension BookPlayerModel {
         playerItem = AVPlayerItem(url: trackURL)
       }
 
-      await MainActor.run {
-        player.replaceCurrentItem(with: playerItem)
-        setupPlayerObservers()
+      player.replaceCurrentItem(with: playerItem)
+      setupPlayerObservers()
 
-        let rewindTime = CMTimeSubtract(currentTime, CMTime(seconds: 5, preferredTimescale: 1000))
-        let seekTime = CMTimeMaximum(rewindTime, .zero)
+      let rewindTime = CMTimeSubtract(currentTime, CMTime(seconds: 5, preferredTimescale: 1000))
+      let seekTime = CMTimeMaximum(rewindTime, .zero)
 
-        player.seek(to: seekTime) { [weak self] _ in
-          guard let self else { return }
+      player.seek(to: seekTime) { [weak self] _ in
+        guard let self else { return }
 
-          self.isLoading = false
-          self.isRecovering = false
+        self.isLoading = false
+        self.isRecovering = false
 
-          if wasPlaying {
-            player.rate = self.speed.playbackSpeed
-          }
-
-          print(
-            "Successfully recovered stream at position: \(CMTimeGetSeconds(seekTime))s (rewound 5s)"
-          )
-          Toast(message: "Reconnected").show()
+        if wasPlaying {
+          player.rate = self.speed.playbackSpeed
         }
+
+        print(
+          "Successfully recovered stream at position: \(CMTimeGetSeconds(seekTime))s (rewound 5s)"
+        )
+        Toast(message: "Reconnected").show()
       }
 
     } catch {
       print("Failed to recover session: \(error)")
 
-      await MainActor.run {
-        isLoading = false
-        isRecovering = false
+      isLoading = false
+      isRecovering = false
 
-        if recoveryAttempts < maxRecoveryAttempts {
-          handleStreamFailure(error: error)
-        } else {
-          Toast(error: "Unable to reconnect. Please try again later.").show()
-          PlayerManager.shared.clearCurrent()
-        }
+      if recoveryAttempts < maxRecoveryAttempts {
+        handleStreamFailure(error: error)
+      } else {
+        Toast(error: "Unable to reconnect. Please try again later.").show()
+        PlayerManager.shared.clearCurrent()
       }
     }
   }

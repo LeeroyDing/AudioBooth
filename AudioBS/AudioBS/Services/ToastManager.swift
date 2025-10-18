@@ -2,7 +2,6 @@ import Combine
 import SwiftUI
 import UIKit
 
-@MainActor
 public struct Toast {
   let message: String
   let type: ToastType
