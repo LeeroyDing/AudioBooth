@@ -6,6 +6,7 @@ import SwiftUI
 struct BookPlayer: View {
   @Binding var model: Model
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.verticalSizeClass) private var verticalSizeClass
   @StateObject private var playerManager = PlayerManager.shared
 
   var body: some View {
@@ -18,22 +19,12 @@ struct BookPlayer: View {
         )
         .ignoresSafeArea()
 
-        VStack(spacing: 0) {
-
-          VStack(spacing: 24) {
-            cover
-
-            Spacer()
-
-            chaptersDisplay
-
-            PlaybackProgressView(model: $model.playbackProgress)
-
-            mainPlaybackControls
-
-            bottomControlBar
+        Group {
+          if verticalSizeClass == .compact {
+            landscapeLayout
+          } else {
+            portraitLayout
           }
-          .padding(.horizontal, 24)
         }
       }
       .toolbar {
@@ -66,6 +57,49 @@ struct BookPlayer: View {
     .sheet(isPresented: $model.timer.isPresented) {
       TimerPickerSheet(model: $model.timer)
     }
+  }
+
+  private var portraitLayout: some View {
+    VStack(spacing: 0) {
+      VStack(spacing: 24) {
+        cover
+
+        Spacer()
+
+        chaptersDisplay
+
+        PlaybackProgressView(model: $model.playbackProgress)
+
+        mainPlaybackControls
+
+        bottomControlBar
+      }
+      .padding(.horizontal, 24)
+    }
+  }
+
+  private var landscapeLayout: some View {
+    HStack(spacing: 24) {
+      cover
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+
+      VStack(spacing: 24) {
+        Spacer()
+
+        chaptersDisplay
+
+        PlaybackProgressView(model: $model.playbackProgress)
+
+        mainPlaybackControls
+
+        bottomControlBar
+
+        Spacer()
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.horizontal, 24)
+    }
+    .padding(.horizontal, 24)
   }
 
   private var cover: some View {
