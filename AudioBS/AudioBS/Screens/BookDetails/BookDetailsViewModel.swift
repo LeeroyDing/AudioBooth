@@ -229,6 +229,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           baseFont.fontDescriptor.withSymbolicTraits(traits) ?? baseFont.fontDescriptor
         attributedString[run.range].font = UIFont(descriptor: descriptor, size: baseFont.pointSize)
       }
+      attributedString[run.range].foregroundColor = nil
     }
 
     return attributedString
