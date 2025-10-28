@@ -10,6 +10,7 @@ final class SessionManager {
 
   private let taskIdentifier = "me.jgrenier.AudioBS.close-session"
   private let sessionIDKey = "activeSessionID"
+  private let retryCountKey = "sessionCloseRetryCount"
   private let inactivityTimeout: TimeInterval = 10 * 60
   private let audiobookshelf = Audiobookshelf.shared
 
@@ -38,6 +39,7 @@ final class SessionManager {
     }
 
     current = session
+    UserDefaults.standard.set(0, forKey: retryCountKey)
     scheduleSessionClose()
 
     var updatedItem = item
@@ -68,7 +70,7 @@ final class SessionManager {
   func closeSession(
     timeListened: TimeInterval = 0,
     currentTime: TimeInterval = 0
-  ) async {
+  ) async throws {
     let sessionID = current?.id ?? UserDefaults.standard.string(forKey: sessionIDKey)
 
     guard let sessionID else {
@@ -94,9 +96,32 @@ final class SessionManager {
       AppLogger.session.info("Successfully closed session: \(sessionID)")
       current = nil
       UserDefaults.standard.removeObject(forKey: sessionIDKey)
+      UserDefaults.standard.removeObject(forKey: retryCountKey)
       cancelScheduledSessionClose()
     } catch {
       AppLogger.session.error("Failed to close session: \(error)")
+
+      let retryCount = UserDefaults.standard.integer(forKey: retryCountKey)
+      guard let backoffDelay = calculateBackoffDelay(retryCount: retryCount) else {
+        AppLogger.session.warning(
+          "Maximum retry attempts reached. Giving up on closing session \(sessionID). Session will auto-expire on server after 24h."
+        )
+        current = nil
+        UserDefaults.standard.removeObject(forKey: sessionIDKey)
+        UserDefaults.standard.removeObject(forKey: retryCountKey)
+        cancelScheduledSessionClose()
+        return
+      }
+
+      let newRetryCount = retryCount + 1
+      UserDefaults.standard.set(newRetryCount, forKey: retryCountKey)
+
+      AppLogger.session.info(
+        "Rescheduling session close with backoff delay: \(backoffDelay)s (retry: \(newRetryCount))"
+      )
+
+      scheduleSessionClose(customDelay: backoffDelay)
+      throw error
     }
   }
 
@@ -147,6 +172,23 @@ final class SessionManager {
     return true
   }
 
+  private func calculateBackoffDelay(retryCount: Int) -> TimeInterval? {
+    let backoffSchedule: [TimeInterval] = [
+      10 * 60,
+      30 * 60,
+      60 * 60,
+      2 * 60 * 60,
+      4 * 60 * 60,
+      4 * 60 * 60,
+      4 * 60 * 60,
+      4 * 60 * 60,
+    ]
+
+    guard retryCount < backoffSchedule.count else { return nil }
+
+    return backoffSchedule[retryCount]
+  }
+
   private func registerBackgroundTask() {
     let success = BGTaskScheduler.shared.register(
       forTaskWithIdentifier: taskIdentifier,
@@ -168,7 +210,7 @@ final class SessionManager {
     }
   }
 
-  private func scheduleSessionClose() {
+  private func scheduleSessionClose(customDelay: TimeInterval? = nil) {
     guard let sessionID = current?.id else {
       AppLogger.session.warning("Cannot schedule session close - no active session")
       return
@@ -176,13 +218,14 @@ final class SessionManager {
 
     UserDefaults.standard.set(sessionID, forKey: sessionIDKey)
 
+    let delay = customDelay ?? inactivityTimeout
     let request = BGAppRefreshTaskRequest(identifier: taskIdentifier)
-    request.earliestBeginDate = Date(timeIntervalSinceNow: inactivityTimeout)
+    request.earliestBeginDate = Date(timeIntervalSinceNow: delay)
 
     do {
       try BGTaskScheduler.shared.submit(request)
       AppLogger.session.info(
-        "Scheduled background task to close session \(sessionID) after \(self.inactivityTimeout)s")
+        "Scheduled background task to close session \(sessionID) after \(delay)s")
     } catch let error as NSError {
       if error.code == 1 {
         AppLogger.session.warning(
@@ -201,26 +244,34 @@ final class SessionManager {
   }
 
   private func handleBackgroundTask(_ task: BGAppRefreshTask) {
-    AppLogger.session.info("Background task executing - checking if session should be closed")
+    let retryCount = UserDefaults.standard.integer(forKey: retryCountKey)
+    AppLogger.session.info(
+      "Background task executing - checking if session should be closed (retry: \(retryCount))")
 
     let nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
     let playbackRate = nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? 0.0
 
     if playbackRate > 0 {
       AppLogger.session.info("Playback is still active, rescheduling session close")
+      UserDefaults.standard.set(0, forKey: retryCountKey)
       scheduleSessionClose()
       task.setTaskCompleted(success: false)
     } else {
-      AppLogger.session.info("Playback is not active, closing session")
+      AppLogger.session.info("Playback is not active, attempting to close session")
       Task {
-        await closeSession()
-        task.setTaskCompleted(success: true)
+        do {
+          try await closeSession()
+          task.setTaskCompleted(success: true)
+        } catch {
+          task.setTaskCompleted(success: false)
+        }
       }
     }
   }
 
   func clearSession() {
     current = nil
+    UserDefaults.standard.set(0, forKey: retryCountKey)
     cancelScheduledSessionClose()
     cancelInactivityTask()
   }
@@ -257,7 +308,7 @@ final class SessionManager {
         }
 
         AppLogger.session.info("Inactivity timeout reached - closing session")
-        await closeSession()
+        try? await closeSession()
       } catch {
         AppLogger.session.debug("Inactivity task sleep was interrupted: \(error)")
       }

@@ -965,7 +965,7 @@ extension BookPlayerModel {
 
   func closeSession() {
     Task {
-      await sessionManager.closeSession(
+      try? await sessionManager.closeSession(
         timeListened: mediaProgress.timeListened,
         currentTime: mediaProgress.currentTime
       )
