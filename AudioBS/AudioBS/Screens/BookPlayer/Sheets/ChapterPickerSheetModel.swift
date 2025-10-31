@@ -39,7 +39,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     }
   }
 
-  func onPreviousChapterTapped() {
+  override func onPreviousChapterTapped() {
     let currentChapter = chapters[currentIndex]
     let timeInCurrentChapter = currentTime - currentChapter.start
 
@@ -52,7 +52,7 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     }
   }
 
-  func onNextChapterTapped() {
+  override func onNextChapterTapped() {
     guard currentIndex < chapters.count - 2 else { return }
     let nextChapter = chapters[currentIndex + 1]
     currentIndex += 1

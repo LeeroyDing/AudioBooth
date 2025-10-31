@@ -182,7 +182,7 @@ struct BookPlayer: View {
     HStack(spacing: 32) {
       if let chapters = model.chapters {
         let isFirstChapter = chapters.currentIndex == 0
-        Button(action: { chapters.onChapterTapped(at: chapters.currentIndex - 1) }) {
+        Button(action: { chapters.onPreviousChapterTapped() }) {
           Image(systemName: "backward.end")
             .font(.system(size: 30, weight: .thin))
             .foregroundColor((model.isLoading || isFirstChapter) ? .white.opacity(0.3) : .white)
@@ -228,7 +228,7 @@ struct BookPlayer: View {
 
       if let chapters = model.chapters {
         let isLastChapter = chapters.currentIndex == chapters.chapters.count - 1
-        Button(action: { chapters.onChapterTapped(at: chapters.currentIndex + 1) }) {
+        Button(action: { chapters.onNextChapterTapped() }) {
           Image(systemName: "forward.end")
             .font(.system(size: 30, weight: .thin))
             .foregroundColor((model.isLoading || isLastChapter) ? .white.opacity(0.3) : .white)

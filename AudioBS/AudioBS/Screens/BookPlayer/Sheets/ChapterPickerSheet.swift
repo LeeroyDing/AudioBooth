@@ -91,6 +91,8 @@ extension ChapterPickerSheet {
     }
 
     func onChapterTapped(at index: Int) {}
+    func onPreviousChapterTapped() {}
+    func onNextChapterTapped() {}
   }
 }
 

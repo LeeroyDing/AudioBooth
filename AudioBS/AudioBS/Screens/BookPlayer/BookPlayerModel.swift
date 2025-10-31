@@ -424,8 +424,6 @@ extension BookPlayerModel {
   private func setupNowPlayingMetadata() {
     nowPlayingInfo[MPMediaItemPropertyTitle] = title
     nowPlayingInfo[MPMediaItemPropertyArtist] = author
-    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] =
-      playbackProgress.current + playbackProgress.remaining
 
     if let cover {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: cover.size) { _ in
@@ -437,6 +435,8 @@ extension BookPlayerModel {
   }
 
   private func updateNowPlayingInfo() {
+    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] =
+      playbackProgress.current + playbackProgress.remaining
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? speed.playbackSpeed : 0.0
 
@@ -756,7 +756,10 @@ extension BookPlayerModel {
     var shouldMarkFinished = isNearEnd
 
     if let chaptersModel = chapters as? ChapterPickerSheetViewModel {
-      let isOnLastChapter = chaptersModel.currentIndex == chaptersModel.chapters.count - 1
+      let isOnLastChapter =
+        chaptersModel.chapters.count > 1
+        && chaptersModel.currentIndex == chaptersModel.chapters.count - 1
+
       shouldMarkFinished = isOnLastChapter || isNearEnd
       AppLogger.player.debug("📖 Chapter check: \(isOnLastChapter), Near end: \(isNearEnd)")
     } else {
