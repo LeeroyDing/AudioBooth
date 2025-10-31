@@ -438,7 +438,7 @@ extension BookPlayerModel {
 
   private func updateNowPlayingInfo() {
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
-    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? speed.playbackSpeed : 0.0
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
   }
@@ -449,9 +449,18 @@ extension BookPlayerModel {
     player.publisher(for: \.rate)
       .receive(on: DispatchQueue.main)
       .sink { [weak self] rate in
-        self?.handlePlaybackStateChange(rate > 0)
-        self?.isPlaying = rate > 0
-        self?.updateNowPlayingInfo()
+        guard let self else { return }
+
+        let isNowPlaying = rate > 0
+        self.handlePlaybackStateChange(isNowPlaying)
+        self.isPlaying = isNowPlaying
+
+        if isNowPlaying && self.timeObserver == nil {
+          AppLogger.player.info("Time observer was nil, re-setting up")
+          self.setupTimeObserver()
+        }
+
+        self.updateNowPlayingInfo()
       }
       .store(in: &cancellables)
 
@@ -685,6 +694,8 @@ extension BookPlayerModel {
         }
 
         player.replaceCurrentItem(with: playerItem)
+        setupPlayerObservers()
+        setupTimeObserver()
 
         player.seek(to: currentTime) { _ in
           if wasPlaying {
@@ -909,6 +920,7 @@ extension BookPlayerModel {
 
         player.replaceCurrentItem(with: playerItem)
         setupPlayerObservers()
+        setupTimeObserver()
 
         let rewindTime = CMTimeSubtract(currentTime, CMTime(seconds: 5, preferredTimescale: 1000))
         let seekTime = CMTimeMaximum(rewindTime, .zero)
@@ -956,10 +968,15 @@ extension BookPlayerModel {
 
   func stopPlayer() {
     player?.rate = 0
+
+    if let timeObserver {
+      player?.removeTimeObserver(timeObserver)
+      self.timeObserver = nil
+    }
+
     player = nil
 
     itemObservation?.cancel()
-    timeObserver = nil
     cancellables.removeAll()
   }
 

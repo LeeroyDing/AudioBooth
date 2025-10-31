@@ -178,7 +178,8 @@ struct HomePage: View {
 }
 
 extension HomePage {
-  @Observable class Model: ObservableObject {
+  @Observable
+  class Model: ObservableObject {
     var isLoading: Bool
     var isRoot: Bool
     var title: String
