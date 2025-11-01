@@ -54,22 +54,6 @@ public final class AuthenticationService {
 
   init(audiobookshelf: Audiobookshelf) {
     self.audiobookshelf = audiobookshelf
-    migrateKeychainIfNeeded()
-  }
-
-  private func migrateKeychainIfNeeded() {
-    guard connection == nil else { return }
-
-    let legacyKeychain = Keychain(service: "com.yourapp.audiobookshelf")
-
-    if let data = try? legacyKeychain.getData(Keys.connection),
-      let legacyConnection = try? JSONDecoder().decode(Connection.self, from: data)
-    {
-      connection = legacyConnection
-      try? legacyKeychain.remove(Keys.connection)
-      AppLogger.authentication.info("Migrated keychain from legacy storage")
-      return
-    }
   }
 
   public func login(
