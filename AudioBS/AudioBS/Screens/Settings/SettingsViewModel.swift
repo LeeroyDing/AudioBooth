@@ -1,5 +1,6 @@
 import API
 import Foundation
+import KeychainAccess
 import Models
 import OSLog
 import SwiftUI
@@ -85,15 +86,22 @@ final class SettingsViewModel: SettingsView.Model {
 
   override func onClearStorageTapped() {
     Task {
-      do {
-        try LocalBook.deleteAll()
-        DownloadManager.shared.cleanupOrphanedDownloads()
-        PlayerManager.shared.clearCurrent()
-        Toast(success: "Storage cleared successfully").show()
-      } catch {
-        AppLogger.viewModel.error("Failed to clear storage: \(error.localizedDescription)")
-        Toast(error: "Failed to clear storage: \(error.localizedDescription)").show()
-      }
+      try? LocalBook.deleteAll()
+      try? MediaProgress.deleteAll()
+      DownloadManager.shared.cleanupOrphanedDownloads()
+      PlayerManager.shared.clearCurrent()
+
+      let keychain = Keychain(service: "me.jgrenier.AudioBS")
+      try? keychain.removeAll()
+
+      audiobookshelf.logout()
+      isAuthenticated = false
+      username = ""
+      password = ""
+      discoveredServers = []
+      library = LibrariesViewModel()
+
+      Toast(success: "All app data cleared successfully").show()
     }
   }
 

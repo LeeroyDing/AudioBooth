@@ -52,15 +52,17 @@ struct SettingsView: View {
           account
         }
 
-        #if DEBUG
-          development
-        #endif
+        debug
 
         Section {
           Text(model.appVersion)
             .font(.caption)
             .foregroundColor(.secondary)
             .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(count: 5) {
+          model.showDebugSection.toggle()
         }
       }
       .navigationTitle("Settings")
@@ -262,35 +264,39 @@ struct SettingsView: View {
   }
 
   @ViewBuilder
-  var development: some View {
-    Section("Development") {
-      NavigationLink(value: "mediaProgress") {
-        HStack {
-          Image(systemName: "chart.line.uptrend.xyaxis")
-          Text("Media Progress")
-        }
-      }
-
-      Button(action: model.onExportLogsTapped) {
-        HStack {
-          if model.isExportingLogs {
-            ProgressView()
-              .scaleEffect(0.8)
-          } else {
-            Image(systemName: "square.and.arrow.up")
+  var debug: some View {
+    if model.showDebugSection {
+      Section("Debug") {
+        Button(action: model.onExportLogsTapped) {
+          HStack {
+            if model.isExportingLogs {
+              ProgressView()
+                .scaleEffect(0.8)
+            } else {
+              Image(systemName: "square.and.arrow.up")
+            }
+            Text(model.isExportingLogs ? "Exporting..." : "Export Logs")
           }
-          Text(model.isExportingLogs ? "Exporting..." : "Export Logs")
         }
+        .disabled(model.isExportingLogs)
+
+        #if DEBUG
+          NavigationLink(value: "mediaProgress") {
+            HStack {
+              Image(systemName: "chart.line.uptrend.xyaxis")
+              Text("Media Progress")
+            }
+          }
+        #endif
+
+        Button("Clear Persistent Storage", action: model.onClearStorageTapped)
+          .foregroundColor(.red)
+
+        Text(
+          "⚠️ This will delete ALL app data including downloaded content, settings, and progress. You will need to log in again. Requires app restart."
+        )
+        .font(.caption)
       }
-      .disabled(model.isExportingLogs)
-
-      Button("Clear Persistent Storage", action: model.onClearStorageTapped)
-        .foregroundColor(.red)
-
-      Text(
-        "Clears all cached data and files. Use this when schema changes cause app crashes. Requires app restart."
-      )
-      .font(.caption)
     }
   }
 }
@@ -328,6 +334,9 @@ extension SettingsView {
 
     @ObservationIgnored
     @AppStorage("showListeningStats") var showListeningStats: Bool = false
+
+    @ObservationIgnored
+    @AppStorage("showDebugSection") var showDebugSection: Bool = false
 
     var isTypingScheme: Bool {
       let lowercased = serverURL.lowercased()
