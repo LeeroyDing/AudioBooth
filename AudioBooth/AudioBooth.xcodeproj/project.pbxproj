@@ -13,7 +13,7 @@
 		3F50E5E42E8DD9770087A5B6 /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = 3F50E5E32E8DD9770087A5B6 /* Models */; };
 		3F50E5E62E8DD97C0087A5B6 /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = 3F50E5E52E8DD97C0087A5B6 /* Models */; };
 		3F6E94DD2E6395A20039F187 /* API in Frameworks */ = {isa = PBXBuildFile; productRef = 3F6E94DC2E6395A20039F187 /* API */; };
-		3FBEA06F2E8CD49400976BA0 /* AudioBS Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3FBEA06F2E8CD49400976BA0 /* AudioBooth Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3FBEA0832E8CE7D600976BA0 /* API in Frameworks */ = {isa = PBXBuildFile; productRef = 3FBEA0822E8CE7D600976BA0 /* API */; };
 /* End PBXBuildFile section */
 
@@ -23,7 +23,7 @@
 			containerPortal = 3FC8DC662E638F5E00A4B080 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 3FBEA0642E8CD49300976BA0;
-			remoteInfo = "AudioBS Mini Watch App";
+			remoteInfo = "AudioBooth Watch App";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -34,7 +34,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				3FBEA06F2E8CD49400976BA0 /* AudioBS Watch App.app in Embed Watch Content */,
+				3FBEA06F2E8CD49400976BA0 /* AudioBooth Watch App.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -45,42 +45,42 @@
 		3F3AF26C2E91DA4E0052C80D /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		3F50E5E22E8DD9700087A5B6 /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Models; path = ../Models; sourceTree = "<group>"; };
 		3F75FB462E7139F700F77C1B /* API */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = API; path = ../API; sourceTree = SOURCE_ROOT; };
-		3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBS Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "AudioBooth Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBooth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3F0D9EE72E6E273F00A8C3BB /* Exceptions for "AudioBS" folder in "AudioBS" target */ = {
+		3F0D9EE72E6E273F00A8C3BB /* Exceptions for "AudioBooth" folder in "AudioBooth" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 3FC8DC6D2E638F5E00A4B080 /* AudioBS */;
+			target = 3FC8DC6D2E638F5E00A4B080 /* AudioBooth */;
 		};
-		3F3AF6E32E94D1720052C80D /* Exceptions for "AudioBS Watch App" folder in "AudioBS Watch App" target */ = {
+		3F3AF6E32E94D1720052C80D /* Exceptions for "AudioBooth Watch App" folder in "AudioBooth Watch App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */;
+			target = 3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3FBEA0662E8CD49300976BA0 /* AudioBS Watch App */ = {
+		3FBEA0662E8CD49300976BA0 /* AudioBooth Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				3F3AF6E32E94D1720052C80D /* Exceptions for "AudioBS Watch App" folder in "AudioBS Watch App" target */,
+				3F3AF6E32E94D1720052C80D /* Exceptions for "AudioBooth Watch App" folder in "AudioBooth Watch App" target */,
 			);
-			path = "AudioBS Watch App";
+			path = "AudioBooth Watch App";
 			sourceTree = "<group>";
 		};
-		3FC8DC702E638F5E00A4B080 /* AudioBS */ = {
+		3FC8DC702E638F5E00A4B080 /* AudioBooth */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				3F0D9EE72E6E273F00A8C3BB /* Exceptions for "AudioBS" folder in "AudioBS" target */,
+				3F0D9EE72E6E273F00A8C3BB /* Exceptions for "AudioBooth" folder in "AudioBooth" target */,
 			);
-			path = AudioBS;
+			path = AudioBooth;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -121,9 +121,9 @@
 		3FC8DC652E638F5E00A4B080 = {
 			isa = PBXGroup;
 			children = (
-				3FC8DC702E638F5E00A4B080 /* AudioBS */,
+				3FC8DC702E638F5E00A4B080 /* AudioBooth */,
 				3FC8DC822E63904C00A4B080 /* Packages */,
-				3FBEA0662E8CD49300976BA0 /* AudioBS Watch App */,
+				3FBEA0662E8CD49300976BA0 /* AudioBooth Watch App */,
 				3F6E94DB2E6395A20039F187 /* Frameworks */,
 				3FC8DC6F2E638F5E00A4B080 /* Products */,
 			);
@@ -132,8 +132,8 @@
 		3FC8DC6F2E638F5E00A4B080 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */,
-				3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */,
+				3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */,
+				3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -150,9 +150,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */ = {
+		3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBS Watch App" */;
+			buildConfigurationList = 3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBooth Watch App" */;
 			buildPhases = (
 				3FBEA0612E8CD49300976BA0 /* Sources */,
 				3FBEA0622E8CD49300976BA0 /* Frameworks */,
@@ -163,20 +163,20 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				3FBEA0662E8CD49300976BA0 /* AudioBS Watch App */,
+				3FBEA0662E8CD49300976BA0 /* AudioBooth Watch App */,
 			);
-			name = "AudioBS Watch App";
+			name = "AudioBooth Watch App";
 			packageProductDependencies = (
 				3FBEA0822E8CE7D600976BA0 /* API */,
 				3F50E5E52E8DD97C0087A5B6 /* Models */,
 			);
-			productName = "AudioBS Mini Watch App";
-			productReference = 3FBEA0652E8CD49300976BA0 /* AudioBS Watch App.app */;
+			productName = "AudioBooth Watch App";
+			productReference = 3FBEA0652E8CD49300976BA0 /* AudioBooth Watch App.app */;
 			productType = "com.apple.product-type.application";
 		};
-		3FC8DC6D2E638F5E00A4B080 /* AudioBS */ = {
+		3FC8DC6D2E638F5E00A4B080 /* AudioBooth */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3FC8DC792E638F5F00A4B080 /* Build configuration list for PBXNativeTarget "AudioBS" */;
+			buildConfigurationList = 3FC8DC792E638F5F00A4B080 /* Build configuration list for PBXNativeTarget "AudioBooth" */;
 			buildPhases = (
 				3FC8DC6A2E638F5E00A4B080 /* Sources */,
 				3FC8DC6B2E638F5E00A4B080 /* Frameworks */,
@@ -190,9 +190,9 @@
 				3FBEA06E2E8CD49400976BA0 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				3FC8DC702E638F5E00A4B080 /* AudioBS */,
+				3FC8DC702E638F5E00A4B080 /* AudioBooth */,
 			);
-			name = AudioBS;
+			name = AudioBooth;
 			packageProductDependencies = (
 				3F6E94DC2E6395A20039F187 /* API */,
 				3F50E5E32E8DD9770087A5B6 /* Models */,
@@ -200,7 +200,7 @@
 				3F3AF26A2E91DA350052C80D /* RevenueCatUI */,
 			);
 			productName = AudiobookshelfDemo;
-			productReference = 3FC8DC6E2E638F5E00A4B080 /* AudioBS.app */;
+			productReference = 3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -221,7 +221,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 3FC8DC692E638F5E00A4B080 /* Build configuration list for PBXProject "AudioBS" */;
+			buildConfigurationList = 3FC8DC692E638F5E00A4B080 /* Build configuration list for PBXProject "AudioBooth" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -238,8 +238,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3FC8DC6D2E638F5E00A4B080 /* AudioBS */,
-				3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */,
+				3FC8DC6D2E638F5E00A4B080 /* AudioBooth */,
+				3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */,
 			);
 		};
 /* End PBXProject section */
@@ -303,7 +303,7 @@
 /* Begin PBXTargetDependency section */
 		3FBEA06E2E8CD49400976BA0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3FBEA0642E8CD49300976BA0 /* AudioBS Watch App */;
+			target = 3FBEA0642E8CD49300976BA0 /* AudioBooth Watch App */;
 			targetProxy = 3FBEA06D2E8CD49400976BA0 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -314,12 +314,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "AudioBS Watch App/AudioBS Watch App.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "AudioBooth Watch App/AudioBooth Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "AudioBS Watch App/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
+				INFOPLIST_FILE = "AudioBooth Watch App/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -347,12 +347,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "AudioBS Watch App/AudioBS Watch App.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "AudioBooth Watch App/AudioBooth Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "AudioBS Watch App/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
+				INFOPLIST_FILE = "AudioBooth Watch App/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = me.jgrenier.AudioBS;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -507,15 +507,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AudioBS/AudioBS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AudioBooth/AudioBooth.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AudioBS/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
+				INFOPLIST_FILE = AudioBooth/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "AudioBS needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "AudioBooth needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -544,15 +544,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AudioBS/AudioBS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = AudioBooth/AudioBooth.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AudioBS/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = AudioBS;
+				INFOPLIST_FILE = AudioBooth/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioBooth;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "AudioBS needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "AudioBooth needs access to your local network to connect to your Audiobookshelf server and stream audiobooks.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -579,7 +579,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBS Watch App" */ = {
+		3FBEA0732E8CD49400976BA0 /* Build configuration list for PBXNativeTarget "AudioBooth Watch App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3FBEA0712E8CD49400976BA0 /* Debug */,
@@ -588,7 +588,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3FC8DC692E638F5E00A4B080 /* Build configuration list for PBXProject "AudioBS" */ = {
+		3FC8DC692E638F5E00A4B080 /* Build configuration list for PBXProject "AudioBooth" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3FC8DC772E638F5F00A4B080 /* Debug */,
@@ -597,7 +597,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3FC8DC792E638F5F00A4B080 /* Build configuration list for PBXNativeTarget "AudioBS" */ = {
+		3FC8DC792E638F5F00A4B080 /* Build configuration list for PBXNativeTarget "AudioBooth" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3FC8DC7A2E638F5F00A4B080 /* Debug */,

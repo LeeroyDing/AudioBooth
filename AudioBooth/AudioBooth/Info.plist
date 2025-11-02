@@ -17,7 +17,7 @@
 			<string>me.jgrenier</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>audiobs</string>
+				<string>audiobooth</string>
 			</array>
 		</dict>
 	</array>

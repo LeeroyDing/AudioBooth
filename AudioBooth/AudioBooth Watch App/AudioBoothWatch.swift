@@ -3,7 +3,7 @@ import Nuke
 import SwiftUI
 
 @main
-struct AudioBSWatch: App {
+struct AudioBoothWatch: App {
   init() {
     configureImagePipeline()
     DownloadManager.shared.cleanupOrphanedDownloads()

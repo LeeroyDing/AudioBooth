@@ -14,7 +14,7 @@ struct ContinueListeningView: View {
         content
       }
     }
-    .navigationTitle("AudioBS")
+    .navigationTitle("AudioBooth")
     .task {
       await model.fetch()
     }

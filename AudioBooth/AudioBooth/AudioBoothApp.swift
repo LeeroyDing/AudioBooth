@@ -4,7 +4,7 @@ import SwiftUI
 import UIKit
 
 @main
-struct AudioBSApp: App {
+struct AudioBoothApp: App {
   init() {
     DownloadManager.shared.cleanupOrphanedDownloads()
     _ = WatchConnectivityManager.shared

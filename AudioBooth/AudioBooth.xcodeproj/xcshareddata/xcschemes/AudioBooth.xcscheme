@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3FC8DC6D2E638F5E00A4B080"
-               BuildableName = "AudioBS.app"
-               BlueprintName = "AudioBS"
-               ReferencedContainer = "container:AudioBS.xcodeproj">
+               BuildableName = "AudioBooth.app"
+               BlueprintName = "AudioBooth"
+               ReferencedContainer = "container:AudioBooth.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,13 +45,13 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3FC8DC6D2E638F5E00A4B080"
-            BuildableName = "AudioBS.app"
-            BlueprintName = "AudioBS"
-            ReferencedContainer = "container:AudioBS.xcodeproj">
+            BuildableName = "AudioBooth.app"
+            BlueprintName = "AudioBooth"
+            ReferencedContainer = "container:AudioBooth.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../../AudioBS/AudioBS.storekit">
+         identifier = "../../AudioBooth/AudioBooth.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
@@ -65,9 +65,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3FC8DC6D2E638F5E00A4B080"
-            BuildableName = "AudioBS.app"
-            BlueprintName = "AudioBS"
-            ReferencedContainer = "container:AudioBS.xcodeproj">
+            BuildableName = "AudioBooth.app"
+            BlueprintName = "AudioBooth"
+            ReferencedContainer = "container:AudioBooth.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

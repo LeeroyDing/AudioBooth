@@ -62,7 +62,7 @@ public final class SessionService {
 
         let deviceID = isDownload ? SessionService.downloadDeviceID : SessionService.deviceID
         self.deviceInfo = DeviceInfo(
-          clientName: "AudioBS iOS",
+          clientName: "AudioBooth iOS",
           clientVersion: clientVersion,
           deviceId: deviceID
         )

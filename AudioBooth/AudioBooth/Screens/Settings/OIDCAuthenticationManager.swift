@@ -38,7 +38,7 @@ final class OIDCAuthenticationManager: NSObject {
   private func openAuthenticationSession(with url: URL) {
     session = ASWebAuthenticationSession(
       url: url,
-      callbackURLScheme: "audiobs"
+      callbackURLScheme: "audiobooth"
     ) { [weak self] callbackURL, error in
       self?.handleAuthenticationResult(callbackURL: callbackURL, error: error)
     }
@@ -114,11 +114,11 @@ final class OIDCAuthenticationManager: NSObject {
       resolvingAgainstBaseURL: false
     )
     components?.queryItems = [
-      URLQueryItem(name: "client_id", value: "AudioBS"),
+      URLQueryItem(name: "client_id", value: "AudioBooth"),
       URLQueryItem(name: "response_type", value: "code"),
       URLQueryItem(name: "scope", value: "openid"),
-      URLQueryItem(name: "redirect_uri", value: "audiobs://oauth"),
-      URLQueryItem(name: "callback", value: "audiobs://oauth"),
+      URLQueryItem(name: "redirect_uri", value: "audiobooth://oauth"),
+      URLQueryItem(name: "callback", value: "audiobooth://oauth"),
       URLQueryItem(name: "code_challenge", value: pkce.challenge),
       URLQueryItem(name: "code_challenge_method", value: "S256"),
     ]
@@ -211,7 +211,7 @@ enum OIDCError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .invalidCallback:
-      return "Add **audiobs://oauth** to your **Allowed Mobile Redirect URIs**"
+      return "Add **audiobooth://oauth** to your **Allowed Mobile Redirect URIs**"
     case .authenticationFailed(let error):
       return "Authentication failed: \(error)"
     case .noAuthorizationCode(let available):

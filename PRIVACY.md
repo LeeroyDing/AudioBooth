@@ -1,16 +1,16 @@
-# Privacy Policy for AudioBS
+# Privacy Policy for AudioBooth
 
 **Last Updated: October 18, 2025**
 
 ## Overview
 
-AudioBS is a client application for self-hosted [audiobookshelf](https://www.audiobookshelf.org) servers. This privacy policy explains how the app handles your data.
+AudioBooth is a client application for self-hosted [audiobookshelf](https://www.audiobookshelf.org) servers. This privacy policy explains how the app handles your data.
 
-**Note:** AudioBS is an independent third-party client and is not affiliated with or endorsed by the audiobookshelf project.
+**Note:** AudioBooth is an independent third-party client and is not affiliated with or endorsed by the audiobookshelf project.
 
 ## Developer Information
 
-AudioBS is developed and maintained by [@jeremygrenier](https://github.com/jeremygrenier).
+AudioBooth is developed and maintained by [@jeremygrenier](https://github.com/jeremygrenier).
 
 ## Data Collection and Usage
 
@@ -45,7 +45,7 @@ This information is:
 
 ### Information NOT Collected
 
-AudioBS does NOT collect, store, or transmit:
+AudioBooth does NOT collect, store, or transmit:
 - Usage analytics
 - Crash reports
 - Browsing history
@@ -64,7 +64,7 @@ All data is stored locally on your device:
 
 ## Data Sharing
 
-AudioBS does NOT share your data with third parties, except:
+AudioBooth does NOT share your data with third parties, except:
 - **Your audiobookshelf Server:** The app communicates directly with the server URL you provide to stream and download audiobooks
 - **RevenueCat:** Only if you choose to make a purchase through the tip jar feature
 
@@ -76,7 +76,7 @@ AudioBS does NOT share your data with third parties, except:
 - Terms of Service: https://www.revenuecat.com/terms
 
 **Your audiobookshelf Server:**
-- AudioBS connects to YOUR self-hosted server
+- AudioBooth connects to YOUR self-hosted server
 - Any data processing is subject to your own server's policies
 - The developer has no access to or control over your server
 
@@ -95,7 +95,7 @@ You have the right to:
 
 ## Children's Privacy
 
-AudioBS does not knowingly collect information from children under 13. The app is designed for general audiences and does not contain age-inappropriate content.
+AudioBooth does not knowingly collect information from children under 13. The app is designed for general audiences and does not contain age-inappropriate content.
 
 ## Changes to This Policy
 
@@ -105,9 +105,9 @@ We may update this privacy policy from time to time. Changes will be reflected b
 
 For questions about this privacy policy or data practices, please contact:
 
-**Email:** audiobs@proton.me
+**Email:** audiobooth@proton.me
 
 ---
 
 **Summary:**
-AudioBS is a privacy-focused client app. Your data stays on your device and your self-hosted server. We don't collect analytics, track usage, or share your information with third parties (except RevenueCat for optional purchases).
+AudioBooth is a privacy-focused client app. Your data stays on your device and your self-hosted server. We don't collect analytics, track usage, or share your information with third parties (except RevenueCat for optional purchases).

@@ -29,7 +29,7 @@ If applicable, add screenshots to help explain your problem.
 - **Platform:** (iPhone / iPad / Apple Watch)
 - **Device Model:** (e.g., iPhone 17 Pro, iPad Air 7th gen, Apple Watch Series 11)
 - **OS Version:** (e.g., iOS 26.1, iPadOS 26.1, watchOS 26.0)
-- **AudioBS Version:** (found in Settings)
+- **AudioBooth Version:** (found in Settings)
 - **Audiobookshelf Server Version:** (if known)
 
 ## Additional Context

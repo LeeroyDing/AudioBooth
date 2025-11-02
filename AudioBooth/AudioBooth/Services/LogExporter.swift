@@ -12,7 +12,7 @@ enum LogExporter {
       .compactMap { $0 as? OSLogEntryLog }
       .filter { $0.subsystem == subsystem }
 
-    var logText = "AudioBS Log Export\n"
+    var logText = "AudioBooth Log Export\n"
     logText += "Generated: \(Date.now.formatted())\n"
     logText += "Period: Last \(Int(since / 60)) minutes\n"
     logText += "Subsystem: \(subsystem)\n"
@@ -29,7 +29,7 @@ enum LogExporter {
 
     // Use a temporary file with proper UTI
     let tempDirectory = FileManager.default.temporaryDirectory
-    let fileName = "audiobs-logs-\(Int(Date.now.timeIntervalSince1970)).txt"
+    let fileName = "audiobooth-logs-\(Int(Date.now.timeIntervalSince1970)).txt"
     let fileURL = tempDirectory.appendingPathComponent(fileName)
 
     try logText.write(to: fileURL, atomically: true, encoding: .utf8)
