@@ -34,21 +34,27 @@ final class ContinueListeningCardModel: ContinueListeningCard.Model {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] current in
         guard let self else { return }
-        self.observeIsPlaying(current)
+        self.observePlayerState(current)
       }
       .store(in: &cancellables)
   }
 
-  private func observeIsPlaying(_ current: BookPlayer.Model?) {
+  private func observePlayerState(_ current: BookPlayer.Model?) {
     guard let current, current.id == id else { return }
 
     withObservationTracking {
       _ = current.isPlaying
+      _ = current.playbackProgress.progress
     } onChange: { [weak self] in
       Task { @MainActor [weak self] in
         guard let self else { return }
         self.updateLastPlayedStatus()
-        self.observeIsPlaying(PlayerManager.shared.current)
+
+        let total = Double(current.playbackProgress.total)
+        let totalTimeRemaining = Double(current.playbackProgress.totalTimeRemaining)
+        progress = (total - totalTimeRemaining) / total
+
+        self.observePlayerState(PlayerManager.shared.current)
       }
     }
   }
