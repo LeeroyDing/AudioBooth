@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3F1E6AA12EB9B62E00CD9090 /* RichText in Frameworks */ = {isa = PBXBuildFile; productRef = 3F1E6AA02EB9B62E00CD9090 /* RichText */; };
 		3F3AF2692E91DA350052C80D /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 3F3AF2682E91DA350052C80D /* RevenueCat */; };
 		3F3AF26B2E91DA350052C80D /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 3F3AF26A2E91DA350052C80D /* RevenueCatUI */; };
 		3F3AF26D2E91DA4E0052C80D /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F3AF26C2E91DA4E0052C80D /* StoreKit.framework */; };
@@ -100,6 +101,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F3AF26B2E91DA350052C80D /* RevenueCatUI in Frameworks */,
+				3F1E6AA12EB9B62E00CD9090 /* RichText in Frameworks */,
 				3F50E5E42E8DD9770087A5B6 /* Models in Frameworks */,
 				3F3AF26D2E91DA4E0052C80D /* StoreKit.framework in Frameworks */,
 				3F6E94DD2E6395A20039F187 /* API in Frameworks */,
@@ -198,6 +200,7 @@
 				3F50E5E32E8DD9770087A5B6 /* Models */,
 				3F3AF2682E91DA350052C80D /* RevenueCat */,
 				3F3AF26A2E91DA350052C80D /* RevenueCatUI */,
+				3F1E6AA02EB9B62E00CD9090 /* RichText */,
 			);
 			productName = AudiobookshelfDemo;
 			productReference = 3FC8DC6E2E638F5E00A4B080 /* AudioBooth.app */;
@@ -232,6 +235,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3F3AF2672E91DA350052C80D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+				3F1E6A9F2EB9B60B00CD9090 /* XCRemoteSwiftPackageReference "RichText" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3FC8DC6F2E638F5E00A4B080 /* Products */;
@@ -609,6 +613,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		3F1E6A9F2EB9B60B00CD9090 /* XCRemoteSwiftPackageReference "RichText" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NuPlay/RichText.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.2;
+			};
+		};
 		3F3AF2672E91DA350052C80D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
@@ -620,6 +632,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3F1E6AA02EB9B62E00CD9090 /* RichText */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F1E6A9F2EB9B60B00CD9090 /* XCRemoteSwiftPackageReference "RichText" */;
+			productName = RichText;
+		};
 		3F3AF2682E91DA350052C80D /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3F3AF2672E91DA350052C80D /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;

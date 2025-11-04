@@ -91,11 +91,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
       let narrators = book.media.metadata.narrators ?? []
 
-      let displayDescription = convertToAttributedString(
-        html: book.description,
-        fallback: book.descriptionPlain
-      )
-
       updateUI(
         title: book.title,
         authors: authors,
@@ -109,7 +104,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         publishedYear: book.publishedYear,
         genres: book.genres,
         tags: book.tags,
-        description: displayDescription
+        description: book.description ?? book.descriptionPlain
       )
 
       error = nil
@@ -135,7 +130,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     publishedYear: String? = nil,
     genres: [String]? = nil,
     tags: [String]? = nil,
-    description: AttributedString? = nil
+    description: String? = nil
   ) {
     self.title = title
     self.authors = authors
@@ -243,35 +238,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     let isCurrentBook = playerManager.current?.id == bookID
     let isPlaying = playerManager.current?.isPlaying ?? false
     isCurrentlyPlaying = isCurrentBook && isPlaying
-  }
-
-  private func convertToAttributedString(html: String?, fallback: String?) -> AttributedString? {
-    guard
-      let html,
-      let nsAttributedString = try? NSAttributedString(
-        data: Data(html.utf8),
-        options: [
-          .documentType: NSAttributedString.DocumentType.html,
-          .characterEncoding: String.Encoding.utf8.rawValue,
-        ],
-        documentAttributes: nil
-      ),
-      var attributedString = try? AttributedString(nsAttributedString, including: \.uiKit)
-    else { return fallback.map(AttributedString.init) }
-
-    let baseFont = UIFont.preferredFont(forTextStyle: .subheadline)
-
-    for run in attributedString.runs {
-      if let existingFont = attributedString[run.range].font {
-        let traits = existingFont.fontDescriptor.symbolicTraits
-        let descriptor =
-          baseFont.fontDescriptor.withSymbolicTraits(traits) ?? baseFont.fontDescriptor
-        attributedString[run.range].font = UIFont(descriptor: descriptor, size: baseFont.pointSize)
-      }
-      attributedString[run.range].foregroundColor = nil
-    }
-
-    return attributedString
   }
 
   override func onPlayTapped() {

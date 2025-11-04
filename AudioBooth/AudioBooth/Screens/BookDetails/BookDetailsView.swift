@@ -1,6 +1,7 @@
 import API
 import Combine
 import Models
+import RichText
 import SwiftUI
 
 struct BookDetailsView: View {
@@ -511,13 +512,17 @@ struct BookDetailsView: View {
     )
   }
 
-  private func descriptionSection(_ description: AttributedString) -> some View {
+  private func descriptionSection(_ description: String) -> some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("Description")
         .font(.headline)
 
-      Text(description)
-        .font(.subheadline)
+      RichText(
+        html: description,
+        configuration: Configuration(
+          customCSS: "body { font: -apple-system-subheadline; }",
+        )
+      )
     }
     .textSelection(.enabled)
   }
@@ -546,7 +551,7 @@ extension BookDetailsView {
     var publishedYear: String?
     var genres: [String]?
     var tags: [String]?
-    var description: AttributedString?
+    var description: String?
 
     func onAppear() {}
     func onPlayTapped() {}
@@ -574,7 +579,7 @@ extension BookDetailsView {
       publishedYear: String? = nil,
       genres: [String]? = nil,
       tags: [String]? = nil,
-      description: AttributedString? = nil
+      description: String? = nil
     ) {
       self.bookID = bookID
       self.title = title

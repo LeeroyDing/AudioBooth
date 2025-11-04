@@ -103,6 +103,7 @@ If you encounter any issues or have questions:
 - [KeychainAccess](https://github.com/kishikawakatsumi/KeychainAccess) - Secure credential storage
 - [Nuke](https://github.com/kean/Nuke) - Efficient image loading and caching
 - [RevenueCat](https://www.revenuecat.com) - In-app purchase support
+- [RichText](https://github.com/NuPlay/RichText) - RichText HTML rendering
 
 ## Acknowledgments
 
