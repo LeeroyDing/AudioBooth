@@ -5,6 +5,8 @@ import SwiftUI
 struct ContentView: View {
   @StateObject private var playerManager = PlayerManager.shared
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
+
+  @Environment(\.colorScheme) private var colorScheme
   @Environment(\.scenePhase) private var scenePhase
 
   @State private var isKeyboardVisible = false
@@ -75,11 +77,23 @@ struct ContentView: View {
     }
     .tabBarMinimizeBehavior(.onScrollDown)
     .tabViewBottomAccessory {
-      if let currentPlayer = playerManager.current, !isKeyboardVisible {
-        MiniBookPlayer(player: currentPlayer)
-          .equatable()
-          .glassEffect()
+      Group {
+        if let currentPlayer = playerManager.current {
+          MiniBookPlayer(player: currentPlayer)
+            .equatable()
+        } else {
+          HStack(spacing: 12) {
+            Image(systemName: "book.circle")
+              .font(.title2)
+
+            Text("Select a book to begin")
+              .font(.subheadline)
+          }
+          .frame(maxWidth: .infinity)
+          .padding()
+        }
       }
+      .colorScheme(colorScheme)
     }
   }
 

@@ -13,7 +13,15 @@ final class HomePageModel: HomePage.Model {
   private var availableOffline: [LocalBook] = []
 
   private var books: [Book] = [] {
-    didSet { refreshContinueListening() }
+    didSet {
+      refreshContinueListening()
+
+      Task { @MainActor in
+        if playerManager.current == nil, let book = books.first {
+          playerManager.current = BookPlayerModel(book)
+        }
+      }
+    }
   }
 
   init() {
