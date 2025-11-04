@@ -1,20 +1,31 @@
 import API
+import Combine
 import Foundation
+import UIKit
 
 final class ListeningStatsCardModel: ListeningStatsCard.Model {
+  private var cancellables = Set<AnyCancellable>()
+
   init() {
     super.init(isLoading: true)
+
+    NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+      .sink { [weak self] _ in
+        Task {
+          await self?.fetchStats()
+        }
+      }
+      .store(in: &cancellables)
   }
 
   override func onAppear() {
     Task {
+      isLoading = true
       await fetchStats()
     }
   }
 
   private func fetchStats() async {
-    isLoading = true
-
     do {
       let stats = try await Audiobookshelf.shared.authentication.fetchListeningStats()
       processStats(stats)

@@ -7,7 +7,6 @@ struct ContentView: View {
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
 
   @Environment(\.colorScheme) private var colorScheme
-  @Environment(\.scenePhase) private var scenePhase
 
   @State private var isKeyboardVisible = false
   @State private var selectedTab: TabSelection = .home
@@ -43,10 +42,6 @@ struct ContentView: View {
     { _ in
       isKeyboardVisible = false
     }
-    .onChange(of: scenePhase) { _, newPhase in
-      AppStateManager.shared.updateScenePhase(newPhase)
-    }
-
   }
 
   @available(iOS 26.0, *)
