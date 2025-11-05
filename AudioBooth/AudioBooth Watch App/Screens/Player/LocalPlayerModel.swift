@@ -437,18 +437,56 @@ extension LocalPlayerModel {
       return .success
     }
 
-    commandCenter.skipForwardCommand.addTarget { [weak self] _ in
+    commandCenter.skipForwardCommand.addTarget { [weak self] event in
+      guard let self else { return .commandFailed }
+
+      let interval: Double
+      if let skipEvent = event as? MPSkipIntervalCommandEvent, skipEvent.interval > 0 {
+        interval = skipEvent.interval
+      } else {
+        interval = 30
+      }
+
+      let currentTime = self.player?.currentTime() ?? .zero
+      let newTime = CMTimeAdd(currentTime, CMTime(seconds: interval, preferredTimescale: 1))
+      self.player?.seek(to: newTime)
+      return .success
+    }
+
+    commandCenter.skipBackwardCommand.addTarget { [weak self] event in
+      guard let self else { return .commandFailed }
+
+      let interval: Double
+      if let skipEvent = event as? MPSkipIntervalCommandEvent, skipEvent.interval > 0 {
+        interval = skipEvent.interval
+      } else {
+        interval = 30
+      }
+
+      let currentTime = self.player?.currentTime() ?? .zero
+      let newTime = CMTimeSubtract(currentTime, CMTime(seconds: interval, preferredTimescale: 1))
+      let zeroTime = CMTime(seconds: 0, preferredTimescale: 1)
+      self.player?.seek(to: CMTimeMaximum(newTime, zeroTime))
+      return .success
+    }
+
+    commandCenter.nextTrackCommand.addTarget { [weak self] _ in
       self?.skipForward()
       return .success
     }
 
-    commandCenter.skipBackwardCommand.addTarget { [weak self] _ in
+    commandCenter.previousTrackCommand.addTarget { [weak self] _ in
       self?.skipBackward()
       return .success
     }
 
     commandCenter.skipForwardCommand.preferredIntervals = [NSNumber(value: 30)]
     commandCenter.skipBackwardCommand.preferredIntervals = [NSNumber(value: 30)]
+
+    commandCenter.skipForwardCommand.isEnabled = true
+    commandCenter.skipBackwardCommand.isEnabled = true
+    commandCenter.nextTrackCommand.isEnabled = true
+    commandCenter.previousTrackCommand.isEnabled = true
 
     updateNowPlayingInfo()
   }
@@ -508,6 +546,13 @@ extension LocalPlayerModel {
         self?.handleAudioInterruption(notification)
       }
       .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: AVAudioSession.mediaServicesWereResetNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.handleMediaServicesReset()
+      }
+      .store(in: &cancellables)
   }
 
   private func handleAudioInterruption(_ notification: Notification) {
@@ -538,6 +583,14 @@ extension LocalPlayerModel {
     @unknown default:
       break
     }
+  }
+
+  private func handleMediaServicesReset() {
+    AppLogger.player.warning(
+      "Media services were reset - reconfiguring audio session and remote commands")
+
+    configureAudioSession()
+    setupRemoteCommandCenter()
   }
 
   private func setupTimeObserver() {

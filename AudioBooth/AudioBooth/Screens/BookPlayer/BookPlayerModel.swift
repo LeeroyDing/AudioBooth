@@ -405,12 +405,40 @@ extension BookPlayerModel {
       return .success
     }
 
-    commandCenter.skipForwardCommand.addTarget { [weak self] _ in
+    commandCenter.skipForwardCommand.addTarget { [weak self] event in
+      guard let self else { return .commandFailed }
+
+      let interval: Double
+      if let skipEvent = event as? MPSkipIntervalCommandEvent, skipEvent.interval > 0 {
+        interval = skipEvent.interval
+      } else {
+        interval = 30
+      }
+
+      self.onSkipForwardTapped(seconds: interval)
+      return .success
+    }
+
+    commandCenter.skipBackwardCommand.addTarget { [weak self] event in
+      guard let self else { return .commandFailed }
+
+      let interval: Double
+      if let skipEvent = event as? MPSkipIntervalCommandEvent, skipEvent.interval > 0 {
+        interval = skipEvent.interval
+      } else {
+        interval = 30
+      }
+
+      self.onSkipBackwardTapped(seconds: interval)
+      return .success
+    }
+
+    commandCenter.nextTrackCommand.addTarget { [weak self] _ in
       self?.onSkipForwardTapped(seconds: 30)
       return .success
     }
 
-    commandCenter.skipBackwardCommand.addTarget { [weak self] _ in
+    commandCenter.previousTrackCommand.addTarget { [weak self] _ in
       self?.onSkipBackwardTapped(seconds: 30)
       return .success
     }
@@ -514,6 +542,13 @@ extension BookPlayerModel {
         self?.handleAudioInterruption(notification)
       }
       .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(for: AVAudioSession.mediaServicesWereResetNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.handleMediaServicesReset()
+      }
+      .store(in: &cancellables)
   }
 
   private func handleAudioInterruption(_ notification: Notification) {
@@ -544,6 +579,17 @@ extension BookPlayerModel {
     @unknown default:
       break
     }
+  }
+
+  private func handleMediaServicesReset() {
+    AppLogger.player.warning(
+      "Media services were reset - reconfiguring audio session and remote commands")
+
+    if isPlaying {
+      onTogglePlaybackTapped()
+    }
+
+    configureAudioSession()
   }
 
   private func setupTimeObserver() {
