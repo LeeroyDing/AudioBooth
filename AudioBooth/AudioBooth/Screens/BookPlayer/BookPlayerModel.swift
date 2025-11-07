@@ -823,6 +823,8 @@ extension BookPlayerModel {
     mediaProgress.progress = 1.0
     try? mediaProgress.save()
 
+    ReviewRequestManager.shared.recordBookCompletion()
+
     Task {
       do {
         try await Audiobookshelf.shared.libraries.updateBookFinishedStatus(
