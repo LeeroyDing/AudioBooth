@@ -63,6 +63,21 @@ public final class Audiobookshelf: @unchecked Sendable {
   }
 }
 
+extension Audiobookshelf.AudiobookshelfError: LocalizedError {
+  public var errorDescription: String? {
+    switch self {
+    case .invalidURL:
+      return "Invalid URL"
+    case .loginFailed(let message):
+      return "Login failed: \(message)"
+    case .networkError(let message):
+      return "Network error: \(message)"
+    case .compositionError(let message):
+      return "Composition error: \(message)"
+    }
+  }
+}
+
 public struct Page<T: Decodable & Sendable>: Decodable, Sendable {
   public let results: [T]
   public let total: Int

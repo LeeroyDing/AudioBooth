@@ -11,4 +11,5 @@ enum AppLogger {
   static let viewModel = Logger(subsystem: subsystem, category: "viewModel")
   static let persistence = Logger(subsystem: subsystem, category: "persistence")
   static let general = Logger(subsystem: subsystem, category: "general")
+  static let authentication = Logger(subsystem: subsystem, category: "authentication")
 }

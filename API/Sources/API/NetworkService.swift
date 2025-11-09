@@ -96,14 +96,24 @@ final class NetworkService {
   func send<T: Decodable>(_ request: NetworkRequest<T>) async throws -> NetworkResponse<T> {
     let urlRequest = try buildURLRequest(from: request)
 
+    AppLogger.network.info(
+      "Sending \(urlRequest.httpMethod ?? "GET") request to: \(urlRequest.url?.absoluteString ?? "unknown")"
+    )
+
     let selectedSession = request.discretionary ? discretionarySession : session
     let (data, response) = try await selectedSession.data(for: urlRequest)
 
     guard let httpResponse = response as? HTTPURLResponse else {
+      AppLogger.network.error("Received non-HTTP response")
       throw URLError(.badServerResponse)
     }
 
+    AppLogger.network.info("Received HTTP \(httpResponse.statusCode) response")
+
     guard 200...299 ~= httpResponse.statusCode else {
+      let responseBody = String(data: data, encoding: .utf8) ?? "Unable to decode response body"
+      AppLogger.network.error(
+        "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)")
       throw URLError(.badServerResponse)
     }
 
