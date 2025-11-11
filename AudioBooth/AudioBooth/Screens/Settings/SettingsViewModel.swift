@@ -53,7 +53,7 @@ final class SettingsViewModel: SettingsView.Model {
         isAuthenticated = true
         navigationPath.append("libraries")
       } catch {
-        AppLogger.viewModel.error("Login failed: \(error.localizedDescription)")
+        AppLogger.viewModel.error("Login failed: \(error.localizedDescription, privacy: .public)")
         Toast(error: "Login failed: \(error.localizedDescription)").show()
         isAuthenticated = false
       }

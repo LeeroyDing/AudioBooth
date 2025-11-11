@@ -117,13 +117,13 @@ public final class AuthenticationService {
     serverURL: String, code: String, verifier: String, state: String?, cookies: [HTTPCookie],
     customHeaders: [String: String] = [:]
   ) async throws {
-    AppLogger.authentication.info("loginWithOIDC called for server: \(serverURL)")
+    AppLogger.authentication.info("loginWithOIDC called for server: \(serverURL, privacy: .public)")
     AppLogger.authentication.debug(
       "Request parameters - code length: \(code.count), verifier length: \(verifier.count), state: \(state ?? "nil"), cookies: \(cookies.count), custom headers: \(customHeaders.count)"
     )
 
     guard let baseURL = URL(string: serverURL) else {
-      AppLogger.authentication.error("Invalid server URL: \(serverURL)")
+      AppLogger.authentication.error("Invalid server URL: \(serverURL, privacy: .public)")
       throw Audiobookshelf.AudiobookshelfError.invalidURL
     }
 
@@ -166,14 +166,15 @@ public final class AuthenticationService {
       let token = response.value.user.token
 
       AppLogger.authentication.info(
-        "OIDC login successful, received token of length: \(token.count)")
+        "OIDC login successful, received token of length: \(token.count, privacy: .public)")
 
       self.connection = Connection(serverURL: baseURL, token: token, customHeaders: customHeaders)
       onAuthenticationChanged((baseURL, token))
     } catch {
-      AppLogger.authentication.error("OIDC login request failed: \(error.localizedDescription)")
+      AppLogger.authentication.error(
+        "OIDC login request failed: \(error.localizedDescription, privacy: .public)")
       if let error = error as? URLError {
-        AppLogger.authentication.error("URLError code: \(error.code.rawValue)")
+        AppLogger.authentication.error("URLError code: \(error.code.rawValue, privacy: .public)")
       }
       throw Audiobookshelf.AudiobookshelfError.networkError(
         "OIDC login failed: \(error.localizedDescription)")
