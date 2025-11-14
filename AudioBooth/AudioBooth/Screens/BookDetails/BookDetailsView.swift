@@ -63,8 +63,14 @@ struct BookDetailsView: View {
             Label(downloadButtonText, systemImage: downloadButtonIcon)
           }
 
-          Button(action: model.onMarkFinishedTapped) {
-            Label(markFinishedText, systemImage: markFinishedIcon)
+          if let progress = model.progress, progress >= 1.0 {
+            Button(action: model.onResetProgressTapped) {
+              Label("Reset Progress", systemImage: "arrow.counterclockwise")
+            }
+          } else {
+            Button(action: model.onMarkFinishedTapped) {
+              Label("Mark as Finished", systemImage: "checkmark.shield")
+            }
           }
         } label: {
           Image(systemName: "ellipsis")
@@ -358,14 +364,27 @@ struct BookDetailsView: View {
           .cornerRadius(12)
         }
 
-        Button(action: model.onMarkFinishedTapped) {
-          HStack {
-            Image(systemName: markFinishedIcon)
-            Text(markFinishedText)
+        if let progress = model.progress, progress >= 1.0 {
+          Button(action: model.onResetProgressTapped) {
+            HStack {
+              Image(systemName: "arrow.counterclockwise")
+              Text("Reset Progress")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(8)
+            .background(Color.secondary.opacity(0.2))
           }
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .padding(8)
-          .background(Color.secondary.opacity(0.2))
+          .cornerRadius(12)
+        } else {
+          Button(action: model.onMarkFinishedTapped) {
+            HStack {
+              Image(systemName: "checkmark.shield")
+              Text("Mark as Finished")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(8)
+            .background(Color.secondary.opacity(0.2))
+          }
           .cornerRadius(12)
         }
       }
@@ -423,20 +442,6 @@ struct BookDetailsView: View {
     case .notDownloaded:
       return "Download"
     }
-  }
-
-  private var markFinishedIcon: String {
-    if let progress = model.progress, progress >= 1.0 {
-      return "checkmark.shield.fill"
-    }
-    return "checkmark.shield"
-  }
-
-  private var markFinishedText: String {
-    if let progress = model.progress, progress >= 1.0 {
-      return "Mark as Unfinished"
-    }
-    return "Mark as Finished"
   }
 
   private func progressBar(_ progress: Double) -> some View {
@@ -642,6 +647,7 @@ extension BookDetailsView {
     func onPlayTapped() {}
     func onDownloadTapped() {}
     func onMarkFinishedTapped() {}
+    func onResetProgressTapped() {}
     func onSupplementaryEbookTapped(_ ebook: SupplementaryEbook) {}
 
     init(

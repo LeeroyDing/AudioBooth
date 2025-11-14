@@ -194,7 +194,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onDownloadTapped() {
-    guard let item = item else { return }
+    guard let item else { return }
 
     switch downloadState {
     case .downloading:
@@ -202,11 +202,11 @@ final class BookPlayerModel: BookPlayer.Model {
       downloadManager.cancelDownload(for: id)
 
     case .downloaded:
-      downloadManager.deleteDownload(for: id)
+      item.removeDownload()
 
     case .notDownloaded:
       downloadState = .downloading(progress: 0)
-      downloadManager.startDownload(for: item.bookID)
+      try? item.download()
     }
   }
 }
@@ -874,11 +874,10 @@ extension BookPlayerModel {
     ReviewRequestManager.shared.recordBookCompletion()
 
     Task {
+      guard let item else { return }
+
       do {
-        try await Audiobookshelf.shared.libraries.updateBookFinishedStatus(
-          bookID: id,
-          isFinished: true
-        )
+        try await item.markAsFinished()
         AppLogger.player.debug("Successfully marked book as finished on server")
       } catch {
         AppLogger.player.error("Failed to update book finished status on server: \(error)")

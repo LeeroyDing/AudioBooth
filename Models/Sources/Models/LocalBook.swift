@@ -14,6 +14,8 @@ public final class LocalBook {
   public var tracks: [Track]
   public var chapters: [Chapter]
   public var publishedYear: String?
+  public var displayOrder: Int = 0
+  public var createdAt: Date = Date()
 
   public var authorNames: String {
     authors.map(\.name).joined(separator: ", ")
@@ -29,7 +31,9 @@ public final class LocalBook {
     duration: TimeInterval,
     tracks: [Track] = [],
     chapters: [Chapter] = [],
-    publishedYear: String? = nil
+    publishedYear: String? = nil,
+    displayOrder: Int = 0,
+    createdAt: Date = Date()
   ) {
     self.bookID = bookID
     self.title = title
@@ -41,6 +45,8 @@ public final class LocalBook {
     self.tracks = tracks
     self.chapters = chapters
     self.publishedYear = publishedYear
+    self.displayOrder = displayOrder
+    self.createdAt = createdAt
   }
 }
 
@@ -113,6 +119,16 @@ extension LocalBook {
     try context.save()
   }
 
+  public static func updateDisplayOrders(_ bookIDsInOrder: [String]) throws {
+    let context = ModelContextProvider.shared.context
+    for (index, bookID) in bookIDsInOrder.enumerated() {
+      if let book = try fetch(bookID: bookID) {
+        book.displayOrder = index
+      }
+    }
+    try context.save()
+  }
+
   public func track(at time: TimeInterval) -> Track? {
     let tracks = orderedTracks
     guard !tracks.isEmpty else { return nil }
@@ -169,55 +185,14 @@ extension LocalBook {
   }
 }
 
-extension Array where Element == LocalBook {
-  public func sorted(current: String?) -> [LocalBook] {
-    let currentBook = first { $0.bookID == current }
-    let currentSeriesID = currentBook?.series.first?.id
-    let currentSequence = currentBook?.series.first?.sequence
-
-    return sorted { book1, book2 in
-      let series1 = book1.series.first
-      let series2 = book2.series.first
-
-      guard let s1 = series1 else { return false }
-      guard let s2 = series2 else { return true }
-
-      let isBook1InCurrentSeries = s1.id == currentSeriesID
-      let isBook2InCurrentSeries = s2.id == currentSeriesID
-
-      if isBook1InCurrentSeries && !isBook2InCurrentSeries {
-        return true
-      }
-      if !isBook1InCurrentSeries && isBook2InCurrentSeries {
-        return false
-      }
-
-      if isBook1InCurrentSeries && isBook2InCurrentSeries, let currentSeq = currentSequence {
-        let seq1Value = Double(s1.sequence) ?? 0
-        let seq2Value = Double(s2.sequence) ?? 0
-        let currentSeqValue = Double(currentSeq) ?? 0
-
-        let isBook1CurrentOrAfter = seq1Value >= currentSeqValue
-        let isBook2CurrentOrAfter = seq2Value >= currentSeqValue
-
-        if isBook1CurrentOrAfter && isBook2CurrentOrAfter {
-          return seq1Value < seq2Value
-        }
-
-        if !isBook1CurrentOrAfter && !isBook2CurrentOrAfter {
-          return seq1Value > seq2Value
-        }
-
-        return isBook1CurrentOrAfter
-      }
-
-      if s1.name != s2.name {
-        return s1.name < s2.name
-      }
-
-      let seq1Value = Double(s1.sequence) ?? 0
-      let seq2Value = Double(s2.sequence) ?? 0
-      return seq1Value < seq2Value
+extension LocalBook: Comparable {
+  public static func < (lhs: LocalBook, rhs: LocalBook) -> Bool {
+    if lhs.displayOrder != rhs.displayOrder {
+      return lhs.displayOrder < rhs.displayOrder
+    } else if lhs.createdAt != rhs.createdAt {
+      return lhs.createdAt < rhs.createdAt
+    } else {
+      return lhs.title < rhs.title
     }
   }
 }

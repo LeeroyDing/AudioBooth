@@ -1,0 +1,195 @@
+import API
+import Foundation
+import Models
+import SwiftUI
+
+final class OfflineListViewModel: OfflineListView.Model {
+  private var audiobookshelf: Audiobookshelf { .shared }
+  private var downloadManager: DownloadManager { .shared }
+  private var playerManager: PlayerManager { .shared }
+
+  private var allBooks: [LocalBook] = []
+  private var filteredBooks: [LocalBook] = []
+  private var booksObservation: Task<Void, Never>?
+  private var isReordering = false
+
+  init() {
+    super.init()
+  }
+
+  override func onAppear() {
+    if allBooks.isEmpty {
+      isLoading = true
+    }
+
+    setupBooksObservation()
+  }
+
+  override func onEditModeTapped() {
+    if editMode == .active {
+      selectedBookIDs.removeAll()
+      editMode = .inactive
+    } else {
+      editMode = .active
+    }
+  }
+
+  override func onSelectBook(id: String) {
+    if selectedBookIDs.contains(id) {
+      selectedBookIDs.remove(id)
+    } else {
+      selectedBookIDs.insert(id)
+    }
+  }
+
+  override func onDeleteSelected() {
+    guard !selectedBookIDs.isEmpty else { return }
+
+    Task {
+      await deleteSelectedBooks()
+    }
+  }
+
+  override func onMarkFinishedSelected() {
+    guard !selectedBookIDs.isEmpty else { return }
+
+    Task {
+      await markSelectedBooksAsFinished()
+    }
+  }
+
+  override func onResetProgressSelected() {
+    guard !selectedBookIDs.isEmpty else { return }
+
+    Task {
+      await resetSelectedBooksProgress()
+    }
+  }
+
+  override func onSelectAllTapped() {
+    if selectedBookIDs.count == books.count {
+      selectedBookIDs.removeAll()
+    } else {
+      selectedBookIDs = Set(books.map(\.id))
+    }
+  }
+
+  override func onReorder(from source: IndexSet, to destination: Int) {
+    isReordering = true
+
+    var reorderedBooks = books
+    reorderedBooks.move(fromOffsets: source, toOffset: destination)
+    books = reorderedBooks
+
+    var reorderedLocalBooks = filteredBooks
+    reorderedLocalBooks.move(fromOffsets: source, toOffset: destination)
+    filteredBooks = reorderedLocalBooks
+
+    Task { @MainActor in
+      await saveDisplayOrder()
+    }
+  }
+
+  override func onDelete(at indexSet: IndexSet) {
+    let booksToDelete = indexSet.map { books[$0] }
+    let bookIDsToDelete = Set(booksToDelete.map(\.id))
+
+    Task {
+      await deleteBooks(bookIDsToDelete)
+    }
+  }
+
+  private func setupBooksObservation() {
+    booksObservation = Task { [weak self] in
+      for await books in LocalBook.observeAll() {
+        guard !Task.isCancelled, let self else { break }
+
+        if !self.isReordering {
+          self.allBooks = books.filter(\.isDownloaded).sorted()
+          self.filteredBooks = self.allBooks
+          self.updateDisplayedBooks()
+        }
+
+        self.isReordering = false
+        self.isLoading = false
+      }
+    }
+  }
+
+  private func updateDisplayedBooks() {
+    let searchTerm = searchText.lowercased().trimmingCharacters(in: .whitespaces)
+
+    if searchTerm.isEmpty {
+      books = filteredBooks.map { BookCardModel($0) }
+    } else {
+      let filtered = filteredBooks.filter { book in
+        book.title.lowercased().contains(searchTerm)
+          || book.authorNames.lowercased().contains(searchTerm)
+      }
+      books = filtered.map { BookCardModel($0) }
+    }
+  }
+
+  private func saveDisplayOrder() async {
+    let bookIDs = filteredBooks.map(\.bookID)
+
+    do {
+      try LocalBook.updateDisplayOrders(bookIDs)
+    } catch {
+      print("Failed to save display order: \(error)")
+    }
+  }
+
+  private func deleteSelectedBooks() async {
+    isPerformingBatchAction = true
+    await deleteBooks(selectedBookIDs)
+    selectedBookIDs.removeAll()
+    editMode = .inactive
+    isPerformingBatchAction = false
+  }
+
+  private func deleteBooks(_ bookIDs: Set<String>) async {
+    for bookID in bookIDs {
+      guard let book = allBooks.first(where: { $0.bookID == bookID }) else { continue }
+      book.removeDownload()
+    }
+  }
+
+  private func markSelectedBooksAsFinished() async {
+    isPerformingBatchAction = true
+    let selectedIDs = Array(selectedBookIDs)
+
+    for bookID in selectedIDs {
+      guard let book = allBooks.first(where: { $0.bookID == bookID }) else { continue }
+
+      do {
+        try await book.markAsFinished()
+      } catch {
+        print("Failed to mark book \(bookID) as finished: \(error)")
+      }
+    }
+
+    selectedBookIDs.removeAll()
+    editMode = .inactive
+    isPerformingBatchAction = false
+  }
+
+  private func resetSelectedBooksProgress() async {
+    isPerformingBatchAction = true
+    let selectedIDs = Array(selectedBookIDs)
+
+    for bookID in selectedIDs {
+      guard let book = allBooks.first(where: { $0.bookID == bookID }) else { continue }
+
+      do {
+        try await book.resetProgress()
+      } catch {
+        print("Failed to reset progress for book \(bookID): \(error)")
+      }
+    }
+
+    selectedBookIDs.removeAll()
+    editMode = .inactive
+    isPerformingBatchAction = false
+  }
+}

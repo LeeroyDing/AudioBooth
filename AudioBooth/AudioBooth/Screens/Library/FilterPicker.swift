@@ -122,7 +122,7 @@ extension FilterPicker {
     case .languages(let name): name
     case .publishers(let name): name
     case .publishedDecades(let decade): decade
-    case .offline, nil: nil
+    case nil: nil
     }
   }
 

@@ -13,7 +13,6 @@ extension LibraryPageModel {
     case languages(String)
     case publishers(String)
     case publishedDecades(String)
-    case offline
   }
 }
 
@@ -86,14 +85,7 @@ final class LibraryPageModel: LibraryPage.Model {
         sortBy: nil,
         title: name
       )
-    case .offline:
-      self.filter = .offline
-      super.init(
-        isRoot: false,
-        sortBy: nil,
-        title: "Downloaded"
-      )
-    case .book, .playlist, .collection:
+    case .book, .playlist, .collection, .offline:
       fatalError("LibraryPageModel cannot be initialized with a \(destination) destination")
     }
 
@@ -167,104 +159,92 @@ final class LibraryPageModel: LibraryPage.Model {
     isLoading = currentPage == 0
 
     do {
-      if case .offline = self.filter {
-        let localBooks = try LocalBook.fetchAll()
-        let bookCards = localBooks.filter(\.isDownloaded).map(BookCardModel.init)
+      let filter: String?
+      var sortBy = self.sortBy
 
-        fetched = bookCards
-        books = bookCards
-        hasMorePages = false
-      } else {
-        let filter: String?
-        var sortBy = self.sortBy
+      switch self.filter {
+      case .progress(let name):
+        let id = name.lowercased().replacingOccurrences(of: " ", with: "-")
+        let base64ProgressID = Data(id.utf8).base64EncodedString()
+        filter = "progress.\(base64ProgressID)"
 
-        switch self.filter {
-        case .progress(let name):
-          let id = name.lowercased().replacingOccurrences(of: " ", with: "-")
-          let base64ProgressID = Data(id.utf8).base64EncodedString()
-          filter = "progress.\(base64ProgressID)"
+      case .series(let id, _):
+        let base64SeriesID = Data(id.utf8).base64EncodedString()
+        filter = "series.\(base64SeriesID)"
 
-        case .series(let id, _):
-          let base64SeriesID = Data(id.utf8).base64EncodedString()
-          filter = "series.\(base64SeriesID)"
+      case .authors(let id, _):
+        let base64AuthorID = Data(id.utf8).base64EncodedString()
+        filter = "authors.\(base64AuthorID)"
+        sortBy = .title
 
-        case .authors(let id, _):
-          let base64AuthorID = Data(id.utf8).base64EncodedString()
-          filter = "authors.\(base64AuthorID)"
-          sortBy = .title
+      case .narrators(let name):
+        let base64NarratorName = Data(name.utf8).base64EncodedString()
+        filter = "narrators.\(base64NarratorName)"
+        sortBy = .title
 
-        case .narrators(let name):
-          let base64NarratorName = Data(name.utf8).base64EncodedString()
-          filter = "narrators.\(base64NarratorName)"
-          sortBy = .title
+      case .genres(let name):
+        let base64GenreName = Data(name.utf8).base64EncodedString()
+        filter = "genres.\(base64GenreName)"
+        sortBy = .title
 
-        case .genres(let name):
-          let base64GenreName = Data(name.utf8).base64EncodedString()
-          filter = "genres.\(base64GenreName)"
-          sortBy = .title
+      case .tags(let name):
+        let base64TagName = Data(name.utf8).base64EncodedString()
+        filter = "tags.\(base64TagName)"
+        sortBy = .title
 
-        case .tags(let name):
-          let base64TagName = Data(name.utf8).base64EncodedString()
-          filter = "tags.\(base64TagName)"
-          sortBy = .title
+      case .languages(let name):
+        let base64LanguageName = Data(name.utf8).base64EncodedString()
+        filter = "languages.\(base64LanguageName)"
+        sortBy = .title
 
-        case .languages(let name):
-          let base64LanguageName = Data(name.utf8).base64EncodedString()
-          filter = "languages.\(base64LanguageName)"
-          sortBy = .title
+      case .publishers(let name):
+        let base64PublisherName = Data(name.utf8).base64EncodedString()
+        filter = "publishers.\(base64PublisherName)"
+        sortBy = .title
 
-        case .publishers(let name):
-          let base64PublisherName = Data(name.utf8).base64EncodedString()
-          filter = "publishers.\(base64PublisherName)"
-          sortBy = .title
+      case .publishedDecades(let decade):
+        let base64Decade = Data(decade.utf8).base64EncodedString()
+        filter = "publishedDecades.\(base64Decade)"
+        sortBy = .title
 
-        case .publishedDecades(let decade):
-          let base64Decade = Data(decade.utf8).base64EncodedString()
-          filter = "publishedDecades.\(base64Decade)"
-          sortBy = .title
-
-        case .offline:
-          filter = nil
-
-        case nil:
-          filter = nil
-        }
-
-        let response = try await audiobookshelf.books.fetch(
-          limit: itemsPerPage,
-          page: currentPage,
-          sortBy: sortBy,
-          ascending: ascending,
-          filter: filter
-        )
-
-        let bookCards = response.results.map { book in
-          if case .series = self.filter {
-            BookCardModel(book, sortBy: .title)
-          } else {
-            BookCardModel(book, sortBy: self.sortBy)
-          }
-        }
-
-        if currentPage == 0 {
-          fetched = bookCards
-        } else {
-          fetched.append(contentsOf: bookCards)
-        }
-
-        if isRoot || search.searchText.isEmpty {
-          books = fetched
-        } else {
-          let searchTerm = search.searchText.lowercased()
-          books = fetched.filter { book in
-            book.title.lowercased().contains(searchTerm)
-          }
-        }
-
-        currentPage += 1
-
-        hasMorePages = (currentPage * itemsPerPage) < response.total
+      case nil:
+        filter = nil
       }
+
+      let response = try await audiobookshelf.books.fetch(
+        limit: itemsPerPage,
+        page: currentPage,
+        sortBy: sortBy,
+        ascending: ascending,
+        filter: filter
+      )
+
+      let bookCards = response.results.map { book in
+        if case .series = self.filter {
+          BookCardModel(book, sortBy: .title)
+        } else {
+          BookCardModel(book, sortBy: self.sortBy)
+        }
+      }
+
+      if currentPage == 0 {
+        fetched = bookCards
+      } else {
+        fetched.append(contentsOf: bookCards)
+      }
+
+      if isRoot || search.searchText.isEmpty {
+        books = fetched
+      } else {
+        let searchTerm = search.searchText.lowercased()
+        books = fetched.filter { book in
+          book.title.lowercased().contains(searchTerm)
+        }
+      }
+
+      currentPage += 1
+
+      hasMorePages = (currentPage * itemsPerPage) < response.total
     } catch {
       if currentPage == 0 {
         fetched = []

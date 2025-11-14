@@ -129,7 +129,7 @@ extension HomePageModel {
       return
     }
 
-    let sortedBooks = downloadedBooks.sorted(current: playerManager.current?.id)
+    let sortedBooks = downloadedBooks.sorted()
 
     let models = sortedBooks.map { BookCardModel($0) }
     self.offline = Section(title: "Available Offline", items: .books(models))
@@ -186,7 +186,10 @@ extension HomePageModel {
 
     do {
       let userData = try await Audiobookshelf.shared.authentication.fetchMe()
-      try? MediaProgress.syncFromAPI(userData: userData)
+      try? MediaProgress.syncFromAPI(
+        userData: userData,
+        currentPlayingBookID: PlayerManager.shared.current?.id
+      )
       try? Bookmark.syncFromAPI(userData: userData)
 
       let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()

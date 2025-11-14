@@ -330,38 +330,51 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       downloadManager.cancelDownload(for: bookID)
 
     case .downloaded:
+      if let book {
+        book.removeDownload()
+      } else if let localBook {
+        localBook.removeDownload()
+      }
       downloadState = .notDownloaded
-      downloadManager.deleteDownload(for: bookID)
 
     case .notDownloaded:
-      if book == nil {
+      guard let book else {
         Toast(error: "Cannot download without network connection").show()
         return
       }
       downloadState = .downloading(progress: 0)
-      downloadManager.startDownload(for: bookID)
+      try? book.download()
     }
   }
 
   override func onMarkFinishedTapped() {
-    guard let duration = book?.duration ?? localBook?.duration else {
-      Toast(error: "Book not available").show()
-      return
-    }
-
     Task {
       do {
-        let isFinished = (progress ?? 0) >= 1.0
-
-        try await Audiobookshelf.shared.libraries.updateBookFinishedStatus(
-          bookID: bookID, isFinished: !isFinished)
-
-        try? MediaProgress.updateFinishedStatus(
-          for: bookID, isFinished: !isFinished, duration: duration)
-
-        Toast(success: isFinished ? "Marked as not finished" : "Marked as finished").show()
+        if let book {
+          try await book.markAsFinished()
+        } else if let localBook {
+          try await localBook.markAsFinished()
+        }
+        progress = 1.0
+        Toast(success: "Marked as finished").show()
       } catch {
-        Toast(error: "Failed to update finished status").show()
+        Toast(error: "Failed to mark as finished").show()
+      }
+    }
+  }
+
+  override func onResetProgressTapped() {
+    Task {
+      do {
+        if let book {
+          try await book.resetProgress()
+        } else if let localBook {
+          try await localBook.resetProgress()
+        }
+        progress = 0
+        Toast(success: "Progress reset").show()
+      } catch {
+        Toast(error: "Failed to reset progress").show()
       }
     }
   }

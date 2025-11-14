@@ -158,57 +158,59 @@ extension MediaProgress {
     }
   }
 
-  public static func updateFinishedStatus(
-    for bookID: String, isFinished: Bool, duration: TimeInterval = 0
-  )
-    throws
-  {
-    if isFinished {
-      if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
-        existingProgress.progress = 1.0
-        existingProgress.isFinished = true
-        existingProgress.lastUpdate = Date()
-        try existingProgress.save()
-      } else {
-        let newProgress = MediaProgress(
-          bookID: bookID,
-          duration: duration,
-          progress: 1.0,
-          isFinished: true
-        )
-        try newProgress.save()
-      }
+  public static func markAsFinished(for bookID: String) throws {
+    if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
+      existingProgress.progress = 1.0
+      existingProgress.isFinished = true
+      existingProgress.lastUpdate = Date()
+      try existingProgress.save()
     } else {
-      if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
-        existingProgress.progress = 0.0
-        existingProgress.isFinished = false
-        existingProgress.lastUpdate = Date()
-        try existingProgress.save()
-      }
+      let newProgress = MediaProgress(
+        bookID: bookID,
+        duration: 0,
+        progress: 1.0,
+        isFinished: true
+      )
+      try newProgress.save()
     }
   }
 
   @MainActor
-  public static func syncFromAPI(userData: User) throws {
+  public static func syncFromAPI(userData: User, currentPlayingBookID: String? = nil) throws {
     let context = ModelContextProvider.shared.context
+
+    let allLocalProgress = try MediaProgress.fetchAll()
+    let remoteBookIDs = Set(userData.mediaProgress.map(\.libraryItemId))
+    let localProgressMap = Dictionary(
+      uniqueKeysWithValues: allLocalProgress.map { ($0.bookID, $0) })
 
     for apiProgress in userData.mediaProgress {
       let remote = MediaProgress(from: apiProgress)
 
-      if let local = try MediaProgress.fetch(bookID: apiProgress.libraryItemId) {
+      if let local = localProgressMap[apiProgress.libraryItemId] {
         local.id = remote.id
+        local.duration = remote.duration
 
         if remote.lastUpdate > local.lastUpdate {
           local.lastPlayedAt = remote.lastPlayedAt
           local.currentTime = remote.currentTime
           local.timeListened = remote.timeListened
-          local.duration = remote.duration
           local.progress = remote.progress
           local.isFinished = remote.isFinished
           local.lastUpdate = remote.lastUpdate
         }
       } else {
         context.insert(remote)
+      }
+    }
+
+    for localProgress in allLocalProgress {
+      if !remoteBookIDs.contains(localProgress.bookID) {
+        if let currentPlayingBookID, localProgress.bookID == currentPlayingBookID {
+          continue
+        }
+
+        context.delete(localProgress)
       }
     }
 
