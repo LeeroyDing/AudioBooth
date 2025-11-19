@@ -6,6 +6,7 @@ public struct Book: Codable, Sendable {
   public let addedAt: Date
   public let updatedAt: Date
   public let libraryFiles: [LibraryFile]?
+  public let collapsedSeries: CollapsedSeries?
 
   public var coverURL: URL? {
     guard let serverURL = Audiobookshelf.shared.serverURL else { return nil }
@@ -167,5 +168,14 @@ extension Book {
         public let size: Int64?
       }
     }
+  }
+
+  public struct CollapsedSeries: Codable, Sendable {
+    public let id: String
+    public let name: String
+    public let nameIgnorePrefix: String?
+    public let sequence: String?
+    public let numBooks: Int
+    public let libraryItemIds: [String]
   }
 }

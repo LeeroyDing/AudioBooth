@@ -11,6 +11,7 @@ final class UserPreferences: ObservableObject {
   @AppStorage("smartRewindInterval") var smartRewindInterval: Double = 30.0
   @AppStorage("showDebugSection") var showDebugSection: Bool = false
   @AppStorage("libraryDisplayMode") var libraryDisplayMode: BookCard.DisplayMode = .card
+  @AppStorage("collapseSeriesInLibrary") var collapseSeriesInLibrary: Bool = false
   @AppStorage("autoDownloadBooks") var autoDownloadBooks: Bool = false
   @AppStorage("removeDownloadOnCompletion") var removeDownloadOnCompletion: Bool = false
   @AppStorage("showNFCTagWriting") var showNFCTagWriting: Bool = false

@@ -114,17 +114,30 @@ struct LibraryPage: View {
             Label("List View", systemImage: "list.bullet")
           }
 
+          if model.isRoot {
+            Divider()
+
+            Toggle(isOn: $preferences.collapseSeriesInLibrary) {
+              Label("Collapse Series", systemImage: "rectangle.stack")
+            }
+            .onChange(of: preferences.collapseSeriesInLibrary) { _, _ in
+              model.onCollapseSeriesToggled()
+            }
+          }
+
           if model.sortBy != nil {
             Divider()
 
-            sortByOption(.title)
-            sortByOption(.authorName)
-            sortByOption(.authorNameLF)
-            sortByOption(.publishedYear)
-            sortByOption(.addedAt)
-            sortByOption(.size)
-            sortByOption(.duration)
-            sortByOption(.updatedAt)
+            Section("Sort By") {
+              sortByOption(.title)
+              sortByOption(.authorName)
+              sortByOption(.authorNameLF)
+              sortByOption(.publishedYear)
+              sortByOption(.addedAt)
+              sortByOption(.size)
+              sortByOption(.duration)
+              sortByOption(.updatedAt)
+            }
           }
         } label: {
           Image(systemName: "ellipsis")
@@ -183,6 +196,7 @@ extension LibraryPage {
     func onSearchChanged(_ searchText: String) {}
     func loadNextPageIfNeeded() {}
     func onDisplayModeTapped() {}
+    func onCollapseSeriesToggled() {}
 
     init(
       isLoading: Bool = false,

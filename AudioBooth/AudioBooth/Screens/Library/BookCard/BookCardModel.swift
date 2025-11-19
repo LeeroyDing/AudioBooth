@@ -38,33 +38,58 @@ final class BookCardModel: BookCard.Model {
   init(
     _ item: Book, sortBy: BooksService.SortBy?, navigate: ((NavigationDestination) -> Void)? = nil
   ) {
-    let id = item.id
-
+    let id: String
+    let title: String
+    let bookCount: Int?
     let details: String?
-    switch sortBy {
-    case .publishedYear:
-      details = item.publishedYear.map({ "Published \($0)" })
-    case .title, .authorName, .authorNameLF:
-      details = item.authorName
-    case .addedAt:
-      details =
-        "Added \(DateFormatter.localizedString(from: item.addedAt, dateStyle: .short, timeStyle: .none))"
-    case .updatedAt:
-      details =
-        "Updated \(DateFormatter.localizedString(from: item.updatedAt, dateStyle: .short, timeStyle: .none))"
-    case .size:
-      details = item.size.map {
-        "Size \(ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .file))"
-      }
-    case .duration:
-      details = Duration.seconds(item.duration).formatted(
-        .units(
-          allowed: [.hours, .minutes, .seconds],
-          width: .narrow
-        )
-      )
-    case nil:
+    let sequence: String?
+    let author: String?
+    let narrator: String?
+    let publishedYear: String?
+
+    if let collapsedSeries = item.collapsedSeries {
+      id = collapsedSeries.id
+      title = collapsedSeries.name
+      bookCount = collapsedSeries.numBooks
       details = nil
+      sequence = nil
+      author = nil
+      narrator = nil
+      publishedYear = nil
+    } else {
+      id = item.id
+      title = item.title
+      sequence = item.series?.first?.sequence
+      author = item.authorName
+      narrator = item.media.metadata.narratorName
+      publishedYear = item.publishedYear
+      bookCount = nil
+
+      switch sortBy {
+      case .publishedYear:
+        details = item.publishedYear.map({ "Published \($0)" })
+      case .title, .authorName, .authorNameLF:
+        details = item.authorName
+      case .addedAt:
+        details =
+          "Added \(DateFormatter.localizedString(from: item.addedAt, dateStyle: .short, timeStyle: .none))"
+      case .updatedAt:
+        details =
+          "Updated \(DateFormatter.localizedString(from: item.updatedAt, dateStyle: .short, timeStyle: .none))"
+      case .size:
+        details = item.size.map {
+          "Size \(ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .file))"
+        }
+      case .duration:
+        details = Duration.seconds(item.duration).formatted(
+          .units(
+            allowed: [.hours, .minutes, .seconds],
+            width: .narrow
+          )
+        )
+      case nil:
+        details = nil
+      }
     }
 
     self.item = .remote(item)
@@ -72,14 +97,15 @@ final class BookCardModel: BookCard.Model {
 
     super.init(
       id: id,
-      title: item.title,
+      title: title,
       details: details,
       coverURL: item.coverURL,
-      sequence: item.series?.first?.sequence,
-      author: item.authorName,
-      narrator: item.media.metadata.narratorName,
-      publishedYear: item.publishedYear,
-      downloadProgress: nil
+      sequence: sequence,
+      author: author,
+      narrator: narrator,
+      publishedYear: publishedYear,
+      downloadProgress: nil,
+      bookCount: bookCount
     )
 
     setupDownloadProgressObserver()
@@ -94,7 +120,21 @@ final class BookCardModel: BookCard.Model {
   }
 
   override func onAppear() {
-    progress = try? MediaProgress.fetch(bookID: id)?.progress
+    if case .remote(let book) = item, let collapsedSeries = book.collapsedSeries {
+      progress = Self.calculateSeriesProgress(libraryItemIds: collapsedSeries.libraryItemIds)
+    } else {
+      progress = try? MediaProgress.fetch(bookID: id)?.progress
+    }
+  }
+
+  private static func calculateSeriesProgress(libraryItemIds: [String]) -> Double? {
+    guard !libraryItemIds.isEmpty else { return nil }
+
+    let totalProgress = libraryItemIds.compactMap { bookID in
+      (try? MediaProgress.fetch(bookID: bookID))?.progress ?? 0.0
+    }.reduce(0, +)
+
+    return totalProgress / Double(libraryItemIds.count)
   }
 
   override func contextMenu() -> BookCardContextMenu.Model {

@@ -11,7 +11,7 @@ struct BookCard: View {
   @Environment(\.bookCardDisplayMode) private var displayMode
 
   var body: some View {
-    NavigationLink(value: NavigationDestination.book(id: model.id)) {
+    NavigationLink(value: navigationDestination) {
       content
     }
     .buttonStyle(.plain)
@@ -19,6 +19,14 @@ struct BookCard: View {
       BookCardContextMenu(model: model.contextMenu())
     }
     .onAppear(perform: model.onAppear)
+  }
+
+  var navigationDestination: NavigationDestination {
+    if model.bookCount != nil {
+      return .series(id: model.id, name: model.title)
+    } else {
+      return .book(id: model.id)
+    }
   }
 
   var content: some View {
@@ -44,7 +52,17 @@ struct BookCard: View {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .overlay(alignment: .topTrailing) {
-      if let sequence = model.sequence {
+      if let bookCount = model.bookCount {
+        Text("\(bookCount)")
+          .font(.caption)
+          .fontWeight(.medium)
+          .foregroundColor(.white)
+          .padding(.horizontal, 8)
+          .padding(.vertical, 4)
+          .background(Color.orange)
+          .cornerRadius(12)
+          .padding(8)
+      } else if let sequence = model.sequence {
         Text("#\(sequence)")
           .font(.caption2)
           .foregroundStyle(Color.white)
@@ -64,6 +82,12 @@ struct BookCard: View {
 
       VStack(alignment: .leading, spacing: 6) {
         title
+
+        if let bookCount = model.bookCount {
+          Text("^[\(bookCount) book](inflect: true)")
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
 
         if let author = model.author {
           rowMetadata(icon: "pencil", value: author)
@@ -225,6 +249,7 @@ extension BookCard {
     let narrator: String?
     let publishedYear: String?
     var downloadProgress: Double?
+    let bookCount: Int?
 
     func onAppear() {}
     func contextMenu() -> BookCardContextMenu.Model { fatalError("Must be overridden") }
@@ -239,7 +264,8 @@ extension BookCard {
       author: String? = nil,
       narrator: String? = nil,
       publishedYear: String? = nil,
-      downloadProgress: Double? = nil
+      downloadProgress: Double? = nil,
+      bookCount: Int? = nil
     ) {
       self.id = id
       self.title = title
@@ -251,6 +277,7 @@ extension BookCard {
       self.narrator = narrator
       self.publishedYear = publishedYear
       self.downloadProgress = downloadProgress
+      self.bookCount = bookCount
     }
   }
 }

@@ -162,6 +162,12 @@ final class LibraryPageModel: LibraryPage.Model {
     preferences.libraryDisplayMode = preferences.libraryDisplayMode == .card ? .row : .card
   }
 
+  override func onCollapseSeriesToggled() {
+    Task {
+      await refresh()
+    }
+  }
+
   private func loadBooks() async {
     guard hasMorePages && !isLoadingNextPage && search.searchText.isEmpty else { return }
 
@@ -221,11 +227,14 @@ final class LibraryPageModel: LibraryPage.Model {
         filter = nil
       }
 
+      let preferences = UserPreferences.shared
+      let collapseSeries = isRoot && preferences.collapseSeriesInLibrary
       let response = try await audiobookshelf.books.fetch(
         limit: itemsPerPage,
         page: currentPage,
         sortBy: sortBy,
         ascending: ascending,
+        collapseSeries: collapseSeries,
         filter: filter
       )
 
