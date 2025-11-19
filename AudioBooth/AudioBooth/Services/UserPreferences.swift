@@ -12,6 +12,8 @@ final class UserPreferences: ObservableObject {
   @AppStorage("showListeningStats") var showListeningStats: Bool = false
   @AppStorage("showDebugSection") var showDebugSection: Bool = false
   @AppStorage("libraryDisplayMode") var libraryDisplayMode: BookCard.DisplayMode = .card
+  @AppStorage("autoDownloadBooks") var autoDownloadBooks: Bool = false
+  @AppStorage("removeDownloadOnCompletion") var removeDownloadOnCompletion: Bool = false
 
   private init() {}
 }

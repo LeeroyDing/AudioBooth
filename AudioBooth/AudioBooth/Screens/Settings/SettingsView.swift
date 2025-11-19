@@ -233,6 +233,12 @@ struct SettingsView: View {
     Section("Preferences") {
       Toggle("Show Listening Stats", isOn: $preferences.showListeningStats)
         .bold()
+
+      Toggle("Auto-Download Books", isOn: $preferences.autoDownloadBooks)
+        .bold()
+
+      Toggle("Remove Download on Completion", isOn: $preferences.removeDownloadOnCompletion)
+        .bold()
     }
 
     Section("Player") {

@@ -423,6 +423,11 @@ extension BookPlayerModel {
 
       do {
         try await setupSession()
+
+        if UserPreferences.shared.autoDownloadBooks && item?.isDownloaded == false {
+          AppLogger.player.info("Auto-download enabled, starting download for book")
+          try? item?.download()
+        }
       } catch {
         AppLogger.player.error("Background session fetch failed: \(error)")
       }
