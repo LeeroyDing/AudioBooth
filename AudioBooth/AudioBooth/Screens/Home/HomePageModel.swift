@@ -203,7 +203,9 @@ extension HomePageModel {
         !book.isDownloaded,
         playerManager.current?.id != book.bookID
       {
-        try? book.delete()
+        Task {
+          try? book.delete()
+        }
       } else if book.isDownloaded {
         downloadedBooks.append(book)
       }
