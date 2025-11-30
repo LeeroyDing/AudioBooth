@@ -17,6 +17,10 @@ final class UserPreferences: ObservableObject {
   @AppStorage("removeDownloadOnCompletion") var removeDownloadOnCompletion: Bool = false
   @AppStorage("showNFCTagWriting") var showNFCTagWriting: Bool = false
   @AppStorage("homeSections") var homeSections: [HomeSection] = HomeSection.defaultCases
+  @AppStorage("lockScreenNextPreviousUsesChapters") var lockScreenNextPreviousUsesChapters: Bool =
+    false
+  @AppStorage("lockScreenAllowPlaybackPositionChange") var lockScreenAllowPlaybackPositionChange:
+    Bool = true
 
   private init() {
     migrateShowListeningStats()

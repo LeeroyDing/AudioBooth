@@ -95,6 +95,34 @@ struct PlayerPreferencesView: View {
           .bold()
       }
       .listRowSeparator(.hidden)
+      .listSectionSpacing(.custom(12))
+
+      Section {
+        VStack(alignment: .leading) {
+          Text("Lock Screen Controls".uppercased())
+            .bold()
+
+          Text("Configure how the lock screen playback controls behave.")
+        }
+        .font(.caption)
+
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Skip by")
+            .bold()
+
+          Picker("Skip by", selection: $preferences.lockScreenNextPreviousUsesChapters) {
+            Text("Seconds").tag(false)
+            Text("Chapter").tag(true)
+          }
+          .pickerStyle(.segmented)
+        }
+
+        Toggle(
+          "Allow Playback Position Change", isOn: $preferences.lockScreenAllowPlaybackPositionChange
+        )
+        .bold()
+      }
+      .listRowSeparator(.hidden)
     }
     .navigationTitle("Player")
   }

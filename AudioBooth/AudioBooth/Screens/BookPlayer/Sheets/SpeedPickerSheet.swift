@@ -53,7 +53,7 @@ struct SpeedPickerSheet: View {
         .padding(.horizontal, 40)
 
         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
-          ForEach([0.7, 1.0, 1.2, 1.5, 1.7, 2.0], id: \.self) { speed in
+          ForEach(model.speeds, id: \.self) { speed in
             button(for: Float(speed))
           }
         }
@@ -99,6 +99,7 @@ extension SpeedPickerSheet {
   @Observable class Model {
     var playbackSpeed: Float = 1.0
     var isPresented: Bool = false
+    let speeds = [0.7, 1.0, 1.2, 1.5, 1.7, 2.0]
 
     init(playbackSpeed: Float = 1.0) {
       self.playbackSpeed = playbackSpeed
