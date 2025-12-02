@@ -26,7 +26,7 @@ final class SessionManager {
     itemID: String,
     item: LocalBook?,
     mediaProgress: MediaProgress
-  ) async throws -> (session: Session, updatedItem: LocalBook?, serverCurrentTime: TimeInterval) {
+  ) async throws -> (session: Session, updatedItem: LocalBook) {
     AppLogger.session.info("Fetching session from server...")
 
     let audiobookshelfSession = try await audiobookshelf.sessions.start(
@@ -51,6 +51,13 @@ final class SessionManager {
       AppLogger.session.debug("Created new item from session")
     }
 
+    if audiobookshelfSession.currentTime > mediaProgress.currentTime {
+      AppLogger.session.info(
+        "Using server currentTime for cross-device sync: \(audiobookshelfSession.currentTime)s (local was: \(mediaProgress.currentTime)s)"
+      )
+      mediaProgress.currentTime = audiobookshelfSession.currentTime
+    }
+
     let playbackSession = PlaybackSession(
       id: session.id,
       libraryItemID: itemID,
@@ -68,11 +75,10 @@ final class SessionManager {
     scheduleSessionClose()
 
     AppLogger.session.info("Session setup completed successfully")
-    return (session, updatedItem, audiobookshelfSession.currentTime)
+    return (session, updatedItem)
   }
 
   func closeSession(
-    currentTime: TimeInterval = 0,
     isDownloaded: Bool = false
   ) async throws {
     guard let session = current else {
@@ -80,7 +86,6 @@ final class SessionManager {
       return
     }
 
-    session.currentTime = currentTime
     session.updatedAt = Date()
     try session.save()
 
@@ -90,7 +95,7 @@ final class SessionManager {
           try await audiobookshelf.sessions.sync(
             session.id,
             timeListened: session.pendingListeningTime,
-            currentTime: currentTime
+            currentTime: session.currentTime
           )
           session.timeListening += session.pendingListeningTime
           session.pendingListeningTime = 0
@@ -168,7 +173,7 @@ final class SessionManager {
     itemID: String,
     item: LocalBook?,
     mediaProgress: MediaProgress
-  ) async throws -> (updatedItem: LocalBook?, serverCurrentTime: TimeInterval) {
+  ) async throws -> LocalBook {
     if let existingSession = current, existingSession.libraryItemID != itemID {
       AppLogger.session.info(
         "Session exists for different book, server will close old session when starting new one")
@@ -176,15 +181,15 @@ final class SessionManager {
       cancelScheduledSessionClose()
     }
 
-    if let existingSession = current, existingSession.libraryItemID == itemID {
+    if let item, let current, current.libraryItemID == itemID {
       AppLogger.session.debug(
-        "Session already exists for this book, reusing: \(existingSession.id)")
-      return (item, mediaProgress.currentTime)
+        "Session already exists for this book, reusing: \(current.id)")
+      return item
     }
 
     do {
       let result = try await startSession(itemID: itemID, item: item, mediaProgress: mediaProgress)
-      return (result.updatedItem, result.serverCurrentTime)
+      return result.updatedItem
     } catch {
       AppLogger.session.warning("Failed to create remote session: \(error)")
 
@@ -195,7 +200,7 @@ final class SessionManager {
           mediaProgress: mediaProgress
         )
         AppLogger.session.info("Created local session for offline stats tracking")
-        return (item, mediaProgress.currentTime)
+        return item
       } else {
         throw error
       }

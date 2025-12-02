@@ -90,32 +90,10 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onTogglePlaybackTapped() {
-    guard let player = player, player.status == .readyToPlay else {
-      pendingPlay = true
-      return
-    }
-
     if isPlaying {
-      player.rate = 0
-      try? audioSession.setActive(false)
+      onPauseTapped()
     } else {
-      if sessionManager.current == nil {
-        AppLogger.player.warning("Session was closed, recreating in background for progress sync")
-
-        player.rate = speed.playbackSpeed
-
-        Task {
-          do {
-            try await setupSession()
-            AppLogger.player.info("Session recreated successfully (playback continued from cache)")
-          } catch {
-            AppLogger.player.error("Failed to recreate session: \(error)")
-          }
-        }
-      } else {
-        player.rate = speed.playbackSpeed
-      }
-      try? audioSession.setActive(true)
+      onPlayTapped()
     }
   }
 
@@ -142,22 +120,26 @@ final class BookPlayerModel: BookPlayer.Model {
     }
 
     if sessionManager.current == nil {
-      AppLogger.player.warning("Session was closed, recreating in background for progress sync")
-
-      player.rate = speed.playbackSpeed
+      AppLogger.player.warning("Session was closed, recreating and reloading player")
 
       Task {
         do {
           try await setupSession()
-          AppLogger.player.info("Session recreated successfully (playback continued from cache)")
+          AppLogger.player.info("Session recreated successfully")
+
+          if isPlayerUsingRemoteURL() {
+            AppLogger.player.info("Player using remote URLs, reloading with new session")
+            await reloadPlayer()
+          } else {
+            AppLogger.player.info("Player using local files, no reload needed")
+          }
         } catch {
           AppLogger.player.error("Failed to recreate session: \(error)")
         }
       }
-    } else {
-      player.rate = speed.playbackSpeed
     }
 
+    player.rate = speed.playbackSpeed
     try? audioSession.setActive(true)
   }
 
@@ -219,7 +201,7 @@ final class BookPlayerModel: BookPlayer.Model {
 
 extension BookPlayerModel {
   private func setupSession() async throws {
-    let result = try await sessionManager.ensureSession(
+    item = try await sessionManager.ensureSession(
       itemID: id,
       item: item,
       mediaProgress: mediaProgress
@@ -229,18 +211,8 @@ extension BookPlayerModel {
       mediaProgress.currentTime = pendingSeekTime
       self.pendingSeekTime = nil
       AppLogger.player.info("Using pending seek time: \(pendingSeekTime)s")
-    } else if result.serverCurrentTime > mediaProgress.currentTime {
-      mediaProgress.currentTime = result.serverCurrentTime
-      AppLogger.player.info(
-        "Using server currentTime for cross-device sync: \(result.serverCurrentTime)s"
-      )
-      applySmartRewind()
     } else {
       applySmartRewind()
-    }
-
-    if let updatedItem = result.updatedItem {
-      item = updatedItem
     }
   }
 
@@ -477,7 +449,8 @@ extension BookPlayerModel {
         self.downloadState = updatedItem.isDownloaded ? .downloaded : .notDownloaded
 
         if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
-          self.refreshPlayerForLocalPlayback()
+          AppLogger.player.info("Download completed, refreshing player to use local files")
+          await self.reloadPlayer()
         }
       }
     }
@@ -702,7 +675,7 @@ extension BookPlayerModel {
         }
         .store(in: &cancellables)
 
-      NotificationCenter.default.publisher(for: .AVPlayerItemPlaybackStalled, object: currentItem)
+      NotificationCenter.default.publisher(for: AVPlayerItem.playbackStalledNotification)
         .receive(on: DispatchQueue.main)
         .sink { [weak self] _ in
           AppLogger.player.warning("Playback stalled - attempting recovery")
@@ -710,17 +683,16 @@ extension BookPlayerModel {
         }
         .store(in: &cancellables)
 
-      NotificationCenter.default.publisher(
-        for: .AVPlayerItemFailedToPlayToEndTime, object: currentItem
-      )
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] notification in
-        let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
-        AppLogger.player.error(
-          "Failed to play to end: \(error?.localizedDescription ?? "Unknown")")
-        self?.handleStreamFailure(error: error)
-      }
-      .store(in: &cancellables)
+      NotificationCenter.default.publisher(for: AVPlayerItem.failedToPlayToEndTimeNotification)
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] notification in
+          let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+          AppLogger.player.error(
+            "Failed to play to end: \(error?.localizedDescription ?? "Unknown")"
+          )
+          self?.handleStreamFailure(error: error)
+        }
+        .store(in: &cancellables)
     }
 
     NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)
@@ -736,6 +708,22 @@ extension BookPlayerModel {
         self?.handleMediaServicesReset()
       }
       .store(in: &cancellables)
+
+    NotificationCenter.default.publisher(
+      for: AVPlayerItem.newErrorLogEntryNotification, object: player.currentItem
+    )
+    .receive(on: DispatchQueue.main)
+    .sink { notification in
+      guard let item = notification.object as? AVPlayerItem,
+        let event = item.errorLog()?.events.last
+      else {
+        return
+      }
+      AppLogger.player.error(
+        "Player error \(event.errorDomain), \(event.errorStatusCode), \(event.errorComment ?? "Unknown error")"
+      )
+    }
+    .store(in: &cancellables)
   }
 
   private func handleAudioInterruption(_ notification: Notification) {
@@ -884,63 +872,64 @@ extension BookPlayerModel {
     return !asset.url.absoluteString.hasPrefix("file")
   }
 
-  private func refreshPlayerForLocalPlayback() {
+  private func reloadPlayer() async {
     guard let player, let item else {
-      AppLogger.player.warning("Cannot refresh player - missing player or item")
+      AppLogger.player.warning("Cannot reload player - missing player or item")
       return
     }
 
-    AppLogger.player.info("Refreshing player to use local files")
+    let playerTime = player.currentTime()
+    let currentTimeSeconds: TimeInterval
+    if playerTime.isValid && !playerTime.isIndefinite {
+      currentTimeSeconds = max(CMTimeGetSeconds(playerTime), mediaProgress.currentTime)
+    } else {
+      currentTimeSeconds = mediaProgress.currentTime
+    }
 
-    let currentTime = player.currentTime()
+    AppLogger.player.info("Reloading player at position: \(currentTimeSeconds)s")
+
+    let currentTime = CMTime(seconds: currentTimeSeconds, preferredTimescale: 1000)
     let wasPlaying = isPlaying
 
-    player.pause()
+    do {
+      let playerItem: AVPlayerItem
 
-    Task {
-      do {
-        let playerItem: AVPlayerItem
-
-        let tracks = item.orderedTracks
-        if tracks.count > 1 {
-          playerItem = try await createCompositionPlayerItem(from: tracks)
-          AppLogger.player.debug(
-            "Recreated composition with local files for \(tracks.count) tracks")
-        } else {
-          guard let track = item.track(at: 0) else {
-            AppLogger.player.error("Failed to get track at time 0")
-            Toast(error: "Failed to get track").show()
-            return
-          }
-
-          let trackURL = sessionManager.current?.url(for: track) ?? track.localPath
-          guard let trackURL else {
-            AppLogger.player.error("No URL available for track")
-            Toast(error: "Failed to get streaming URL").show()
-            return
-          }
-
-          playerItem = AVPlayerItem(url: trackURL)
-          AppLogger.player.debug("Using URL: \(trackURL)")
+      let tracks = item.orderedTracks
+      if tracks.count > 1 {
+        playerItem = try await createCompositionPlayerItem(from: tracks)
+        AppLogger.player.debug("Recreated composition for \(tracks.count) tracks")
+      } else {
+        guard let track = item.track(at: 0) else {
+          AppLogger.player.error("Failed to get track at time 0")
+          Toast(error: "Failed to get track").show()
+          return
         }
 
-        player.replaceCurrentItem(with: playerItem)
-        setupPlayerObservers()
-        setupTimeObserver()
-
-        player.seek(to: currentTime) { _ in
-          if wasPlaying {
-            player.rate = self.speed.playbackSpeed
-          }
-          AppLogger.player.info(
-            "Restored playback position and state after switching to local files")
+        let trackURL = sessionManager.current?.url(for: track) ?? track.localPath
+        guard let trackURL else {
+          AppLogger.player.error("No URL available for track")
+          Toast(error: "Failed to get track URL").show()
+          return
         }
 
-      } catch {
-        AppLogger.player.error(
-          "Failed to refresh player for local playback: \(error)")
-        Toast(error: "Failed to switch to downloaded files").show()
+        playerItem = AVPlayerItem(url: trackURL)
+        AppLogger.player.debug("Using URL: \(trackURL)")
       }
+
+      player.replaceCurrentItem(with: playerItem)
+      setupPlayerObservers()
+      setupTimeObserver()
+
+      player.seek(to: currentTime) { _ in
+        if wasPlaying {
+          player.rate = self.speed.playbackSpeed
+        }
+        AppLogger.player.info("Restored playback position and state after reload")
+      }
+
+    } catch {
+      AppLogger.player.error("Failed to reload player: \(error)")
+      Toast(error: "Failed to reload playback").show()
     }
   }
 
@@ -1112,8 +1101,6 @@ extension BookPlayerModel {
       return
     }
 
-    let currentTime = player.currentTime()
-    let wasPlaying = isPlaying
     let isDownloaded = item?.isDownloaded ?? false
 
     player.pause()
@@ -1131,64 +1118,15 @@ extension BookPlayerModel {
     do {
       try await setupSession()
 
-      guard let item else {
-        throw Audiobookshelf.AudiobookshelfError.networkError("Failed to recreate session")
-      }
-
       if !isDownloaded {
-        let playerItem: AVPlayerItem
-
-        let tracks = item.orderedTracks
-        if tracks.count > 1 {
-          playerItem = try await createCompositionPlayerItem(from: tracks)
-          AppLogger.player.debug(
-            "Recreated composition with \(tracks.count) tracks after recovery")
-        } else {
-          guard let track = item.track(at: 0) else {
-            throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track")
-          }
-
-          let trackURL = sessionManager.current?.url(for: track) ?? track.localPath
-          guard let trackURL else {
-            throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track URL")
-          }
-
-          playerItem = AVPlayerItem(url: trackURL)
-        }
-
-        player.replaceCurrentItem(with: playerItem)
-        setupPlayerObservers()
-        setupTimeObserver()
-
-        let rewindTime = CMTimeSubtract(currentTime, CMTime(seconds: 5, preferredTimescale: 1000))
-        let seekTime = CMTimeMaximum(rewindTime, .zero)
-
-        player.seek(to: seekTime) { [weak self] _ in
-          guard let self else { return }
-
-          self.isLoading = false
-          self.isRecovering = false
-
-          if wasPlaying {
-            player.rate = self.speed.playbackSpeed
-          }
-
-          AppLogger.player.debug(
-            "Successfully recovered stream at position: \(CMTimeGetSeconds(seekTime))s (rewound 5s)"
-          )
-          Toast(message: "Reconnected").show()
-        }
+        await reloadPlayer()
+        Toast(message: "Reconnected").show()
       } else {
-        isLoading = false
-        isRecovering = false
-
-        if wasPlaying {
-          player.rate = speed.playbackSpeed
-        }
-
         AppLogger.player.debug("Session recreated for downloaded book (for progress sync)")
       }
 
+      isLoading = false
+      isRecovering = false
     } catch {
       AppLogger.player.error("Failed to recover session: \(error)")
 
@@ -1221,7 +1159,6 @@ extension BookPlayerModel {
   func closeSession() {
     Task {
       try? await sessionManager.closeSession(
-        currentTime: mediaProgress.currentTime,
         isDownloaded: item?.isDownloaded ?? false
       )
     }
