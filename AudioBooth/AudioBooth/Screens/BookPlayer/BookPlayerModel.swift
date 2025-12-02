@@ -608,6 +608,7 @@ extension BookPlayerModel {
   private func setupNowPlayingMetadata() {
     nowPlayingInfo[MPMediaItemPropertyTitle] = title
     nowPlayingInfo[MPMediaItemPropertyArtist] = author
+    nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
 
     if let cover {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: cover.size) { _ in
@@ -622,7 +623,14 @@ extension BookPlayerModel {
     nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] =
       playbackProgress.current + playbackProgress.remaining
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = playbackProgress.current
-    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? speed.playbackSpeed : 0.0
+
+    nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = player?.defaultRate
+    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate
+
+    if let chaptersModel = chapters as? ChapterPickerSheetViewModel {
+      nowPlayingInfo[MPNowPlayingInfoPropertyChapterNumber] = (chaptersModel.currentIndex + 1)
+      nowPlayingInfo[MPNowPlayingInfoPropertyChapterCount] = chaptersModel.chapters.count
+    }
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
   }
@@ -775,7 +783,10 @@ extension BookPlayerModel {
       guard let self else { return }
 
       if time.isValid && !time.isIndefinite {
-        self.mediaProgress.currentTime = CMTimeGetSeconds(time)
+        let currentTime = CMTimeGetSeconds(time)
+        if currentTime > 0 || self.mediaProgress.currentTime == 0 {
+          self.mediaProgress.currentTime = currentTime
+        }
 
         if let model = self.chapters as? ChapterPickerSheetViewModel {
           let previous = model.currentIndex
