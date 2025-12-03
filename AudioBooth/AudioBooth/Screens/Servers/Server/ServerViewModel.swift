@@ -12,25 +12,44 @@ final class ServerViewModel: ServerView.Model {
   private var playerManager: PlayerManager { .shared }
 
   private var libraryData: [API.Library] = []
-  private var connection: Connection?
+  private var server: Server?
   private var pendingConnectionID: String?
 
-  init(connection: Connection? = nil) {
-    self.connection = connection
+  private final class NewServerAuthViewModel: AuthenticationView.Model {
+    weak var parent: ServerViewModel?
+
+    init(parent: ServerViewModel) {
+      self.parent = parent
+      super.init()
+    }
+
+    override func onLoginTapped() {
+      parent?.performNewServerLogin(
+        username: username,
+        password: password,
+        authModel: self
+      )
+    }
+
+    override func onOIDCLoginTapped() {
+      parent?.performNewServerOIDCLogin(authModel: self)
+    }
+  }
+
+  init(server: Server? = nil) {
+    self.server = server
 
     let serverURL: String
     let customHeaders: [String: String]
     let selectedLibrary: Library?
-    let isAuthenticated: Bool
     let alias: String
     let isActiveServer: Bool
 
-    if let connection {
-      serverURL = connection.serverURL.absoluteString
-      customHeaders = connection.customHeaders
-      isAuthenticated = true
-      alias = connection.alias ?? ""
-      isActiveServer = audiobookshelf.authentication.activeServerID == connection.id
+    if let server {
+      serverURL = server.baseURL.absoluteString
+      customHeaders = server.customHeaders
+      alias = server.alias ?? ""
+      isActiveServer = audiobookshelf.authentication.server?.id == server.id
 
       if isActiveServer, let current = audiobookshelf.libraries.current {
         selectedLibrary = Library(id: current.id, name: current.name)
@@ -41,32 +60,103 @@ final class ServerViewModel: ServerView.Model {
       serverURL = ""
       customHeaders = [:]
       selectedLibrary = nil
-      isAuthenticated = false
       alias = ""
       isActiveServer = false
     }
 
+    let authModel: AuthenticationView.Model?
+    let reauthModel: AuthenticationView.Model?
+
+    if let server {
+      authModel = nil
+
+      let needsReauth: Bool
+      if server.status == .authenticationError {
+        needsReauth = true
+      } else if case .bearer(_, _, let expiresAt) = server.token {
+        needsReauth = Date().timeIntervalSince1970 >= expiresAt
+      } else {
+        needsReauth = false
+      }
+
+      if needsReauth {
+        reauthModel = AuthenticationViewModel(server: server)
+      } else {
+        reauthModel = nil
+      }
+    } else {
+      authModel = nil
+      reauthModel = nil
+    }
+
     super.init(
-      isAuthenticated: isAuthenticated,
       serverURL: serverURL,
-      username: "",
-      password: "",
       customHeaders: CustomHeadersViewModel(initialHeaders: customHeaders),
       selectedLibrary: selectedLibrary,
-      alias: alias
+      alias: alias,
+      authenticationModel: authModel,
+      reauthenticationModel: reauthModel,
+      status: server?.status
     )
 
+    if server == nil {
+      let newAuthModel = NewServerAuthViewModel(parent: self)
+      newAuthModel.onAuthenticationSuccess = { [weak self] in
+        self?.authenticationModel = nil
+      }
+      authenticationModel = newAuthModel
+    }
+
+    if let reauthViewModel = reauthModel as? AuthenticationViewModel {
+      reauthViewModel.onAuthenticationSuccess = { [weak self] in
+        self?.reauthenticationModel = nil
+        Task {
+          await self?.fetchLibraries()
+        }
+      }
+    }
   }
 
   override func onAppear() {
-    if connection != nil {
+    if let server {
+      let needsReauth: Bool
+
+      if server.status == .authenticationError {
+        needsReauth = true
+      } else if case .bearer(_, _, let expiresAt) = server.token {
+        needsReauth = Date().timeIntervalSince1970 >= expiresAt
+      } else {
+        needsReauth = false
+      }
+
+      if needsReauth {
+        let reauthViewModel = AuthenticationViewModel(server: server)
+        reauthViewModel.onAuthenticationSuccess = { [weak self] in
+          self?.reauthenticationModel = nil
+          Task {
+            await self?.fetchLibraries()
+          }
+        }
+        reauthenticationModel = reauthViewModel
+      } else {
+        reauthenticationModel = nil
+      }
+    } else {
+      reauthenticationModel = nil
+    }
+
+    if let server, server.status == .connected {
       Task {
         await fetchLibraries()
       }
     }
   }
 
-  override func onLoginTapped() {
+  private func performNewServerLogin(
+    username: String,
+    password: String,
+    authModel: AuthenticationView.Model
+  ) {
     guard !serverURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
       !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
       !password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -74,7 +164,7 @@ final class ServerViewModel: ServerView.Model {
       return
     }
 
-    isLoading = true
+    authModel.isLoading = true
     let normalizedURL = buildFullServerURL()
     let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
 
@@ -86,22 +176,21 @@ final class ServerViewModel: ServerView.Model {
           password: password,
           customHeaders: headers
         )
-        password = ""
+        authModel.password = ""
         pendingConnectionID = connectionID
-        connection = audiobookshelf.authentication.connections[connectionID]
-        isAuthenticated = true
+        server = audiobookshelf.authentication.servers[connectionID]
+        authenticationModel = nil
         await fetchLibraries()
       } catch {
         AppLogger.viewModel.error("Login failed: \(error.localizedDescription)")
         Toast(error: error.localizedDescription).show()
-        isAuthenticated = false
       }
 
-      isLoading = false
+      authModel.isLoading = false
     }
   }
 
-  override func onOIDCLoginTapped() {
+  private func performNewServerOIDCLogin(authModel: AuthenticationView.Model) {
     guard !serverURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
       return
     }
@@ -109,7 +198,7 @@ final class ServerViewModel: ServerView.Model {
     let normalizedURL = buildFullServerURL()
     let headers = Dictionary(uniqueKeysWithValues: customHeaders.headers.map { ($0.key, $0.value) })
 
-    isLoading = true
+    authModel.isLoading = true
 
     let authManager = OIDCAuthenticationManager(
       serverURL: normalizedURL,
@@ -123,7 +212,6 @@ final class ServerViewModel: ServerView.Model {
 
   func showError(_ message: String) {
     Toast(error: message).show()
-    isLoading = false
   }
 
   override func onDiscoverServersTapped() {
@@ -153,10 +241,10 @@ final class ServerViewModel: ServerView.Model {
       let value = libraryData.first(where: { $0.id == library.id })
     else { return }
 
-    let connectionID = pendingConnectionID ?? connection?.id
+    let connectionID = pendingConnectionID ?? server?.id
     guard let connectionID else { return }
 
-    if audiobookshelf.authentication.activeServerID != connectionID {
+    if audiobookshelf.authentication.server?.id != connectionID {
       Task {
         do {
           try await audiobookshelf.switchToServer(connectionID)
@@ -177,7 +265,7 @@ final class ServerViewModel: ServerView.Model {
   }
 
   override func onAliasChanged(_ newAlias: String) {
-    guard let connectionID = connection?.id else { return }
+    guard let connectionID = server?.id else { return }
     let trimmedAlias = newAlias.trimmingCharacters(in: .whitespacesAndNewlines)
     audiobookshelf.authentication.updateAlias(
       connectionID,
@@ -186,16 +274,21 @@ final class ServerViewModel: ServerView.Model {
   }
 
   override func onLogoutTapped() {
-    guard let serverID = connection?.id else { return }
+    guard let serverID = server?.id else { return }
 
-    if audiobookshelf.authentication.activeServerID == serverID {
+    if audiobookshelf.authentication.server?.id == serverID {
       playerManager.current = nil
     }
 
     audiobookshelf.logout(serverID: serverID)
-    isAuthenticated = false
-    username = ""
-    password = ""
+    server = nil
+
+    let newAuthModel = NewServerAuthViewModel(parent: self)
+    newAuthModel.onAuthenticationSuccess = { [weak self] in
+      self?.authenticationModel = nil
+    }
+    authenticationModel = newAuthModel
+
     discoveredServers = []
     libraries = []
     selectedLibrary = nil
@@ -212,7 +305,7 @@ final class ServerViewModel: ServerView.Model {
   }
 
   private func fetchLibraries() async {
-    let connectionID = pendingConnectionID ?? connection?.id
+    let connectionID = pendingConnectionID ?? server?.id
     guard let connectionID else { return }
 
     isLoadingLibraries = true
@@ -230,6 +323,11 @@ final class ServerViewModel: ServerView.Model {
       }
     } catch {
       Toast(error: "Failed to load libraries").show()
+
+      if let server, server.status == .authenticationError {
+        let reauthViewModel = AuthenticationViewModel(server: server)
+        self.reauthenticationModel = reauthViewModel
+      }
     }
 
     isLoadingLibraries = false
@@ -264,9 +362,9 @@ final class ServerViewModel: ServerView.Model {
 extension ServerViewModel: OIDCAuthenticationDelegate {
   func oidcAuthenticationDidSucceed(connectionID: String) {
     pendingConnectionID = connectionID
-    connection = audiobookshelf.authentication.connections[connectionID]
-    isAuthenticated = true
-    isLoading = false
+    server = audiobookshelf.authentication.servers[connectionID]
+    authenticationModel?.isLoading = false
+    authenticationModel = nil
     oidcAuthManager = nil
     Toast(success: "Successfully authenticated with SSO").show()
     Task {
@@ -276,7 +374,7 @@ extension ServerViewModel: OIDCAuthenticationDelegate {
 
   func oidcAuthentication(didFailWithError error: Error) {
     showError("SSO login failed: \(error.localizedDescription)")
-    isLoading = false
+    authenticationModel?.isLoading = false
     oidcAuthManager = nil
   }
 }

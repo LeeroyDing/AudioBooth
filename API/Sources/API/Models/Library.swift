@@ -20,7 +20,7 @@ public struct Library: Codable, Sendable, Equatable {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     id = try container.decode(String.self, forKey: .id)
     name = try container.decode(String.self, forKey: .name)
-    serverID = Audiobookshelf.shared.authentication.activeServerID ?? ""
+    serverID = Audiobookshelf.shared.authentication.server?.id ?? ""
   }
 
   public func encode(to encoder: Encoder) throws {

@@ -42,15 +42,14 @@ struct AudioBoothApp: App {
       if Audiobookshelf.shared.authentication.isAuthenticated {
         await SessionManager.shared.syncUnsyncedSessions()
       }
+      await Audiobookshelf.shared.authentication.checkServersHealth()
     }
   }
 
   private func setupDatabaseCallbacks() {
-    if let serverID = Audiobookshelf.shared.authentication.activeServerID,
-      let connection = Audiobookshelf.shared.authentication.connection
-    {
+    if let server = Audiobookshelf.shared.authentication.server {
       do {
-        try ModelContextProvider.shared.switchToServer(serverID, serverURL: connection.serverURL)
+        try ModelContextProvider.shared.switchToServer(server.id, serverURL: server.baseURL)
       } catch {
         AppLogger.general.error(
           "Failed to initialize database on app launch: \(error.localizedDescription)"
@@ -82,9 +81,9 @@ struct AudioBoothApp: App {
       }
     }
 
-    if let connection = Audiobookshelf.shared.authentication.connection {
+    if let server = Audiobookshelf.shared.authentication.server {
       WatchConnectivityManager.shared.syncAuthCredentials(
-        serverURL: connection.serverURL, token: "")
+        serverURL: server.baseURL, token: "")
     }
   }
 

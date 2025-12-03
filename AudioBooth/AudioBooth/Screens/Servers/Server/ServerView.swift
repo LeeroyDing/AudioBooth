@@ -17,12 +17,12 @@ struct ServerView: View {
 
   var body: some View {
     Form {
-      if !model.isAuthenticated {
+      if model.authenticationModel != nil {
         discovery
       }
 
       Section("Server Configuration") {
-        if model.isAuthenticated {
+        if model.authenticationModel == nil {
           TextField("Alias (optional)", text: $model.alias)
             .autocorrectionDisabled()
             .onChange(of: model.alias) { _, newValue in
@@ -36,20 +36,20 @@ struct ServerView: View {
             Text("http://").tag(ServerView.Model.ServerScheme.http)
           }
           .pickerStyle(.segmented)
-          .disabled(model.isAuthenticated)
+          .disabled(model.authenticationModel == nil)
         }
 
         TextField("Server URL", text: $model.serverURL)
           .autocorrectionDisabled()
           .textInputAutocapitalization(.never)
-          .disabled(model.isAuthenticated)
+          .disabled(model.authenticationModel == nil)
           .focused($focusedField, equals: .serverURL)
           .submitLabel(.next)
           .onSubmit {
             focusedField = .username
           }
 
-        if !model.isAuthenticated {
+        if model.authenticationModel != nil {
           Toggle("Use Subdirectory", isOn: $model.useSubdirectory)
 
           if model.useSubdirectory {
@@ -62,8 +62,8 @@ struct ServerView: View {
         customHeadersSection
       }
 
-      if !model.isAuthenticated {
-        authentication
+      if let authModel = model.authenticationModel {
+        AuthenticationView(model: authModel)
       } else {
         account
       }
@@ -125,7 +125,7 @@ struct ServerView: View {
 
   @ViewBuilder
   var customHeadersSection: some View {
-    if !model.isAuthenticated {
+    if model.authenticationModel != nil {
       NavigationLink(destination: { CustomHeadersView(model: model.customHeaders) }) {
         HStack {
           Image(systemName: "list.bullet.rectangle")
@@ -141,116 +141,67 @@ struct ServerView: View {
   }
 
   @ViewBuilder
-  var authentication: some View {
-    Section("Authentication Method") {
-      Picker("Method", selection: $model.authenticationMethod) {
-        Text("Username & Password").tag(ServerView.Model.AuthenticationMethod.usernamePassword)
-        Text("OIDC (SSO)").tag(ServerView.Model.AuthenticationMethod.oidc)
-      }
-      .pickerStyle(.segmented)
-    }
-
-    if model.authenticationMethod == .usernamePassword {
-      Section("Credentials") {
-        TextField("Username", text: $model.username)
-          .autocorrectionDisabled()
-          .textInputAutocapitalization(.never)
-          .focused($focusedField, equals: .username)
-          .submitLabel(.next)
-          .onSubmit {
-            focusedField = .password
-          }
-
-        SecureField("Password", text: $model.password)
-          .focused($focusedField, equals: .password)
-          .submitLabel(.send)
-          .onSubmit {
-            model.onLoginTapped()
-          }
-      }
-
-      Section {
-        Button(action: model.onLoginTapped) {
-          HStack {
-            if model.isLoading {
-              ProgressView()
-                .scaleEffect(0.8)
-            } else {
-              Image(systemName: "person.badge.key")
-            }
-            Text(model.isLoading ? "Logging in..." : "Login")
-          }
-        }
-        .disabled(
-          model.username.isEmpty || model.password.isEmpty || model.serverURL.isEmpty
-            || model.isLoading)
-      }
-    } else {
-      Section {
-        Button(action: model.onOIDCLoginTapped) {
-          HStack {
-            if model.isLoading {
-              ProgressView()
-                .scaleEffect(0.8)
-            } else {
-              Image(systemName: "globe")
-            }
-            Text(model.isLoading ? "Authenticating..." : "Login with SSO")
-          }
-        }
-        .disabled(model.serverURL.isEmpty || model.isLoading)
-      }
-    }
-  }
-
-  @ViewBuilder
   var account: some View {
-    Section("Library") {
-      if model.isLoadingLibraries {
-        HStack {
-          ProgressView()
-            .scaleEffect(0.8)
-          Text("Loading libraries...")
-        }
-      } else {
-        ForEach(model.libraries) { library in
-          Button(
-            action: { model.onLibraryTapped(library) },
-            label: {
-              HStack {
-                Text(library.name)
-                  .font(.headline)
-                  .frame(maxWidth: .infinity, alignment: .leading)
-                  .foregroundStyle(Color.primary)
+    if model.isLoadingLibraries || !model.libraries.isEmpty {
+      Section("Library") {
+        if model.isLoadingLibraries {
+          HStack {
+            ProgressView()
+              .scaleEffect(0.8)
+            Text("Loading libraries...")
+          }
+        } else {
+          ForEach(model.libraries) { library in
+            Button(
+              action: { model.onLibraryTapped(library) },
+              label: {
+                HStack {
+                  Text(library.name)
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .foregroundStyle(Color.primary)
 
-                if library.id == model.selectedLibrary?.id {
-                  Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.blue)
+                  if library.id == model.selectedLibrary?.id {
+                    Image(systemName: "checkmark.circle.fill")
+                      .foregroundColor(.blue)
+                  }
                 }
               }
-            }
-          )
-          .padding(.vertical, 2)
+            )
+            .padding(.vertical, 2)
+          }
         }
       }
     }
 
     Section("Account") {
       HStack {
-        Image(systemName: "checkmark.circle.fill")
-          .foregroundColor(.green)
-        Text("Authenticated")
-          .bold()
-        Spacer()
-        Button(
-          "Logout",
-          action: {
-            model.onLogoutTapped()
-            dismiss()
-          }
+        Image(
+          systemName: model.reauthenticationModel != nil
+            ? "exclamationmark.circle.fill" : "checkmark.circle.fill"
         )
-        .foregroundColor(.red)
+        .foregroundColor(model.reauthenticationModel != nil ? .orange : .green)
+        Text(model.reauthenticationModel != nil ? "Authentication Required" : "Authenticated")
+          .bold()
       }
+
+      if let reauthModel = model.reauthenticationModel {
+        NavigationLink(destination: { AuthenticationPage(model: reauthModel) }) {
+          HStack {
+            Image(systemName: "arrow.clockwise")
+            Text("Re-authenticate")
+          }
+        }
+      }
+
+      Button(
+        "Logout",
+        role: .destructive,
+        action: {
+          model.onLogoutTapped()
+          dismiss()
+        }
+      )
     }
   }
 }
@@ -283,26 +234,23 @@ extension ServerView {
       let name: String
     }
 
-    var isLoading: Bool
-    var isAuthenticated: Bool
     var isDiscovering: Bool
     var isLoadingLibraries: Bool
-    var navigationPath = NavigationPath()
     var showDiscoveryPortAlert: Bool
 
     var serverURL: String
     var serverScheme: ServerScheme
     var useSubdirectory: Bool
     var subdirectory: String
-    var username: String
-    var password: String
     var customHeaders: CustomHeadersView.Model
     var discoveryPort: String
-    var authenticationMethod: AuthenticationMethod
     var discoveredServers: [DiscoveredServer]
     var libraries: [Library]
     var selectedLibrary: Library?
     var alias: String
+    var authenticationModel: AuthenticationView.Model?
+    var reauthenticationModel: AuthenticationView.Model?
+    var status: Server.Status?
 
     var isTypingScheme: Bool {
       let lowercased = serverURL.lowercased()
@@ -311,8 +259,6 @@ extension ServerView {
     }
 
     func onAppear() {}
-    func onLoginTapped() {}
-    func onOIDCLoginTapped() {}
     func onLogoutTapped() {}
     func onDiscoverServersTapped() {}
     func onServerSelected(_ server: DiscoveredServer) {}
@@ -320,8 +266,6 @@ extension ServerView {
     func onAliasChanged(_ newAlias: String) {}
 
     init(
-      isAuthenticated: Bool = false,
-      isLoading: Bool = false,
       isDiscovering: Bool = false,
       isLoadingLibraries: Bool = false,
       showDiscoveryPortAlert: Bool = false,
@@ -329,27 +273,22 @@ extension ServerView {
       serverScheme: ServerScheme = .https,
       useSubdirectory: Bool = false,
       subdirectory: String = "",
-      username: String = "",
-      password: String = "",
       customHeaders: CustomHeadersView.Model = .mock,
       discoveryPort: String = "13378",
-      authenticationMethod: AuthenticationMethod = .usernamePassword,
       discoveredServers: [DiscoveredServer] = [],
       libraries: [Library] = [],
       selectedLibrary: Library? = nil,
-      alias: String = ""
+      alias: String = "",
+      authenticationModel: AuthenticationView.Model? = nil,
+      reauthenticationModel: AuthenticationView.Model? = nil,
+      status: Server.Status? = nil
     ) {
       self.serverURL = serverURL
       self.serverScheme = serverScheme
       self.useSubdirectory = useSubdirectory
       self.subdirectory = subdirectory
-      self.username = username
-      self.password = password
       self.customHeaders = customHeaders
       self.discoveryPort = discoveryPort
-      self.authenticationMethod = authenticationMethod
-      self.isAuthenticated = isAuthenticated
-      self.isLoading = isLoading
       self.isDiscovering = isDiscovering
       self.isLoadingLibraries = isLoadingLibraries
       self.showDiscoveryPortAlert = showDiscoveryPortAlert
@@ -357,6 +296,9 @@ extension ServerView {
       self.libraries = libraries
       self.selectedLibrary = selectedLibrary
       self.alias = alias
+      self.authenticationModel = authenticationModel
+      self.reauthenticationModel = reauthenticationModel
+      self.status = status
     }
   }
 }
@@ -366,13 +308,16 @@ extension ServerView.Model {
 }
 
 #Preview("ServerView - Authentication") {
-  ServerView(model: .mock)
+  ServerView(
+    model: .init(
+      authenticationModel: .mock
+    )
+  )
 }
 
 #Preview("ServerView - Authenticated with Library") {
   ServerView(
     model: .init(
-      isAuthenticated: true,
       serverURL: "https://192.168.0.1:13378",
       libraries: [
         .init(id: UUID().uuidString, name: "My Library"),
@@ -386,7 +331,6 @@ extension ServerView.Model {
 #Preview("ServerView - Authenticated No Library") {
   ServerView(
     model: .init(
-      isAuthenticated: true,
       serverURL: "https://192.168.0.1:13378"
     )
   )

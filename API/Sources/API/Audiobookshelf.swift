@@ -45,25 +45,28 @@ public final class Audiobookshelf: @unchecked Sendable {
   }
 
   func setupNetworkService() {
-    guard let connection = authentication.connection, authentication.activeServerID != nil else {
+    guard let server = authentication.server else {
       networkService = nil
       return
     }
 
-    networkService = NetworkService(baseURL: connection.serverURL) { [weak self] in
+    networkService = NetworkService(
+      baseURL: server.baseURL,
+      server: server
+    ) { [weak self] in
       guard let self = self,
-        let connection = self.authentication.connection
+        let server = self.authentication.server
       else {
         return [:]
       }
 
-      let freshToken = try? await connection.freshToken
+      let freshToken = try? await server.freshToken
       guard let credentials = freshToken else {
         return [:]
       }
 
       var headers = ["Authorization": credentials.bearer]
-      headers.merge(connection.customHeaders) { _, new in new }
+      headers.merge(server.customHeaders) { _, new in new }
       return headers
     }
   }
@@ -71,11 +74,11 @@ public final class Audiobookshelf: @unchecked Sendable {
   public func switchToServer(_ serverID: String) async throws {
     try authentication.switchToServer(serverID)
 
-    guard let connection = authentication.connection else {
-      throw AudiobookshelfError.networkError("Failed to get connection after switching")
+    guard let server = authentication.server else {
+      throw AudiobookshelfError.networkError("Failed to get server after switching")
     }
 
-    onServerSwitched?(serverID, connection.serverURL)
+    onServerSwitched?(serverID, server.baseURL)
   }
 
   public var onServerSwitched: ((String, URL) -> Void)?

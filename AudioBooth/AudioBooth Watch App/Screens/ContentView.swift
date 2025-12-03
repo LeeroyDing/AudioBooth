@@ -11,7 +11,7 @@ struct ContentView: View {
   @StateObject private var model: Model = ContentViewModel()
 
   var body: some View {
-    if Audiobookshelf.shared.authentication.connection == nil || libraries.current == nil {
+    if Audiobookshelf.shared.authentication.server == nil || libraries.current == nil {
       VStack(spacing: 16) {
         if !model.authTimeout {
           ProgressView()

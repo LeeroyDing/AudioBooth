@@ -70,7 +70,7 @@ extension DownloadManager {
         let appGroupURL = FileManager.default.containerURL(
           forSecurityApplicationGroupIdentifier: "group.me.jgrenier.audioBS"
         ),
-        let serverID = Audiobookshelf.shared.authentication.activeServerID
+        let serverID = Audiobookshelf.shared.authentication.server?.id
       else {
         Toast(error: "Failed to access app group container").show()
         return
@@ -277,7 +277,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       throw URLError(.fileDoesNotExist)
     }
 
-    guard let serverID = Audiobookshelf.shared.authentication.activeServerID else {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
       throw URLError(.userAuthenticationRequired)
     }
 

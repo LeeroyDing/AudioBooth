@@ -220,9 +220,9 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
     var context = session.applicationContext
 
-    if let connection = Audiobookshelf.shared.authentication.connection {
-      context["authServerURL"] = connection.serverURL.absoluteString
-      context["authToken"] = connection.token
+    if let server = Audiobookshelf.shared.authentication.server {
+      context["authServerURL"] = server.baseURL.absoluteString
+      context["authToken"] = server.token
     }
 
     if let library = Audiobookshelf.shared.libraries.current,

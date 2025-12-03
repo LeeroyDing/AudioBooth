@@ -2,37 +2,36 @@ import Foundation
 
 actor CredentialsActor {
   private var refreshTask: Task<Credentials, Error>?
-  private weak var connection: Connection?
+  private weak var server: Server?
 
-  init(connection: Connection) {
-    self.connection = connection
+  init(server: Server) {
+    self.server = server
   }
 
   var freshCredentials: Credentials {
     get async throws {
-      guard let connection = connection else {
-        throw Audiobookshelf.AudiobookshelfError.networkError("No connection")
+      guard let server = server else {
+        throw Audiobookshelf.AudiobookshelfError.networkError("No server")
       }
 
-      guard case .bearer(_, _, let expiresAt) = connection.token else {
-        return connection.token
+      guard case .bearer(_, _, let expiresAt) = server.token else {
+        return server.token
       }
 
       let currentTime = Date().timeIntervalSince1970
       let bufferTime: TimeInterval = 60
 
       if currentTime < (expiresAt - bufferTime) {
-        return connection.token
+        return server.token
       }
 
       if let existingTask = refreshTask {
         return try await existingTask.value
       }
 
-      let connectionToRefresh = connection
-      let task = Task<Credentials, Error> { @MainActor in
-        try await Audiobookshelf.shared.authentication.refreshToken(for: connectionToRefresh)
-        return connectionToRefresh.token
+      let task = Task<Credentials, Error> { @MainActor [server] in
+        try await Audiobookshelf.shared.authentication.refreshToken(for: server)
+        return server.token
       }
 
       refreshTask = task

@@ -2,9 +2,22 @@ import API
 import Combine
 import SwiftUI
 
-struct ServersView: View {
+struct ServerListPage: View {
   @Environment(\.dismiss) var dismiss
   @StateObject var model: Model
+
+  func statusColor(for status: Server.Status?) -> Color {
+    switch status {
+    case .connected:
+      return .green
+    case .connectionError:
+      return .orange
+    case .authenticationError:
+      return .red
+    case .none:
+      return .gray
+    }
+  }
 
   var body: some View {
     NavigationStack {
@@ -19,6 +32,9 @@ struct ServersView: View {
                 model.selected = server
               } label: {
                 HStack {
+                  Text("●")
+                    .foregroundStyle(statusColor(for: server.status))
+
                   VStack(alignment: .leading, spacing: 4) {
                     if !server.alias.isEmpty {
                       Text(server.alias)
@@ -68,7 +84,7 @@ struct ServersView: View {
   }
 }
 
-extension ServersView {
+extension ServerListPage {
   @Observable
   class Model: ObservableObject {
     var servers: [ServerView.Model]
@@ -93,6 +109,6 @@ extension ServersView {
   }
 }
 
-extension ServersView.Model {
-  static var mock = ServersView.Model()
+extension ServerListPage.Model {
+  static var mock = ServerListPage.Model()
 }

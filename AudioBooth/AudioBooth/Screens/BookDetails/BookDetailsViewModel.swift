@@ -387,7 +387,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
   override func onSupplementaryEbookTapped(_ ebook: BookDetailsView.Model.SupplementaryEbook) {
     guard let serverURL = Audiobookshelf.shared.serverURL,
-      let token = Audiobookshelf.shared.authentication.connection?.token
+      let token = Audiobookshelf.shared.authentication.server?.token
     else {
       Toast(error: "Unable to open ebook").show()
       return

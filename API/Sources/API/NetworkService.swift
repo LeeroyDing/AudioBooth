@@ -69,6 +69,7 @@ struct NetworkResponse<T: Decodable> {
 final class NetworkService {
   private let baseURL: URL
   private let headersProvider: () async -> [String: String]
+  private weak var server: Server?
 
   private let session: URLSessionProtocol = {
     let config = URLSessionConfiguration.default
@@ -117,8 +118,13 @@ final class NetworkService {
     return decoder
   }()
 
-  init(baseURL: URL, headersProvider: @escaping () async -> [String: String] = { [:] }) {
+  init(
+    baseURL: URL,
+    server: Server? = nil,
+    headersProvider: @escaping () async -> [String: String] = { [:] }
+  ) {
     self.baseURL = baseURL
+    self.server = server
     self.headersProvider = headersProvider
   }
 
@@ -130,65 +136,84 @@ final class NetworkService {
     )
 
     let selectedSession = request.discretionary ? discretionarySession : session
-    let (data, response) = try await selectedSession.data(for: urlRequest)
 
-    guard let httpResponse = response as? HTTPURLResponse else {
-      AppLogger.network.error("Received non-HTTP response")
-      throw NetworkError.invalidResponse
-    }
+    do {
+      let (data, response) = try await selectedSession.data(for: urlRequest)
 
-    AppLogger.network.info("Received HTTP \(httpResponse.statusCode) response")
+      guard let httpResponse = response as? HTTPURLResponse else {
+        AppLogger.network.error("Received non-HTTP response")
+        server?.status = .connectionError
+        throw NetworkError.invalidResponse
+      }
 
-    guard 200...299 ~= httpResponse.statusCode else {
-      let responseBody = String(data: data, encoding: .utf8) ?? "Unable to decode response body"
-      AppLogger.network.error(
-        "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)"
-      )
-      throw NetworkError.httpError(statusCode: httpResponse.statusCode, message: responseBody)
-    }
+      AppLogger.network.info("Received HTTP \(httpResponse.statusCode) response")
 
-    let decodedValue: T
-    if T.self == Data.self {
-      decodedValue = data as! T
-    } else if data.isEmpty {
-      throw NetworkError.decodingError(URLError(.cannotDecodeContentData))
-    } else {
-      do {
-        decodedValue = try decoder.decode(T.self, from: data)
-      } catch {
+      guard 200...299 ~= httpResponse.statusCode else {
+        let responseBody = String(data: data, encoding: .utf8) ?? "Unable to decode response body"
         AppLogger.network.error(
-          "Failed to decode \(T.self): \(error)")
+          "HTTP \(httpResponse.statusCode) error. Response body: \(responseBody)"
+        )
 
-        if let decodingError = error as? DecodingError {
-          switch decodingError {
-          case .keyNotFound(let key, let context):
-            AppLogger.network.error(
-              "  Missing key: '\(key.stringValue)' at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
-            )
-          case .typeMismatch(let type, let context):
-            AppLogger.network.error(
-              "  Type mismatch: expected \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
-            )
-            AppLogger.network.error("  Context: \(context.debugDescription)")
-          case .valueNotFound(let type, let context):
-            AppLogger.network.error(
-              "  Value not found: expected \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
-            )
-            AppLogger.network.error("  Context: \(context.debugDescription)")
-          case .dataCorrupted(let context):
-            AppLogger.network.error(
-              "  Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
-            )
-            AppLogger.network.error("  Context: \(context.debugDescription)")
-          @unknown default:
-            AppLogger.network.error("  Unknown decoding error")
-          }
+        if httpResponse.statusCode == 401 {
+          server?.status = .authenticationError
+        } else {
+          server?.status = .connectionError
         }
 
-        throw NetworkError.decodingError(error)
+        throw NetworkError.httpError(statusCode: httpResponse.statusCode, message: responseBody)
       }
+
+      server?.status = .connected
+
+      let decodedValue: T
+      if T.self == Data.self {
+        decodedValue = data as! T
+      } else if data.isEmpty {
+        throw NetworkError.decodingError(URLError(.cannotDecodeContentData))
+      } else {
+        do {
+          decodedValue = try decoder.decode(T.self, from: data)
+        } catch {
+          AppLogger.network.error(
+            "Failed to decode \(T.self): \(error)")
+
+          if let decodingError = error as? DecodingError {
+            switch decodingError {
+            case .keyNotFound(let key, let context):
+              AppLogger.network.error(
+                "  Missing key: '\(key.stringValue)' at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+              )
+            case .typeMismatch(let type, let context):
+              AppLogger.network.error(
+                "  Type mismatch: expected \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+              )
+              AppLogger.network.error("  Context: \(context.debugDescription)")
+            case .valueNotFound(let type, let context):
+              AppLogger.network.error(
+                "  Value not found: expected \(type) at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+              )
+              AppLogger.network.error("  Context: \(context.debugDescription)")
+            case .dataCorrupted(let context):
+              AppLogger.network.error(
+                "  Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+              )
+              AppLogger.network.error("  Context: \(context.debugDescription)")
+            @unknown default:
+              AppLogger.network.error("  Unknown decoding error")
+            }
+          }
+
+          throw NetworkError.decodingError(error)
+        }
+      }
+      return NetworkResponse(value: decodedValue)
+    } catch {
+      if let urlError = error as? URLError {
+        AppLogger.network.error("Network request failed: \(urlError.localizedDescription)")
+        server?.status = .connectionError
+      }
+      throw error
     }
-    return NetworkResponse(value: decodedValue)
   }
 
   private func buildURLRequest<T: Decodable>(from request: NetworkRequest<T>) async throws

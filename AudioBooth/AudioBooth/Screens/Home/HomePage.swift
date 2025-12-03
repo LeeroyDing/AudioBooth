@@ -4,6 +4,7 @@ import SwiftData
 import SwiftUI
 
 struct HomePage: View {
+  @ObservedObject private var authentication = Audiobookshelf.shared.authentication
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
   @ObservedObject private var preferences = UserPreferences.shared
 
@@ -12,6 +13,19 @@ struct HomePage: View {
   @State private var showingServerPicker = false
 
   @State private var path = NavigationPath()
+
+  var connectionStatusColor: Color {
+    switch authentication.server?.status {
+    case .connected:
+      return .green
+    case .connectionError:
+      return .orange
+    case .authenticationError:
+      return .red
+    case .none:
+      return .gray
+    }
+  }
 
   var body: some View {
     NavigationStack {
@@ -53,6 +67,9 @@ struct HomePage: View {
         Button {
           showingServerPicker = true
         } label: {
+          Text("●")
+            .foregroundStyle(connectionStatusColor)
+
           Text(libraries.current?.name ?? "Server")
             .bold()
         }
@@ -72,7 +89,7 @@ struct HomePage: View {
       }
     }
     .sheet(isPresented: $showingServerPicker) {
-      ServersView(model: ServersViewModel())
+      ServerListPage(model: ServerListModel())
     }
     .onAppear {
       if !Audiobookshelf.shared.isAuthenticated {

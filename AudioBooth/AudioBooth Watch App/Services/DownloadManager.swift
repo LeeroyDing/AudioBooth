@@ -348,7 +348,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     let tracks = book.orderedTracks
     guard !tracks.isEmpty else { throw URLError(.badURL) }
 
-    guard let serverID = Audiobookshelf.shared.authentication.activeServerID else {
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
       throw URLError(.userAuthenticationRequired)
     }
 

@@ -28,7 +28,7 @@ struct LegacyMigration {
     let legacyDBURL = appGroupURL.appending(path: "AudiobookshelfData.sqlite")
 
     guard fileManager.fileExists(atPath: legacyDBURL.path),
-      let serverID = Audiobookshelf.shared.authentication.activeServerID
+      let serverID = Audiobookshelf.shared.authentication.server?.id
     else {
       return
     }
@@ -77,7 +77,7 @@ struct LegacyMigration {
     let legacyDBURL = documentsURL.appending(path: "AudiobookshelfData.sqlite")
 
     guard fileManager.fileExists(atPath: legacyDBURL.path),
-      let serverID = Audiobookshelf.shared.authentication.activeServerID
+      let serverID = Audiobookshelf.shared.authentication.server?.id
     else {
       return
     }
@@ -112,7 +112,7 @@ struct LegacyMigration {
   }
 
   private static func migration2() {
-    guard let serverID = Audiobookshelf.shared.authentication.activeServerID,
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id,
       let context = ModelContextProvider.shared.container?.mainContext
     else {
       return

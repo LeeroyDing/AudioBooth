@@ -3,7 +3,7 @@ import KeychainAccess
 import Logging
 import Nuke
 
-public final class AuthenticationService {
+public final class AuthenticationService: ObservableObject {
   private let audiobookshelf: Audiobookshelf
   private let keychain = Keychain(service: "me.jgrenier.AudioBS")
 
@@ -15,7 +15,7 @@ public final class AuthenticationService {
     static let permissions = "audiobookshelf_user_permissions"
   }
 
-  public var connections: [String: Connection] = [:] {
+  private var connections: [String: Connection] = [:] {
     didSet {
       if !connections.isEmpty {
         guard let data = try? JSONEncoder().encode(connections) else { return }
@@ -26,13 +26,12 @@ public final class AuthenticationService {
     }
   }
 
-  public var activeServerID: String? {
-    get {
-      UserDefaults.standard.string(forKey: Keys.activeServerID)
-    }
-    set {
-      if let newValue = newValue {
-        UserDefaults.standard.set(newValue, forKey: Keys.activeServerID)
+  public var servers: [String: Server] = [:]
+
+  public private(set) var server: Server? {
+    didSet {
+      if let server = server {
+        UserDefaults.standard.set(server.id, forKey: Keys.activeServerID)
       } else {
         UserDefaults.standard.removeObject(forKey: Keys.activeServerID)
       }
@@ -40,26 +39,8 @@ public final class AuthenticationService {
     }
   }
 
-  public var connection: Connection? {
-    get {
-      guard let serverID = activeServerID else { return nil }
-      return connections[serverID]
-    }
-    set {
-      guard let serverID = activeServerID else { return }
-      var allConnections = connections
-      if let newValue = newValue {
-        allConnections[serverID] = newValue
-      } else {
-        allConnections.removeValue(forKey: serverID)
-      }
-      connections = allConnections
-      audiobookshelf.setupNetworkService()
-    }
-  }
-
-  public var serverURL: URL? { connection?.serverURL }
-  public var isAuthenticated: Bool { connection != nil }
+  public var serverURL: URL? { server?.baseURL }
+  public var isAuthenticated: Bool { server != nil }
 
   public var permissions: User.Permissions? {
     get {
@@ -81,10 +62,16 @@ public final class AuthenticationService {
 
     migrateLegacyConnection()
 
-    if let data = try? keychain.getData(Keys.connections),
+    if connections.isEmpty,
+      let data = try? keychain.getData(Keys.connections),
       let decoded = try? JSONDecoder().decode([String: Connection].self, from: data)
     {
       self.connections = decoded
+      self.servers = decoded.mapValues { Server(connection: $0) }
+
+      if let activeServerID = UserDefaults.standard.string(forKey: Keys.activeServerID) {
+        self.server = servers[activeServerID]
+      }
     }
   }
 
@@ -117,18 +104,16 @@ public final class AuthenticationService {
       return
     }
 
-    let migratedConnection = Connection(
+    let connection = Connection(
       serverURL: legacyConnection.serverURL,
       token: .legacy(token: legacyConnection.token),
       customHeaders: legacyConnection.customHeaders ?? [:],
       alias: legacyConnection.alias
     )
 
-    var allConnections = connections
-    allConnections[migratedConnection.id] = migratedConnection
-    connections = allConnections
-
-    activeServerID = migratedConnection.id
+    self.connections = [connection.id: connection]
+    self.servers = [connection.id: Server(connection: connection)]
+    self.server = servers.first?.value
   }
 
   public func login(
@@ -192,9 +177,13 @@ public final class AuthenticationService {
       token: authToken,
       customHeaders: customHeaders
     )
+    let newServer = Server(connection: newConnection)
+
     var allConnections = connections
     allConnections[newConnection.id] = newConnection
     connections = allConnections
+
+    servers[newConnection.id] = newServer
 
     return newConnection.id
   }
@@ -279,9 +268,13 @@ public final class AuthenticationService {
         token: authToken,
         customHeaders: customHeaders
       )
+      let newServer = Server(connection: newConnection)
+
       var allConnections = connections
       allConnections[newConnection.id] = newConnection
       connections = allConnections
+
+      servers[newConnection.id] = newServer
 
       return newConnection.id
     } catch {
@@ -296,22 +289,39 @@ public final class AuthenticationService {
   }
 
   public func switchToServer(_ serverID: String) throws {
-    guard connections[serverID] != nil else {
+    guard let newServer = servers[serverID] else {
       throw Audiobookshelf.AudiobookshelfError.networkError("Server not found")
     }
-    activeServerID = serverID
+    server = newServer
+  }
+
+  public func restoreConnection(_ connection: Connection) {
+    var allConnections = connections
+    allConnections[connection.id] = connection
+    connections = allConnections
+
+    let restoredServer = Server(connection: connection)
+    servers[connection.id] = restoredServer
+    server = restoredServer
   }
 
   public func updateAlias(_ serverID: String, alias: String?) {
-    guard let connection = connections[serverID] else { return }
+    guard let server = servers[serverID] else { return }
+
+    server.alias = alias
+
     var allConnections = connections
-    allConnections[serverID] = Connection(
-      id: connection.id,
-      serverURL: connection.serverURL,
-      token: connection.token,
-      customHeaders: connection.customHeaders,
-      alias: alias
-    )
+    allConnections[serverID] = Connection(server)
+    connections = allConnections
+  }
+
+  public func updateToken(_ serverID: String, token: Credentials) {
+    guard let server = servers[serverID] else { return }
+
+    server.token = token
+
+    var allConnections = connections
+    allConnections[serverID] = Connection(server)
     connections = allConnections
   }
 
@@ -320,15 +330,17 @@ public final class AuthenticationService {
     allConnections.removeValue(forKey: serverID)
     connections = allConnections
 
-    if activeServerID == serverID {
-      activeServerID = nil
+    servers.removeValue(forKey: serverID)
+
+    if server?.id == serverID {
+      server = nil
     }
   }
 
   public func logout(serverID: String) {
     removeServer(serverID)
 
-    if activeServerID == serverID {
+    if server?.id == serverID {
       permissions = nil
       audiobookshelf.libraries.current = nil
       ImagePipeline.shared.cache.removeAll()
@@ -338,7 +350,8 @@ public final class AuthenticationService {
 
   public func logoutAll() {
     connections = [:]
-    activeServerID = nil
+    servers = [:]
+    server = nil
     permissions = nil
     audiobookshelf.libraries.current = nil
     ImagePipeline.shared.cache.removeAll()
@@ -370,7 +383,8 @@ public final class AuthenticationService {
   public func fetchListeningStats() async throws -> ListeningStats {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<ListeningStats>(
@@ -383,12 +397,13 @@ public final class AuthenticationService {
       return response.value
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to fetch listening stats: \(error.localizedDescription)")
+        "Failed to fetch listening stats: \(error.localizedDescription)"
+      )
     }
   }
 
-  func refreshToken(for connection: Connection) async throws {
-    guard case .bearer(_, let refreshToken, _) = connection.token else {
+  func refreshToken(for server: Server) async throws {
+    guard case .bearer(_, let refreshToken, _) = server.token else {
       return
     }
 
@@ -400,7 +415,7 @@ public final class AuthenticationService {
       let user: User
     }
 
-    let networkService = NetworkService(baseURL: connection.serverURL) {
+    let networkService = NetworkService(baseURL: server.baseURL) {
       ["x-refresh-token": refreshToken]
     }
 
@@ -417,12 +432,20 @@ public final class AuthenticationService {
       throw Audiobookshelf.AudiobookshelfError.loginFailed("Failed to decode refreshed JWT token")
     }
 
-    connection.token = Credentials.bearer(
+    let newToken = Credentials.bearer(
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
       expiresAt: newExpiresAt
     )
 
-    connections[connection.id] = connection
+    updateToken(server.id, token: newToken)
+  }
+
+  public func checkServersHealth() async {
+    let activeServerID = server?.id
+
+    for (serverID, _) in servers where serverID != activeServerID {
+      _ = try? await self.audiobookshelf.libraries.fetch(serverID: serverID)
+    }
   }
 }

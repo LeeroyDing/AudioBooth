@@ -8,7 +8,7 @@ final class ContentViewModel: ContentView.Model {
   override func onAuthenticationWait() async {
     try? await Task.sleep(for: .seconds(15))
 
-    if audiobookshelf.authentication.connection == nil || audiobookshelf.libraries.current == nil {
+    if audiobookshelf.authentication.server == nil || audiobookshelf.libraries.current == nil {
       authTimeout = true
     }
   }

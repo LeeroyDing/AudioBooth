@@ -1,19 +1,11 @@
 import Foundation
 
-public class Connection: Codable, @unchecked Sendable {
+public struct Connection: Codable, Sendable {
   public let id: String
   public let serverURL: URL
-  public var token: Credentials
+  public let token: Credentials
   public let customHeaders: [String: String]
-  public var alias: String?
-
-  private lazy var credentialsActor = CredentialsActor(connection: self)
-
-  public var freshToken: Credentials {
-    get async throws {
-      try await credentialsActor.freshCredentials
-    }
-  }
+  public let alias: String?
 
   public init(
     id: String? = nil,
@@ -29,13 +21,26 @@ public class Connection: Codable, @unchecked Sendable {
     self.alias = alias
   }
 
-  public required init(from decoder: Decoder) throws {
+  public init(_ server: Server) {
+    self.init(
+      id: server.id,
+      serverURL: server.baseURL,
+      token: server.token,
+      customHeaders: server.customHeaders,
+      alias: server.alias
+    )
+  }
+
+  public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
+    id = try container.decode(String.self, forKey: .id)
     serverURL = try container.decode(URL.self, forKey: .serverURL)
-    token = try container.decode(Credentials.self, forKey: .token)
-    customHeaders =
-      try container.decodeIfPresent([String: String].self, forKey: .customHeaders) ?? [:]
+    if let legacy = try? container.decode(String.self, forKey: .token) {
+      token = .legacy(token: legacy)
+    } else {
+      token = try container.decode(Credentials.self, forKey: .token)
+    }
+    customHeaders = try container.decode([String: String].self, forKey: .customHeaders)
     alias = try container.decodeIfPresent(String.self, forKey: .alias)
   }
 }
@@ -43,40 +48,6 @@ public class Connection: Codable, @unchecked Sendable {
 public enum Credentials: Codable, Sendable {
   case legacy(token: String)
   case bearer(accessToken: String, refreshToken: String, expiresAt: TimeInterval)
-
-  enum CodingKeys: String, CodingKey {
-    case type
-    case token
-    case accessToken
-    case refreshToken
-    case expiresAt
-  }
-
-  public init(from decoder: Decoder) throws {
-    let container = try decoder.container(keyedBy: CodingKeys.self)
-
-    if let token = try? container.decode(String.self, forKey: .token) {
-      self = .legacy(token: token)
-    } else {
-      let accessToken = try container.decode(String.self, forKey: .accessToken)
-      let refreshToken = try container.decode(String.self, forKey: .refreshToken)
-      let expiresAt = try container.decode(TimeInterval.self, forKey: .expiresAt)
-      self = .bearer(accessToken: accessToken, refreshToken: refreshToken, expiresAt: expiresAt)
-    }
-  }
-
-  public func encode(to encoder: Encoder) throws {
-    var container = encoder.container(keyedBy: CodingKeys.self)
-
-    switch self {
-    case .legacy(let token):
-      try container.encode(token, forKey: .token)
-    case .bearer(let accessToken, let refreshToken, let expiresAt):
-      try container.encode(accessToken, forKey: .accessToken)
-      try container.encode(refreshToken, forKey: .refreshToken)
-      try container.encode(expiresAt, forKey: .expiresAt)
-    }
-  }
 
   public var bearer: String {
     switch self {
