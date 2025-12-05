@@ -56,10 +56,12 @@ final class BookPlayerModel: BookPlayer.Model {
       speed: SpeedPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
-      playbackProgress: PlaybackProgressViewModel()
+      history: PlaybackHistorySheet.Model(),
+      playbackProgress: PlaybackProgressViewModel(itemID: book.id)
     )
 
     setupDownloadStateBinding(bookID: book.id)
+    setupHistory()
     observeSpeedChanged()
     observeSkipIntervalChanges()
     onLoad()
@@ -81,10 +83,12 @@ final class BookPlayerModel: BookPlayer.Model {
       speed: SpeedPickerSheet.Model(),
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
-      playbackProgress: PlaybackProgressViewModel()
+      history: PlaybackHistorySheet.Model(),
+      playbackProgress: PlaybackProgressViewModel(itemID: item.bookID)
     )
 
     setupDownloadStateBinding(bookID: item.bookID)
+    setupHistory()
     observeSpeedChanged()
     observeSkipIntervalChanges()
     onLoad()
@@ -146,6 +150,8 @@ final class BookPlayerModel: BookPlayer.Model {
     let currentTime = player.currentTime()
     let newTime = CMTimeAdd(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
     player.seek(to: newTime)
+    let newTimeSeconds = CMTimeGetSeconds(newTime)
+    PlaybackHistory.record(itemID: id, action: .seek, position: newTimeSeconds)
   }
 
   override func onSkipBackwardTapped(seconds: Double) {
@@ -153,7 +159,10 @@ final class BookPlayerModel: BookPlayer.Model {
     let currentTime = player.currentTime()
     let newTime = CMTimeSubtract(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
     let zeroTime = CMTime(seconds: 0, preferredTimescale: 1)
-    player.seek(to: CMTimeMaximum(newTime, zeroTime))
+    let finalTime = CMTimeMaximum(newTime, zeroTime)
+    player.seek(to: finalTime)
+    let newTimeSeconds = CMTimeGetSeconds(finalTime)
+    PlaybackHistory.record(itemID: id, action: .seek, position: newTimeSeconds)
   }
 
   func seekToTime(_ time: TimeInterval) {
@@ -167,6 +176,7 @@ final class BookPlayerModel: BookPlayer.Model {
     player.seek(to: seekTime) { _ in
       AppLogger.player.debug("Seeked to position: \(time)s")
     }
+    PlaybackHistory.record(itemID: id, action: .seek, position: time)
   }
 
   override func onBookmarksTapped() {
@@ -177,6 +187,10 @@ final class BookPlayerModel: BookPlayer.Model {
       }
     }
     bookmarks?.isPresented = true
+  }
+
+  override func onHistoryTapped() {
+    history?.isPresented = true
   }
 
   override func onDownloadTapped() {
@@ -307,7 +321,7 @@ extension BookPlayerModel {
     }
 
     if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
-      chapters = ChapterPickerSheetViewModel(chapters: sessionChapters, player: player)
+      chapters = ChapterPickerSheetViewModel(itemID: id, chapters: sessionChapters, player: player)
       timer.maxRemainingChapters = sessionChapters.count - 1
       AppLogger.player.debug(
         "Loaded \(sessionChapters.count) chapters from play session info")
@@ -373,6 +387,15 @@ extension BookPlayerModel {
         self?.setupRemoteCommandCenter()
       }
       .store(in: &cancellables)
+  }
+
+  private func setupHistory() {
+    history = PlaybackHistorySheetViewModel(
+      itemID: id,
+      title: title
+    ) { [weak self] time in
+      self?.seekToTime(time)
+    }
   }
 
   private func onLoad() {
@@ -952,11 +975,13 @@ extension BookPlayerModel {
 
     if isNowPlaying && !isPlaying {
       AppLogger.player.debug("🎵 State: Starting playback")
+      PlaybackHistory.record(itemID: id, action: .play, position: mediaProgress.currentTime)
       lastPlaybackAt = now
       mediaProgress.lastPlayedAt = Date()
       sessionManager.notifyPlaybackStarted()
     } else if !isNowPlaying && isPlaying {
       AppLogger.player.debug("🎵 State: Stopping playback")
+      PlaybackHistory.record(itemID: id, action: .pause, position: mediaProgress.currentTime)
       if let last = lastPlaybackAt {
         let timeListened = now.timeIntervalSince(last)
         sessionManager.current?.pendingListeningTime += timeListened
@@ -1154,6 +1179,8 @@ extension BookPlayerModel {
 
   func stopPlayer() {
     player?.pause()
+
+    PlaybackHistory.record(itemID: id, action: .pause, position: mediaProgress.currentTime)
 
     if let timeObserver {
       player?.removeTimeObserver(timeObserver)

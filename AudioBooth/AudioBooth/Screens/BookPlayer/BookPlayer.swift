@@ -40,6 +40,11 @@ struct BookPlayer: View {
             }
           )
         }
+
+        ToolbarItem(placement: .topBarTrailing) {
+          AirPlayButton()
+            .frame(width: 44, height: 44)
+        }
       }
     }
     .preferredColorScheme(.dark)
@@ -70,6 +75,16 @@ struct BookPlayer: View {
     ) {
       if let bookmarks = model.bookmarks {
         BookmarkViewerSheet(model: bookmarks)
+      }
+    }
+    .sheet(
+      isPresented: Binding(
+        get: { model.history?.isPresented ?? false },
+        set: { newValue in model.history?.isPresented = newValue }
+      )
+    ) {
+      if let history = model.history {
+        PlaybackHistorySheet(model: history)
       }
     }
   }
@@ -295,14 +310,19 @@ struct BookPlayer: View {
         .frame(maxWidth: .infinity)
       }
 
-      VStack(spacing: 6) {
-        AirPlayButton()
-          .frame(width: 20, height: 20)
-        Text("AirPlay")
-          .font(.caption2)
-          .foregroundColor(.white.opacity(0.7))
+      if model.history != nil {
+        Button(action: { model.onHistoryTapped() }) {
+          VStack(spacing: 6) {
+            Image(systemName: "clock.arrow.circlepath")
+              .font(.system(size: 20))
+              .foregroundColor(.white)
+            Text("History")
+              .font(.caption2)
+              .foregroundColor(.white.opacity(0.7))
+          }
+        }
+        .frame(maxWidth: .infinity)
       }
-      .frame(maxWidth: .infinity)
 
       Button(action: { model.onDownloadTapped() }) {
         VStack(spacing: 6) {
@@ -370,6 +390,7 @@ extension BookPlayer {
     var timer: TimerPickerSheet.Model
     var chapters: ChapterPickerSheet.Model?
     var bookmarks: BookmarkViewerSheet.Model?
+    var history: PlaybackHistorySheet.Model?
     var playbackProgress: PlaybackProgressView.Model
 
     var downloadState: DownloadManager.DownloadState
@@ -387,6 +408,7 @@ extension BookPlayer {
       timer: TimerPickerSheet.Model,
       chapters: ChapterPickerSheet.Model? = nil,
       bookmarks: BookmarkViewerSheet.Model? = nil,
+      history: PlaybackHistorySheet.Model? = nil,
       playbackProgress: PlaybackProgressView.Model,
       downloadState: DownloadManager.DownloadState = .notDownloaded
     ) {
@@ -400,6 +422,7 @@ extension BookPlayer {
       self.timer = timer
       self.chapters = chapters
       self.bookmarks = bookmarks
+      self.history = history
       self.playbackProgress = playbackProgress
       self.downloadState = downloadState
     }
@@ -412,6 +435,7 @@ extension BookPlayer {
     func onProgressChanged(to progress: Double) {}
     func onDownloadTapped() {}
     func onBookmarksTapped() {}
+    func onHistoryTapped() {}
   }
 }
 

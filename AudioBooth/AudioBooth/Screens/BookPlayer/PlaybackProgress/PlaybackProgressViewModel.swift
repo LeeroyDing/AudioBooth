@@ -1,7 +1,9 @@
 import AVFoundation
+import Models
 import SwiftUI
 
 final class PlaybackProgressViewModel: PlaybackProgressView.Model {
+  private var itemID: String
   private var player: AVPlayer?
   private var chapters: ChapterPickerSheet.Model?
   private var speed: SpeedPickerSheet.Model?
@@ -10,7 +12,8 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var isPlayerLoading: Bool = false
   private let preferences = UserPreferences.shared
 
-  init() {
+  init(itemID: String) {
+    self.itemID = itemID
     super.init(
       progress: 0,
       current: 0,
@@ -99,9 +102,11 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       let duration = chapter.end - chapter.start
       let seekTime = chapter.start + (duration * progress)
       player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
-    } else if let totalDuration = totalDuration {
+      PlaybackHistory.record(itemID: itemID, action: .seek, position: seekTime)
+    } else if let totalDuration {
       let seekTime = totalDuration * progress
       player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
+      PlaybackHistory.record(itemID: itemID, action: .seek, position: seekTime)
     }
   }
 }

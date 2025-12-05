@@ -205,6 +205,14 @@ extension MediaProgress {
         local.duration = remote.duration
 
         if remote.lastUpdate > local.lastUpdate {
+          if remote.currentTime != local.currentTime {
+            PlaybackHistory.record(
+              itemID: local.bookID,
+              action: .sync,
+              position: remote.currentTime
+            )
+          }
+
           local.lastPlayedAt = remote.lastPlayedAt
           local.currentTime = remote.currentTime
           local.progress = remote.progress

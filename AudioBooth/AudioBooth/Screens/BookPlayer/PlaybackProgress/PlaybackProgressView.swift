@@ -25,6 +25,10 @@ struct PlaybackProgressView: View {
           DragGesture(minimumDistance: 0)
             .onChanged { value in
               let progress = min(max(0, value.location.x / geometry.size.width), 1)
+              model.progress = progress
+            }
+            .onEnded { value in
+              let progress = min(max(0, value.location.x / geometry.size.width), 1)
               model.onProgressChanged(Double(progress))
             }
         )
