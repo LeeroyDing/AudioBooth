@@ -24,12 +24,14 @@ public final class SeriesService {
   ) async throws -> Page<Series> {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     guard let library = audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "No library selected. Please select a library first.")
+        "No library selected. Please select a library first."
+      )
     }
 
     var queryParams: [String: String] = [:]

@@ -55,7 +55,8 @@ final class TipJarViewModel: TipJarView.Model {
         }
       } catch {
         AppLogger.viewModel.error(
-          "Failed to fetch offerings: \(error.localizedDescription)")
+          "Failed to fetch offerings: \(error.localizedDescription)"
+        )
       }
     }
   }
@@ -78,7 +79,8 @@ final class TipJarViewModel: TipJarView.Model {
         }
       } catch {
         AppLogger.viewModel.error(
-          "Failed to purchase tip: \(error.localizedDescription)")
+          "Failed to purchase tip: \(error.localizedDescription)"
+        )
       }
 
       isPurchasing = nil

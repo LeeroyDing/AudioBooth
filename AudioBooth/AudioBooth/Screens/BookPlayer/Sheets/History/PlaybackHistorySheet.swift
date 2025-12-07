@@ -47,7 +47,8 @@ struct PlaybackHistorySheet: View {
               HStack(spacing: 12) {
                 Text(
                   entry.timestamp.formatted(
-                    .dateTime.hour(.twoDigits(amPM: .abbreviated)).minute(.twoDigits))
+                    .dateTime.hour(.twoDigits(amPM: .abbreviated)).minute(.twoDigits)
+                  )
                 )
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)

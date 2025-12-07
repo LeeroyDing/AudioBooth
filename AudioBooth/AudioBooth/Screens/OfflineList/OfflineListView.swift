@@ -102,7 +102,8 @@ struct OfflineListView: View {
           ? nil
           : { indexSet in
             model.onDelete(at: indexSet)
-          })
+          }
+      )
     }
     .listStyle(.plain)
     .environment(\.bookCardDisplayMode, .row)

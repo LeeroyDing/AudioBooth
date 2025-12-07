@@ -255,8 +255,7 @@ struct BookDetailsView: View {
 
           FlowLayout(spacing: 4) {
             ForEach(model.authors, id: \.id) { author in
-              NavigationLink(value: NavigationDestination.author(id: author.id, name: author.name))
-              {
+              NavigationLink(value: NavigationDestination.author(id: author.id, name: author.name)) {
                 Chip(
                   title: author.name,
                   icon: "person.circle.fill",
@@ -285,8 +284,7 @@ struct BookDetailsView: View {
 
           FlowLayout(spacing: 4) {
             ForEach(model.series, id: \.id) { series in
-              NavigationLink(value: NavigationDestination.series(id: series.id, name: series.name))
-              {
+              NavigationLink(value: NavigationDestination.series(id: series.id, name: series.name)) {
                 Chip(
                   title: series.sequence.isEmpty
                     ? series.name : "\(series.name) #\(series.sequence)",

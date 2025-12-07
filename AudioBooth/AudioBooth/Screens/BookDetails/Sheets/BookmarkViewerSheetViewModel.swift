@@ -199,7 +199,8 @@ final class BookmarkViewerSheetViewModel: BookmarkViewerSheet.Model {
         newBookmarkTitle = ""
 
         AppLogger.player.info(
-          "Created bookmark: \(title) at \(time)s")
+          "Created bookmark: \(title) at \(time)s"
+        )
         Toast(message: "Bookmark created").show()
 
         isPresented = false

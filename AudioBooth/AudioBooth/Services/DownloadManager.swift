@@ -127,7 +127,8 @@ extension DownloadManager {
         AppLogger.download.info("Deleted all server data")
       } catch {
         AppLogger.download.error(
-          "Failed to delete all server data: \(error.localizedDescription)")
+          "Failed to delete all server data: \(error.localizedDescription)"
+        )
       }
     }
   }
@@ -152,7 +153,8 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
   private lazy var downloadSession: URLSession = {
     let config = URLSessionConfiguration.background(
-      withIdentifier: "me.jgrenier.AudioBS.download.\(bookID)")
+      withIdentifier: "me.jgrenier.AudioBS.download.\(bookID)"
+    )
     config.sessionSendsLaunchEvents = true
     config.isDiscretionary = false
     let delegate = URLSessionProxyDelegate(delegate: self)
@@ -185,7 +187,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     self.bookID = bookID
 
     let (stream, continuation) = AsyncStream.makeStream(
-      of: Double.self, bufferingPolicy: .bufferingNewest(1))
+      of: Double.self,
+      bufferingPolicy: .bufferingNewest(1)
+    )
     self.progress = stream
     self.progressContinuation = continuation
 
@@ -225,7 +229,8 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     }
 
     let bookDirectory = appGroupURL.appendingPathComponent("audiobooks").appendingPathComponent(
-      bookID)
+      bookID
+    )
     try? FileManager.default.removeItem(at: bookDirectory)
   }
 

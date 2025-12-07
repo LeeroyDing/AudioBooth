@@ -118,7 +118,8 @@ final class BookPlayerModel: PlayerView.Model {
     }
 
     AppLogger.player.info(
-      "Got book info: \(info.tracks.count) tracks, \(info.chapters.count) chapters")
+      "Got book info: \(info.tracks.count) tracks, \(info.chapters.count) chapters"
+    )
 
     self.sessionID = info.sessionID
     self.book = info
@@ -144,7 +145,8 @@ final class BookPlayerModel: PlayerView.Model {
 
     playbackState = .loading
     AppLogger.player.info(
-      "Setting up local playback for \(self.bookID) at time \(self.book.currentTime)")
+      "Setting up local playback for \(self.bookID) at time \(self.book.currentTime)"
+    )
 
     guard let track = localBook.track(at: book.currentTime) else {
       AppLogger.player.error(
@@ -167,8 +169,8 @@ final class BookPlayerModel: PlayerView.Model {
     guard FileManager.default.fileExists(atPath: trackURL.path) else {
       AppLogger.player.error("Track file does not exist at: \(trackURL.path)")
       if let attributes = try? FileManager.default.attributesOfItem(
-        atPath: trackURL.deletingLastPathComponent().path)
-      {
+        atPath: trackURL.deletingLastPathComponent().path
+      ) {
         AppLogger.player.error("Parent directory exists with attributes: \(attributes)")
       } else {
         AppLogger.player.error("Parent directory does not exist")
@@ -182,11 +184,13 @@ final class BookPlayerModel: PlayerView.Model {
       as? Int64
     {
       AppLogger.player.info(
-        "Track file size: \(fileSize) bytes, expected: \(track.size ?? 0) bytes")
+        "Track file size: \(fileSize) bytes, expected: \(track.size ?? 0) bytes"
+      )
     }
 
     AppLogger.player.info(
-      "Track found: index=\(track.index), duration=\(track.duration), url=\(trackURL.path)")
+      "Track found: index=\(track.index), duration=\(track.duration), url=\(trackURL.path)"
+    )
 
     currentTrackIndex = track.index
 
@@ -209,7 +213,8 @@ final class BookPlayerModel: PlayerView.Model {
       }
 
       AppLogger.player.info(
-        "Local player setup complete for \(self.bookID), waiting for AVPlayer to become ready")
+        "Local player setup complete for \(self.bookID), waiting for AVPlayer to become ready"
+      )
     }
   }
 
@@ -247,7 +252,8 @@ final class BookPlayerModel: PlayerView.Model {
       }
 
       AppLogger.player.info(
-        "Streaming player setup complete for \(self.bookID), waiting for ready state")
+        "Streaming player setup complete for \(self.bookID), waiting for ready state"
+      )
     }
   }
 
@@ -509,7 +515,8 @@ final class BookPlayerModel: PlayerView.Model {
             }
 
             AppLogger.player.error(
-              "Player item failed - \(errorDetails), isLocal: \(self.localBook != nil)")
+              "Player item failed - \(errorDetails), isLocal: \(self.localBook != nil)"
+            )
 
             if self.localBook != nil {
               AppLogger.player.warning(

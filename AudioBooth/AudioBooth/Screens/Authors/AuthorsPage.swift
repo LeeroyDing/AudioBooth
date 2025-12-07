@@ -33,7 +33,8 @@ struct AuthorsPage: View {
             "No Authors Found",
             systemImage: "person.2",
             description: Text(
-              "Your library appears to have no authors or no library is selected.")
+              "Your library appears to have no authors or no library is selected."
+            )
           )
         } else {
           authorsContent
@@ -45,7 +46,8 @@ struct AuthorsPage: View {
       await model.refresh()
     }
     .conditionalSearchable(
-      text: $model.searchViewModel.searchText, prompt: "Search books, series, and authors"
+      text: $model.searchViewModel.searchText,
+      prompt: "Search books, series, and authors"
     )
     .onAppear(perform: model.onAppear)
   }

@@ -28,7 +28,8 @@ extension BookActionable {
       progressID = id
     } else {
       let apiProgress = try await Audiobookshelf.shared.libraries.fetchMediaProgress(
-        bookID: bookID)
+        bookID: bookID
+      )
       progressID = apiProgress.id
     }
 

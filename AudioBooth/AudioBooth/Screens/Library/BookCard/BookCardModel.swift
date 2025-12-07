@@ -43,7 +43,9 @@ final class BookCardModel: BookCard.Model {
   }
 
   init(
-    _ item: Book, sortBy: BooksService.SortBy?, navigate: ((NavigationDestination) -> Void)? = nil
+    _ item: Book,
+    sortBy: BooksService.SortBy?,
+    navigate: ((NavigationDestination) -> Void)? = nil
   ) {
     let id: String
     let title: String

@@ -4,7 +4,8 @@ import Foundation
 struct SkipBackwardIntent: AppIntent {
   static let title: LocalizedStringResource = "Skip backward the given time"
   static let description = IntentDescription(
-    "Skips backward in the currently playing audiobook by a specified duration.")
+    "Skips backward in the currently playing audiobook by a specified duration."
+  )
   static let openAppWhenRun = false
 
   @Parameter(

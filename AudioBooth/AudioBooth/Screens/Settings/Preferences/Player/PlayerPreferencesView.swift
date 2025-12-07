@@ -122,7 +122,8 @@ struct PlayerPreferencesView: View {
         }
 
         Toggle(
-          "Allow Playback Position Change", isOn: $preferences.lockScreenAllowPlaybackPositionChange
+          "Allow Playback Position Change",
+          isOn: $preferences.lockScreenAllowPlaybackPositionChange
         )
         .font(.subheadline)
         .bold()

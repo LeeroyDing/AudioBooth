@@ -48,8 +48,12 @@ struct NetworkRequest<T: Decodable> {
   let discretionary: Bool
 
   init(
-    path: String, method: HTTPMethod = .get, body: (any Encodable)? = nil,
-    query: [String: String]? = nil, headers: [String: String]? = nil, timeout: TimeInterval? = nil,
+    path: String,
+    method: HTTPMethod = .get,
+    body: (any Encodable)? = nil,
+    query: [String: String]? = nil,
+    headers: [String: String]? = nil,
+    timeout: TimeInterval? = nil,
     discretionary: Bool = false
   ) {
     self.path = path
@@ -77,10 +81,10 @@ final class NetworkService {
     config.timeoutIntervalForResource = 60
 
     #if os(watchOS)
-      config.timeoutIntervalForResource = 300
-      config.allowsExpensiveNetworkAccess = true
-      config.allowsConstrainedNetworkAccess = true
-      config.allowsCellularAccess = true
+    config.timeoutIntervalForResource = 300
+    config.allowsExpensiveNetworkAccess = true
+    config.allowsConstrainedNetworkAccess = true
+    config.allowsCellularAccess = true
     #endif
 
     return URLSessionProxy(configuration: config)
@@ -92,17 +96,17 @@ final class NetworkService {
     discretionaryConfig.timeoutIntervalForResource = 60
 
     #if os(watchOS)
-      discretionaryConfig.timeoutIntervalForResource = 300
-      discretionaryConfig.allowsExpensiveNetworkAccess = true
-      discretionaryConfig.allowsConstrainedNetworkAccess = true
-      discretionaryConfig.allowsCellularAccess = true
-      discretionaryConfig.waitsForConnectivity = true
+    discretionaryConfig.timeoutIntervalForResource = 300
+    discretionaryConfig.allowsExpensiveNetworkAccess = true
+    discretionaryConfig.allowsConstrainedNetworkAccess = true
+    discretionaryConfig.allowsCellularAccess = true
+    discretionaryConfig.waitsForConnectivity = true
     #endif
 
     #if os(iOS)
-      discretionaryConfig.sessionSendsLaunchEvents = true
-      discretionaryConfig.isDiscretionary = true
-      discretionaryConfig.shouldUseExtendedBackgroundIdleMode = true
+    discretionaryConfig.sessionSendsLaunchEvents = true
+    discretionaryConfig.isDiscretionary = true
+    discretionaryConfig.shouldUseExtendedBackgroundIdleMode = true
     #endif
 
     return URLSessionProxy(configuration: discretionaryConfig)
@@ -175,7 +179,8 @@ final class NetworkService {
           decodedValue = try decoder.decode(T.self, from: data)
         } catch {
           AppLogger.network.error(
-            "Failed to decode \(T.self): \(error)")
+            "Failed to decode \(T.self): \(error)"
+          )
 
           if let decodingError = error as? DecodingError {
             switch decodingError {
@@ -216,7 +221,9 @@ final class NetworkService {
     }
   }
 
-  private func buildURLRequest<T: Decodable>(from request: NetworkRequest<T>) async throws
+  private func buildURLRequest<T: Decodable>(
+    from request: NetworkRequest<T>
+  ) async throws
     -> URLRequest
   {
     var url = baseURL.appendingPathComponent(request.path)

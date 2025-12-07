@@ -12,7 +12,10 @@ struct FlowLayout: Layout {
   }
 
   func placeSubviews(
-    in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
+    in bounds: CGRect,
+    proposal: ProposedViewSize,
+    subviews: Subviews,
+    cache: inout ()
   ) {
     let rows = computeRows(proposal: proposal, subviews: subviews)
     var y = bounds.minY

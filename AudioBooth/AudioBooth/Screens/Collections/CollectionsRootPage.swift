@@ -42,7 +42,8 @@ struct CollectionsRootPage: View {
           CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))
         case .collection(let id):
           CollectionDetailPage(
-            model: CollectionDetailPageModel(collectionID: id, mode: .collections))
+            model: CollectionDetailPageModel(collectionID: id, mode: .collections)
+          )
         case .series, .author, .narrator, .genre, .tag, .offline:
           LibraryPage(model: LibraryPageModel(destination: destination))
         }

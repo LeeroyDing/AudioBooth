@@ -4,7 +4,8 @@ import Foundation
 struct SkipToPreviousChapterIntent: AppIntent {
   static let title: LocalizedStringResource = "Skip to previous chapter"
   static let description = IntentDescription(
-    "Skips to the previous chapter in the currently playing audiobook.")
+    "Skips to the previous chapter in the currently playing audiobook."
+  )
   static let openAppWhenRun = false
 
   func perform() async throws -> some IntentResult {

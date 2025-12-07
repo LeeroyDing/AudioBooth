@@ -47,7 +47,9 @@ final class SettingsViewModel: SettingsView.Model {
 
     let itemProvider = NSItemProvider(contentsOf: fileURL)!
     let activityVC = UIActivityViewController(
-      activityItems: [itemProvider], applicationActivities: nil)
+      activityItems: [itemProvider],
+      applicationActivities: nil
+    )
 
     activityVC.completionWithItemsHandler = { _, completed, _, _ in
       if completed {

@@ -148,7 +148,8 @@ extension DownloadManager {
     }
 
     let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
-      bookID)
+      bookID
+    )
 
     do {
       if FileManager.default.fileExists(atPath: bookDirectory.path) {
@@ -178,7 +179,9 @@ extension DownloadManager {
 
     do {
       let downloadDirectories = try FileManager.default.contentsOfDirectory(
-        at: audiobooksDirectory, includingPropertiesForKeys: [.isDirectoryKey])
+        at: audiobooksDirectory,
+        includingPropertiesForKeys: [.isDirectoryKey]
+      )
 
       let localBooks = localStorage.books
       let localBookIDs = Set(localBooks.map { $0.id })
@@ -220,7 +223,8 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
   private lazy var downloadSession: URLSession = {
     let config = URLSessionConfiguration.background(
-      withIdentifier: "me.jgrenier.AudioBS.watch.download.\(bookID)")
+      withIdentifier: "me.jgrenier.AudioBS.watch.download.\(bookID)"
+    )
     config.isDiscretionary = false
     config.sessionSendsLaunchEvents = true
     config.timeoutIntervalForRequest = 60
@@ -261,7 +265,9 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     self.isReconnecting = reconnecting
 
     let (stream, continuation) = AsyncStream.makeStream(
-      of: Double.self, bufferingPolicy: .bufferingNewest(1))
+      of: Double.self,
+      bufferingPolicy: .bufferingNewest(1)
+    )
     self.progress = stream
     self.progressContinuation = continuation
 
@@ -303,7 +309,8 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     }
 
     let bookDirectory = documentsPath.appendingPathComponent("audiobooks").appendingPathComponent(
-      bookID)
+      bookID
+    )
     try? FileManager.default.removeItem(at: bookDirectory)
   }
 

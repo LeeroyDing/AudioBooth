@@ -28,12 +28,14 @@ public final class BooksService {
   ) async throws -> Page<Book> {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     guard let library = audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "No library selected. Please select a library first.")
+        "No library selected. Please select a library first."
+      )
     }
 
     var query: [String: String] = ["minified": "1"]
@@ -70,7 +72,8 @@ public final class BooksService {
   public func fetch(id: String) async throws -> Book {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let query: [String: String] = ["expanded": "1"]

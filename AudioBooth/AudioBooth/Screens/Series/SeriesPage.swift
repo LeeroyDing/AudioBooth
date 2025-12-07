@@ -31,7 +31,8 @@ struct SeriesPage: View {
       await model.refresh()
     }
     .conditionalSearchable(
-      text: $model.search.searchText, prompt: "Search books, series, and authors"
+      text: $model.search.searchText,
+      prompt: "Search books, series, and authors"
     )
     .onAppear(perform: model.onAppear)
   }

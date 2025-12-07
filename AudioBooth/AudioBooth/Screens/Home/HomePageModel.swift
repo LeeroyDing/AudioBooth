@@ -116,18 +116,27 @@ extension HomePageModel {
         } else {
           let books = items.map({ BookCardModel($0, sortBy: .title) })
           sectionsByID[section.id] = .init(
-            id: section.id, title: section.label, items: .books(books))
+            id: section.id,
+            title: section.label,
+            items: .books(books)
+          )
         }
 
       case .series(let items):
         let series = items.map { SeriesCardModel(series: $0) }
         sectionsByID[section.id] = .init(
-          id: section.id, title: section.label, items: .series(series))
+          id: section.id,
+          title: section.label,
+          items: .series(series)
+        )
 
       case .authors(let items):
         let authors = items.map { AuthorCardModel(author: $0) }
         sectionsByID[section.id] = .init(
-          id: section.id, title: section.label, items: .authors(authors))
+          id: section.id,
+          title: section.label,
+          items: .authors(authors)
+        )
 
       case .unknown:
         continue

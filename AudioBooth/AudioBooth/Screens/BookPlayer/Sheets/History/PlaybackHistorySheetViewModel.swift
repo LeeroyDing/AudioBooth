@@ -29,7 +29,9 @@ final class PlaybackHistorySheetViewModel: PlaybackHistorySheet.Model {
     }
   }
 
-  private func groupEntriesByDate(_ entries: [PlaybackHistory]) -> [PlaybackHistorySheet.Model
+  private func groupEntriesByDate(
+    _ entries: [PlaybackHistory]
+  ) -> [PlaybackHistorySheet.Model
     .Section]
   {
     let calendar = Calendar.current

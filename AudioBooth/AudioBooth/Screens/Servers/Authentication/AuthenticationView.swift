@@ -18,7 +18,8 @@ struct AuthenticationView: View {
     Section("Authentication Method") {
       Picker("Method", selection: $model.authenticationMethod) {
         Text("Username & Password").tag(
-          AuthenticationView.Model.AuthenticationMethod.usernamePassword)
+          AuthenticationView.Model.AuthenticationMethod.usernamePassword
+        )
         Text("OIDC (SSO)").tag(AuthenticationView.Model.AuthenticationMethod.oidc)
       }
       .pickerStyle(.segmented)
@@ -56,7 +57,8 @@ struct AuthenticationView: View {
           }
         }
         .disabled(
-          model.username.isEmpty || model.password.isEmpty || model.isLoading)
+          model.username.isEmpty || model.password.isEmpty || model.isLoading
+        )
       }
     } else {
       Section {

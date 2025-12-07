@@ -4,7 +4,8 @@ import Foundation
 struct SetSleepTimerWithDurationIntent: AppIntent {
   static let title: LocalizedStringResource = "Set sleep timer with duration"
   static let description = IntentDescription(
-    "Sets the sleep timer to pause after a specified duration.")
+    "Sets the sleep timer to pause after a specified duration."
+  )
   static let openAppWhenRun = false
 
   @Parameter(

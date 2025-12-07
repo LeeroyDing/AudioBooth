@@ -103,14 +103,16 @@ final class SessionManager {
           AppLogger.session.debug("Synced final progress before closing remote session")
         } catch {
           AppLogger.session.error(
-            "Failed to sync session progress before close: \(error)")
+            "Failed to sync session progress before close: \(error)"
+          )
         }
       }
 
       do {
         try await audiobookshelf.sessions.close(session.id)
         AppLogger.session.info(
-          "Successfully closed remote session: \(session.id)")
+          "Successfully closed remote session: \(session.id)"
+        )
         UserDefaults.standard.removeObject(forKey: sessionIDKey)
         UserDefaults.standard.removeObject(forKey: retryCountKey)
         cancelScheduledSessionClose()
@@ -119,7 +121,8 @@ final class SessionManager {
 
         if isDownloaded {
           AppLogger.session.info(
-            "Book is downloaded, clearing session to allow local session creation")
+            "Book is downloaded, clearing session to allow local session creation"
+          )
           current = nil
           UserDefaults.standard.removeObject(forKey: sessionIDKey)
           UserDefaults.standard.removeObject(forKey: retryCountKey)
@@ -158,7 +161,8 @@ final class SessionManager {
         session.pendingListeningTime = 0
         try session.save()
         AppLogger.session.info(
-          "Successfully closed and synced local session: \(session.id)")
+          "Successfully closed and synced local session: \(session.id)"
+        )
       } catch {
         try session.save()
         AppLogger.session.error(
@@ -176,14 +180,16 @@ final class SessionManager {
   ) async throws -> LocalBook {
     if let existingSession = current, existingSession.libraryItemID != itemID {
       AppLogger.session.info(
-        "Session exists for different book, server will close old session when starting new one")
+        "Session exists for different book, server will close old session when starting new one"
+      )
       current = nil
       cancelScheduledSessionClose()
     }
 
     if let item, let current, current.libraryItemID == itemID {
       AppLogger.session.debug(
-        "Session already exists for this book, reusing: \(current.id)")
+        "Session already exists for this book, reusing: \(current.id)"
+      )
       return item
     }
 
@@ -256,7 +262,8 @@ final class SessionManager {
         try session.save()
         scheduleSessionClose()
         AppLogger.session.info(
-          "Successfully synced remote session: \(session.id)")
+          "Successfully synced remote session: \(session.id)"
+        )
         return
       } catch {
         try session.save()
@@ -298,7 +305,8 @@ final class SessionManager {
       )
     } else {
       AppLogger.session.warning(
-        "Failed to register background task handler for: \(self.taskIdentifier)")
+        "Failed to register background task handler for: \(self.taskIdentifier)"
+      )
       AppLogger.session.debug(
         "Note: This is normal if registration was already done, or if running in certain environments"
       )
@@ -390,7 +398,8 @@ final class SessionManager {
     }
 
     AppLogger.session.info(
-      "Found \(unsyncedSessions.count) unsynced sessions to sync")
+      "Found \(unsyncedSessions.count) unsynced sessions to sync"
+    )
 
     let sessionSyncs = unsyncedSessions.map(SessionSync.init)
 
@@ -404,10 +413,12 @@ final class SessionManager {
       }
 
       AppLogger.session.info(
-        "Successfully synced \(unsyncedSessions.count) sessions")
+        "Successfully synced \(unsyncedSessions.count) sessions"
+      )
     } catch {
       AppLogger.session.error(
-        "Failed to bulk sync sessions: \(error). Will retry on next startup.")
+        "Failed to bulk sync sessions: \(error). Will retry on next startup."
+      )
     }
   }
 
@@ -438,7 +449,8 @@ final class SessionManager {
 
         if playbackRate > 0 {
           AppLogger.session.info(
-            "Inactivity timeout reached but playback is active - not closing session")
+            "Inactivity timeout reached but playback is active - not closing session"
+          )
           return
         }
 

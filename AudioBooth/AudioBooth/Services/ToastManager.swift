@@ -30,7 +30,9 @@ public struct Toast {
   }
 
   public func show() {
-    Toast.toasts.forEach { $0.value.dismiss() }
+    for toast in Toast.toasts {
+      toast.value.dismiss()
+    }
 
     let id = UUID()
     Toast.toasts[id] = self

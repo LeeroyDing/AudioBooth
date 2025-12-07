@@ -23,7 +23,8 @@ final class OIDCAuthenticationManager: NSObject {
 
   func start() {
     AppLogger.authentication.info(
-      "Starting OIDC authentication for server: \(self.serverURL)")
+      "Starting OIDC authentication for server: \(self.serverURL)"
+    )
     Task {
       do {
         let authURL = try buildOIDCURL()
@@ -61,7 +62,8 @@ final class OIDCAuthenticationManager: NSObject {
   private func handleAuthenticationResult(callbackURL: URL?, error: Error?) {
     if let error {
       AppLogger.authentication.error(
-        "Authentication session failed with error: \(error.localizedDescription)")
+        "Authentication session failed with error: \(error.localizedDescription)"
+      )
       delegate?.oidcAuthentication(didFailWithError: error)
       return
     }
@@ -73,7 +75,8 @@ final class OIDCAuthenticationManager: NSObject {
     }
 
     AppLogger.authentication.info(
-      "Received callback URL: \(callbackURL.absoluteString)")
+      "Received callback URL: \(callbackURL.absoluteString)"
+    )
 
     guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
       let queryItems = components.queryItems
@@ -92,16 +95,19 @@ final class OIDCAuthenticationManager: NSObject {
 
     if let error = error {
       AppLogger.authentication.error(
-        "Authentication failed with error parameter: \(error)")
+        "Authentication failed with error parameter: \(error)"
+      )
       delegate?.oidcAuthentication(didFailWithError: OIDCError.authenticationFailed(error))
       return
     }
 
     guard let authCode = code else {
       let availableParams = queryItems.map { "\($0.name): \($0.value ?? "nil")" }.joined(
-        separator: ", ")
+        separator: ", "
+      )
       AppLogger.authentication.error(
-        "No authorization code in callback. Available params: \(availableParams)")
+        "No authorization code in callback. Available params: \(availableParams)"
+      )
       delegate?.oidcAuthentication(didFailWithError: OIDCError.noAuthorizationCode(availableParams))
       return
     }
@@ -125,7 +131,8 @@ final class OIDCAuthenticationManager: NSObject {
         delegate?.oidcAuthenticationDidSucceed(connectionID: connectionID)
       } catch {
         AppLogger.authentication.error(
-          "loginWithOIDC API call failed: \(error.localizedDescription)")
+          "loginWithOIDC API call failed: \(error.localizedDescription)"
+        )
         delegate?.oidcAuthentication(didFailWithError: error)
       }
     }
@@ -159,21 +166,26 @@ final class OIDCAuthenticationManager: NSObject {
     AppLogger.authentication.info("Built OIDC URL: \(authURL.absoluteString)")
     AppLogger.authentication.debug("PKCE challenge: \(self.pkce.challenge)")
     AppLogger.authentication.debug(
-      "PKCE verifier length: \(self.pkce.verifier.count)")
+      "PKCE verifier length: \(self.pkce.verifier.count)"
+    )
 
     return authURL
   }
 
   private func makeInitialOAuthRequest(authURL: URL) async throws -> (URL, [HTTPCookie]) {
     AppLogger.authentication.info(
-      "Making initial OAuth request to: \(authURL.absoluteString)")
+      "Making initial OAuth request to: \(authURL.absoluteString)"
+    )
 
     var request = URLRequest(url: authURL)
     request.httpMethod = "GET"
 
     let config = URLSessionConfiguration.default
     let session = URLSession(
-      configuration: config, delegate: NoRedirectDelegate(), delegateQueue: nil)
+      configuration: config,
+      delegate: NoRedirectDelegate(),
+      delegateQueue: nil
+    )
 
     let (data, response) = try await session.data(for: request)
 
@@ -183,19 +195,23 @@ final class OIDCAuthenticationManager: NSObject {
     }
 
     AppLogger.authentication.info(
-      "Received HTTP response with status code: \(httpResponse.statusCode)")
+      "Received HTTP response with status code: \(httpResponse.statusCode)"
+    )
 
     if httpResponse.statusCode == 302,
       let locationString = httpResponse.allHeaderFields["Location"] as? String,
       let redirectURL = URL(string: locationString)
     {
       let cookies = HTTPCookie.cookies(
-        withResponseHeaderFields: httpResponse.allHeaderFields as! [String: String], for: authURL
+        withResponseHeaderFields: httpResponse.allHeaderFields as! [String: String],
+        for: authURL
       )
       AppLogger.authentication.info(
-        "Received redirect to: \(redirectURL.absoluteString)")
+        "Received redirect to: \(redirectURL.absoluteString)"
+      )
       AppLogger.authentication.info(
-        "Captured \(cookies.count) cookies: \(cookies.map { $0.name }.joined(separator: ", "))")
+        "Captured \(cookies.count) cookies: \(cookies.map { $0.name }.joined(separator: ", "))"
+      )
       return (redirectURL, cookies)
     } else if httpResponse.statusCode == 400, let error = String(data: data, encoding: .utf8) {
       AppLogger.authentication.error("Received 400 Bad Request: \(error)")
@@ -207,7 +223,8 @@ final class OIDCAuthenticationManager: NSObject {
     }
 
     AppLogger.authentication.error(
-      "Unexpected response status: \(httpResponse.statusCode)")
+      "Unexpected response status: \(httpResponse.statusCode)"
+    )
     if let responseBody = String(data: data, encoding: .utf8) {
       AppLogger.authentication.error("Response body: \(responseBody)")
     }
@@ -285,8 +302,10 @@ enum OIDCError: LocalizedError {
 
 final class NoRedirectDelegate: NSObject, URLSessionTaskDelegate {
   func urlSession(
-    _ session: URLSession, task: URLSessionTask,
-    willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest,
+    _ session: URLSession,
+    task: URLSessionTask,
+    willPerformHTTPRedirection response: HTTPURLResponse,
+    newRequest request: URLRequest,
     completionHandler: @escaping (URLRequest?) -> Void
   ) {
     completionHandler(nil)

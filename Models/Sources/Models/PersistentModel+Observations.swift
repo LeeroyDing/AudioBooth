@@ -22,8 +22,8 @@ extension PersistentModel {
         } catch {}
 
         for await notification in NotificationCenter.default.notifications(
-          named: ModelContext.didSave)
-        {
+          named: ModelContext.didSave
+        ) {
           guard
             let modelContext = notification.object as? ModelContext,
             let userInfo = notification.userInfo
@@ -75,8 +75,8 @@ extension PersistentModel {
         fetchData()
 
         for await notification in NotificationCenter.default.notifications(
-          named: ModelContext.didSave)
-        {
+          named: ModelContext.didSave
+        ) {
           guard let userInfo = notification.userInfo else { continue }
 
           let inserts = (userInfo[NSInsertedObjectsKey] as? [PersistentIdentifier]) ?? []

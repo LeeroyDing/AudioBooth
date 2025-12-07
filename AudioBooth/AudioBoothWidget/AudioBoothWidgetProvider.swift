@@ -27,7 +27,8 @@ struct AudioBoothWidgetProvider: TimelineProvider {
   }
 
   func getTimeline(
-    in context: Context, completion: @escaping (Timeline<AudioBoothWidgetEntry>) -> Void
+    in context: Context,
+    completion: @escaping (Timeline<AudioBoothWidgetEntry>) -> Void
   ) {
     Task {
       let entry = await getCurrentBookEntry()

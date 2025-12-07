@@ -72,7 +72,8 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
     } else {
       guard let service = audiobookshelf.networkService else {
         throw Audiobookshelf.AudiobookshelfError.networkError(
-          "Network service not configured. Please login first.")
+          "Network service not configured. Please login first."
+        )
       }
       networkService = service
     }
@@ -106,12 +107,14 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func fetchPersonalized() async throws -> Personalized {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     guard let library = audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "No library selected. Please select a library first.")
+        "No library selected. Please select a library first."
+      )
     }
 
     let request = NetworkRequest<[Personalized.Section]>(
@@ -141,7 +144,8 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func markAsFinished(bookID: String) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     struct UpdateFinishedStatusRequest: Codable {
@@ -166,7 +170,8 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func fetchMediaProgress(bookID: String) async throws -> User.MediaProgress {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<User.MediaProgress>(
@@ -187,7 +192,8 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func resetBookProgress(progressID: String) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<Data>(
@@ -214,12 +220,14 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func fetchFilterData() async throws -> FilterData {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     guard let library = audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "No library selected. Please select a library first.")
+        "No library selected. Please select a library first."
+      )
     }
 
     struct Response: Codable {

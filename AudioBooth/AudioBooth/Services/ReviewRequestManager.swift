@@ -96,7 +96,8 @@ final class ReviewRequestManager {
     UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastReviewRequestDateKey)
 
     AppLogger.general.info(
-      "Review requested successfully. Total requests: \(requestCount + 1)")
+      "Review requested successfully. Total requests: \(requestCount + 1)"
+    )
   }
 
   private func recordFirstLaunchIfNeeded() {

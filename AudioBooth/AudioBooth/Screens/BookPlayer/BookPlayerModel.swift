@@ -292,7 +292,8 @@ extension BookPlayerModel {
       let seekTime = CMTime(seconds: mediaProgress.currentTime, preferredTimescale: 1000)
       player.seek(to: seekTime) { _ in
         AppLogger.player.debug(
-          "Seeked to position: \(self.mediaProgress.currentTime)s")
+          "Seeked to position: \(self.mediaProgress.currentTime)s"
+        )
       }
     }
 
@@ -324,7 +325,8 @@ extension BookPlayerModel {
       chapters = ChapterPickerSheetViewModel(itemID: id, chapters: sessionChapters, player: player)
       timer.maxRemainingChapters = sessionChapters.count - 1
       AppLogger.player.debug(
-        "Loaded \(sessionChapters.count) chapters from play session info")
+        "Loaded \(sessionChapters.count) chapters from play session info"
+      )
     } else {
       chapters = nil
       AppLogger.player.debug("No chapters available in play session info")
@@ -350,7 +352,8 @@ extension BookPlayerModel {
 
         self.item = existingItem
         AppLogger.player.debug(
-          "Found existing progress: \(self.mediaProgress.currentTime)s")
+          "Found existing progress: \(self.mediaProgress.currentTime)s"
+        )
 
         if existingItem.isDownloaded {
           try await setupAudioPlayer()
@@ -439,7 +442,8 @@ extension BookPlayerModel {
         setupNowPlayingMetadata()
       } catch {
         AppLogger.player.error(
-          "Failed to load cover image for now playing: \(error)")
+          "Failed to load cover image for now playing: \(error)"
+        )
       }
     }
   }
@@ -739,7 +743,8 @@ extension BookPlayerModel {
       .store(in: &cancellables)
 
     NotificationCenter.default.publisher(
-      for: AVPlayerItem.newErrorLogEntryNotification, object: player.currentItem
+      for: AVPlayerItem.newErrorLogEntryNotification,
+      object: player.currentItem
     )
     .receive(on: DispatchQueue.main)
     .sink { notification in
@@ -788,7 +793,8 @@ extension BookPlayerModel {
 
   private func handleMediaServicesReset() {
     AppLogger.player.warning(
-      "Media services were reset - reconfiguring audio session and remote commands")
+      "Media services were reset - reconfiguring audio session and remote commands"
+    )
 
     let wasPlaying = isPlaying
     configureAudioSession()
@@ -845,7 +851,9 @@ extension BookPlayerModel {
     }
   }
 
-  private func createCompositionPlayerItem(from tracks: [Track])
+  private func createCompositionPlayerItem(
+    from tracks: [Track]
+  )
     async throws -> AVPlayerItem
   {
     let composition = AVMutableComposition()
@@ -887,7 +895,8 @@ extension BookPlayerModel {
         )
       } catch {
         AppLogger.player.error(
-          "Failed to insert track \(track.index): \(error)")
+          "Failed to insert track \(track.index): \(error)"
+        )
       }
     }
 
@@ -1023,7 +1032,8 @@ extension BookPlayerModel {
       )
     } else {
       AppLogger.player.debug(
-        "📖 No chapters, using time-based check. Near end: \(isNearEnd)")
+        "📖 No chapters, using time-based check. Near end: \(isNearEnd)"
+      )
     }
 
     guard shouldMarkFinished else { return }
@@ -1042,7 +1052,8 @@ extension BookPlayerModel {
         AppLogger.player.debug("Successfully marked book as finished on server")
       } catch {
         AppLogger.player.error(
-          "Failed to update book finished status on server: \(error)")
+          "Failed to update book finished status on server: \(error)"
+        )
       }
     }
   }

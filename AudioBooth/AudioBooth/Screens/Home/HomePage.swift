@@ -313,7 +313,10 @@ extension HomePage.Model {
     return HomePage.Model(
       sections: [
         Section(
-          id: "continue-listening", title: "Continue Listening", items: .continueListening(books))
+          id: "continue-listening",
+          title: "Continue Listening",
+          items: .continueListening(books)
+        )
       ]
     )
   }

@@ -211,7 +211,8 @@ extension ContinueListeningCard.Model {
             progress: 0.75,
             lastPlayedAt: Date().addingTimeInterval(-7200),
             timeRemaining: "2hr 15min left"
-          ))
+          )
+        )
       }
       .padding(.horizontal)
     }

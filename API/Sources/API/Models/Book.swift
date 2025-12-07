@@ -13,9 +13,9 @@ public struct Book: Codable, Sendable {
     var url = serverURL.appendingPathComponent("api/items/\(id)/cover")
 
     #if os(watchOS)
-      url.append(queryItems: [URLQueryItem(name: "format", value: "jpg")])
+    url.append(queryItems: [URLQueryItem(name: "format", value: "jpg")])
     #else
-      url.append(queryItems: [URLQueryItem(name: "raw", value: "1")])
+    url.append(queryItems: [URLQueryItem(name: "raw", value: "1")])
     #endif
 
     return url

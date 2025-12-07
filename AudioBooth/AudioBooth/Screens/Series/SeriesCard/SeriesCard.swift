@@ -48,7 +48,8 @@ struct SeriesCard: View {
             }
 
             ForEach(Array(model.bookCovers.prefix(10).enumerated()), id: \.offset) {
-              index, cover in
+              index,
+              cover in
               LazyImage(url: cover) { state in
                 if let image = state.image {
                   image

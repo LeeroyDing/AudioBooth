@@ -22,7 +22,8 @@ public final class ModelContextProvider {
 
     assertionFailure("No active server. Database access requires user to be logged in.")
     AppLogger.persistence.warning(
-      "Accessing context without active server, using fallback database")
+      "Accessing context without active server, using fallback database"
+    )
 
     let serverID = "fallback"
     if let fallbackContext = contexts[serverID] {
@@ -36,7 +37,8 @@ public final class ModelContextProvider {
       return fallbackContainer.mainContext
     } catch {
       AppLogger.persistence.error(
-        "Failed to create fallback container: \(error.localizedDescription)")
+        "Failed to create fallback container: \(error.localizedDescription)"
+      )
       fatalError("Failed to create fallback database container")
     }
   }
@@ -76,7 +78,8 @@ public final class ModelContextProvider {
       let schema = Schema(versionedSchema: AudiobookshelfSchema.self)
       let container = try ModelContainer(for: schema, configurations: configuration)
       AppLogger.persistence.info(
-        "ModelContainer created successfully for server: \(serverID)")
+        "ModelContainer created successfully for server: \(serverID)"
+      )
       return container
     } catch {
       AppLogger.persistence.error(

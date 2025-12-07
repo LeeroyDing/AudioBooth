@@ -189,7 +189,11 @@ public final class AuthenticationService: ObservableObject {
   }
 
   public func loginWithOIDC(
-    serverURL: String, code: String, verifier: String, state: String?, cookies: [HTTPCookie],
+    serverURL: String,
+    code: String,
+    verifier: String,
+    state: String?,
+    cookies: [HTTPCookie],
     customHeaders: [String: String] = [:]
   ) async throws -> String {
     AppLogger.authentication.info("loginWithOIDC called for server: \(serverURL)")
@@ -230,7 +234,8 @@ public final class AuthenticationService: ObservableObject {
 
     AppLogger.authentication.info("Sending OIDC callback request to /auth/openid/callback")
     AppLogger.authentication.debug(
-      "Query parameters: \(query.keys.joined(separator: ", "))")
+      "Query parameters: \(query.keys.joined(separator: ", "))"
+    )
     AppLogger.authentication.debug("Cookie header: \(cookieString)")
 
     let request = NetworkRequest<Response>(
@@ -258,7 +263,8 @@ public final class AuthenticationService: ObservableObject {
       } else if let token = user.token {
         authToken = .legacy(token: token)
         AppLogger.authentication.info(
-          "OIDC login successful, received legacy token of length: \(token.count)")
+          "OIDC login successful, received legacy token of length: \(token.count)"
+        )
       } else {
         throw Audiobookshelf.AudiobookshelfError.loginFailed("No token received from server")
       }
@@ -279,12 +285,14 @@ public final class AuthenticationService: ObservableObject {
       return newConnection.id
     } catch {
       AppLogger.authentication.error(
-        "OIDC login request failed: \(error.localizedDescription)")
+        "OIDC login request failed: \(error.localizedDescription)"
+      )
       if let error = error as? URLError {
         AppLogger.authentication.error("URLError code: \(error.code.rawValue)")
       }
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "OIDC login failed: \(error.localizedDescription)")
+        "OIDC login failed: \(error.localizedDescription)"
+      )
     }
   }
 
@@ -361,7 +369,8 @@ public final class AuthenticationService: ObservableObject {
   public func authorize() async throws -> Authorize {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<Authorize>(
@@ -378,14 +387,16 @@ public final class AuthenticationService: ObservableObject {
       return authorize
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to fetch user data: \(error.localizedDescription)")
+        "Failed to fetch user data: \(error.localizedDescription)"
+      )
     }
   }
 
   public func fetchMe() async throws -> User {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<User>(
@@ -400,7 +411,8 @@ public final class AuthenticationService: ObservableObject {
       return user
     } catch {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Failed to fetch user data: \(error.localizedDescription)")
+        "Failed to fetch user data: \(error.localizedDescription)"
+      )
     }
   }
 

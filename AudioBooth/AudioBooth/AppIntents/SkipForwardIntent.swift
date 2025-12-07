@@ -4,7 +4,8 @@ import Foundation
 struct SkipForwardIntent: AppIntent {
   static let title: LocalizedStringResource = "Skip forward the given time"
   static let description = IntentDescription(
-    "Skips forward in the currently playing audiobook by a specified duration.")
+    "Skips forward in the currently playing audiobook by a specified duration."
+  )
   static let openAppWhenRun = false
 
   @Parameter(

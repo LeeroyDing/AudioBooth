@@ -125,7 +125,10 @@ extension MediaProgress {
     cache.removeAll()
   }
 
-  public static func getOrCreate(for bookID: String, duration: TimeInterval) throws
+  public static func getOrCreate(
+    for bookID: String,
+    duration: TimeInterval
+  ) throws
     -> MediaProgress
   {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
@@ -195,7 +198,8 @@ extension MediaProgress {
     let allLocalProgress = try MediaProgress.fetchAll()
     let remoteBookIDs = Set(userData.mediaProgress.map(\.libraryItemId))
     let localProgressMap = Dictionary(
-      uniqueKeysWithValues: allLocalProgress.map { ($0.bookID, $0) })
+      uniqueKeysWithValues: allLocalProgress.map { ($0.bookID, $0) }
+    )
 
     for apiProgress in userData.mediaProgress {
       let remote = MediaProgress(from: apiProgress)

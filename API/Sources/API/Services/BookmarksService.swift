@@ -10,7 +10,8 @@ public final class BookmarksService {
   public func create(bookID: String, title: String, time: Int) async throws -> User.Bookmark {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     struct CreateRequest: Codable {
@@ -32,7 +33,8 @@ public final class BookmarksService {
   public func delete(bookID: String, time: Int) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<Data>(
@@ -46,7 +48,8 @@ public final class BookmarksService {
   public func update(bookmark: User.Bookmark) async throws -> User.Bookmark {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<User.Bookmark>(

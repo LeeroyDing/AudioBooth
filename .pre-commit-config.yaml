@@ -2,10 +2,15 @@ repos:
   - repo: local
     hooks:
       - id: swift-format
-        name: Swift Format
-        entry: swift-format
+        name: swift-format
+        entry: swift-format format --in-place --recursive --parallel
         language: system
-        files: \.swift$
-        args: [--in-place]
-        pass_filenames: true
-        description: "Format Swift code using swift-format"
+        types: [swift]
+        require_serial: true
+
+      - id: swift-format-lint
+        name: swift-format-lint
+        entry: swift-format lint --strict --recursive --parallel
+        language: system
+        types: [swift]
+        require_serial: true

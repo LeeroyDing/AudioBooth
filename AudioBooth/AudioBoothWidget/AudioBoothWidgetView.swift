@@ -116,7 +116,9 @@ struct AudioBoothWidgetView: View {
               RoundedRectangle(cornerRadius: 3)
                 .fill(Color.white)
                 .frame(
-                  width: geometry.size.width * playbackState.progress, height: 6)
+                  width: geometry.size.width * playbackState.progress,
+                  height: 6
+                )
             }
           }
           .frame(height: 6)

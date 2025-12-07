@@ -126,17 +126,20 @@ struct ServerView: View {
   @ViewBuilder
   var customHeadersSection: some View {
     if model.authenticationModel != nil {
-      NavigationLink(destination: { CustomHeadersView(model: model.customHeaders) }) {
-        HStack {
-          Image(systemName: "list.bullet.rectangle")
-          Text("Custom Headers")
-          Spacer()
-          if model.customHeaders.headers.count > 0 {
-            Text("\(model.customHeaders.headers.count)")
-              .foregroundColor(.secondary)
+      NavigationLink(
+        destination: { CustomHeadersView(model: model.customHeaders) },
+        label: {
+          HStack {
+            Image(systemName: "list.bullet.rectangle")
+            Text("Custom Headers")
+            Spacer()
+            if model.customHeaders.headers.count > 0 {
+              Text("\(model.customHeaders.headers.count)")
+                .foregroundColor(.secondary)
+            }
           }
         }
-      }
+      )
     }
   }
 

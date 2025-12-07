@@ -13,12 +13,14 @@ public final class CollectionsService {
   ) async throws -> Page<Collection> {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     guard let library = audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "No library selected. Please select a library first.")
+        "No library selected. Please select a library first."
+      )
     }
 
     var query: [String: String] = [:]
@@ -43,7 +45,8 @@ public final class CollectionsService {
   public func fetch(id: String) async throws -> Collection {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<Collection>(
@@ -58,7 +61,8 @@ public final class CollectionsService {
   public func removeItem(collectionID: String, libraryItemID: String) async throws -> Collection {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<Collection>(
@@ -85,7 +89,8 @@ public final class CollectionsService {
 
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let requestBody = RemoveItemsRequest(books: items)
@@ -117,12 +122,14 @@ public final class CollectionsService {
 
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     guard let library = audiobookshelf.libraries.current else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "No library selected. Please select a library first.")
+        "No library selected. Please select a library first."
+      )
     }
 
     let requestBody = CreateCollectionRequest(
@@ -149,7 +156,8 @@ public final class CollectionsService {
 
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let requestBody = AddItemsRequest(books: items)
@@ -178,7 +186,8 @@ public final class CollectionsService {
 
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let requestBody = UpdateCollectionRequest(
@@ -200,7 +209,8 @@ public final class CollectionsService {
   public func delete(collectionID: String) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     let request = NetworkRequest<Data>(

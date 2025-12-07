@@ -34,7 +34,9 @@ struct SpeedPickerSheet: View {
             value: Binding(
               get: { Double(model.playbackSpeed) },
               set: { model.onSpeedChanged(Float($0)) }
-            ), in: 0.5...3.5, step: 0.05
+            ),
+            in: 0.5...3.5,
+            step: 0.05
           )
           .accentColor(.orange)
 

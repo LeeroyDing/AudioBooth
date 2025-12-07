@@ -35,12 +35,10 @@ struct ContentView: View {
           .presentationDragIndicator(.visible)
       }
     }
-    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification))
-    { _ in
+    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
       isKeyboardVisible = true
     }
-    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification))
-    { _ in
+    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
       isKeyboardVisible = false
     }
     .onOpenURL { url in

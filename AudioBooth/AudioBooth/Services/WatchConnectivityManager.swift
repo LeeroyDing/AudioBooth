@@ -39,7 +39,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     let allProgress = (try? MediaProgress.fetchAll()) ?? []
     let progressByBookID = Dictionary(
-      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.currentTime) })
+      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.currentTime) }
+    )
 
     var continueListening: [[String: Any]] = []
     var progress: [String: Double] = [:]
@@ -73,7 +74,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     updateContext(context)
 
     AppLogger.watchConnectivity.info(
-      "Synced \(continueListening.count) continue listening books")
+      "Synced \(continueListening.count) continue listening books"
+    )
   }
 
   private func refreshProgress() {
@@ -85,7 +87,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
 
     let allProgress = (try? MediaProgress.fetchAll()) ?? []
     let progressByBookID = Dictionary(
-      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.currentTime) })
+      uniqueKeysWithValues: allProgress.map { ($0.bookID, $0.currentTime) }
+    )
 
     for dict in continueListening {
       guard let bookID = dict["id"] as? String,
@@ -115,7 +118,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       try session?.updateApplicationContext(context)
     } catch {
       AppLogger.watchConnectivity.error(
-        "Failed to sync context to watch: \(error)")
+        "Failed to sync context to watch: \(error)"
+      )
     }
   }
 
@@ -205,7 +209,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
         if case .books(let books) = section.entities {
           syncContinueListening(books: books)
           AppLogger.watchConnectivity.info(
-            "Synced cached continue listening to watch on activation")
+            "Synced cached continue listening to watch on activation"
+          )
         }
         break
       }
@@ -250,18 +255,23 @@ extension WatchConnectivityManager: WCSessionDelegate {
           let timeListened = message["timeListened"] as? Double
         {
           handleProgressReport(
-            sessionID: sessionID, currentTime: currentTime, timeListened: timeListened)
+            sessionID: sessionID,
+            currentTime: currentTime,
+            timeListened: timeListened
+          )
         }
       case "syncDownloadedBooks":
         if let bookIDs = message["bookIDs"] as? [String] {
           watchDownloadedBookIDs = bookIDs
           AppLogger.watchConnectivity.info(
-            "Received \(bookIDs.count) downloaded book IDs from watch")
+            "Received \(bookIDs.count) downloaded book IDs from watch"
+          )
           refreshProgress()
         }
       default:
         AppLogger.watchConnectivity.warning(
-          "Unknown command from watch: \(command)")
+          "Unknown command from watch: \(command)"
+        )
       }
     }
   }
@@ -317,7 +327,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
       }
 
       let baseURLString = serverURL.absoluteString.trimmingCharacters(
-        in: CharacterSet(charactersIn: "/"))
+        in: CharacterSet(charactersIn: "/")
+      )
       guard let baseURL = URL(string: "\(baseURLString)/public/session/\(playSession.id)") else {
         replyHandler(["error": "Failed to construct base URL"])
         return
@@ -377,7 +388,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
         AppLogger.watchConnectivity.debug("Synced watch progress: \(currentTime)s")
       } catch {
         AppLogger.watchConnectivity.error(
-          "Failed to sync watch progress: \(error)")
+          "Failed to sync watch progress: \(error)"
+        )
       }
     }
   }
@@ -402,7 +414,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
         }
       } catch {
         AppLogger.watchConnectivity.error(
-          "Failed to handle play command: \(error)")
+          "Failed to handle play command: \(error)"
+        )
       }
     }
   }

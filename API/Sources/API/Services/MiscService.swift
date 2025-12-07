@@ -29,7 +29,8 @@ public final class MiscService {
   ) async throws {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
-        "Network service not configured. Please login first.")
+        "Network service not configured. Please login first."
+      )
     }
 
     struct EbookRequest: Codable {

@@ -139,7 +139,8 @@ struct LegacyMigration {
     if migratedCount > 0 {
       try? context.save()
       AppLogger.persistence.info(
-        "Migration 2: Updated \(migratedCount) track paths to include server ID")
+        "Migration 2: Updated \(migratedCount) track paths to include server ID"
+      )
     }
   }
 }

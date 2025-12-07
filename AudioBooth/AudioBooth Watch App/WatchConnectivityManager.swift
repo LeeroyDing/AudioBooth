@@ -142,7 +142,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     completion: @escaping (WatchBook?) -> Void
   ) {
     AppLogger.watchConnectivity.info(
-      "startSession called for \(bookID), forDownload=\(forDownload)")
+      "startSession called for \(bookID), forDownload=\(forDownload)"
+    )
 
     guard let session = session else {
       AppLogger.watchConnectivity.error("Cannot start session - no WCSession instance")
@@ -231,7 +232,8 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
       errorHandler: { error in
         AppLogger.watchConnectivity.error("sendMessage error: \(error.localizedDescription)")
         completion(nil)
-      })
+      }
+    )
   }
 }
 
@@ -245,7 +247,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
       AppLogger.watchConnectivity.error("Watch session activation failed: \(error)")
     } else {
       AppLogger.watchConnectivity.info(
-        "Watch session activated with state: \(activationState.rawValue)")
+        "Watch session activated with state: \(activationState.rawValue)"
+      )
 
       if activationState == .activated {
         let context = session.receivedApplicationContext
@@ -263,8 +266,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
     }
   }
 
-  func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any])
-  {
+  func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
     Task { @MainActor in
       handleContext(applicationContext)
     }

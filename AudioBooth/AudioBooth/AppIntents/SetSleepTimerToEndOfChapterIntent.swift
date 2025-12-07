@@ -4,7 +4,8 @@ import Foundation
 struct SetSleepTimerToEndOfChapterIntent: AppIntent {
   static let title: LocalizedStringResource = "Set sleep timer to end of chapter"
   static let description = IntentDescription(
-    "Sets the sleep timer to pause at the end of a specified number of chapters.")
+    "Sets the sleep timer to pause at the end of a specified number of chapters."
+  )
   static let openAppWhenRun = false
 
   @Parameter(
