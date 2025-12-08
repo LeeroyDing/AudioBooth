@@ -634,9 +634,11 @@ extension BookPlayerModel {
   }
 
   private func setupNowPlayingMetadata() {
+    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = title
     nowPlayingInfo[MPMediaItemPropertyTitle] = title
     nowPlayingInfo[MPMediaItemPropertyArtist] = author
     nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
+    nowPlayingInfo[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
 
     if let cover {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: cover.size) { _ in
@@ -655,9 +657,15 @@ extension BookPlayerModel {
     nowPlayingInfo[MPNowPlayingInfoPropertyDefaultPlaybackRate] = player?.defaultRate
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player?.rate
 
-    if let chaptersModel = chapters as? ChapterPickerSheetViewModel {
-      nowPlayingInfo[MPNowPlayingInfoPropertyChapterNumber] = (chaptersModel.currentIndex + 1)
-      nowPlayingInfo[MPNowPlayingInfoPropertyChapterCount] = chaptersModel.chapters.count
+    if let chapters {
+      nowPlayingInfo[MPMediaItemPropertyTitle] =
+        chapters.current?.title ?? nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
+      nowPlayingInfo[MPNowPlayingInfoPropertyChapterNumber] = (chapters.currentIndex + 1)
+      nowPlayingInfo[MPNowPlayingInfoPropertyChapterCount] = chapters.chapters.count
+    } else {
+      nowPlayingInfo[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
+      nowPlayingInfo[MPNowPlayingInfoPropertyChapterNumber] = nil
+      nowPlayingInfo[MPNowPlayingInfoPropertyChapterCount] = nil
     }
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
