@@ -335,7 +335,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       downloadSession.invalidateAndCancel()
     }
 
-    if let session = session {
+    if let session {
       Task {
         try await audiobookshelf.sessions.close(session.id)
       }
@@ -343,7 +343,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
     if success {
       Toast(success: "Download completed").show()
-    } else if let error = error {
+    } else if let error {
       let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
       if !isCancelled {
         Toast(error: "Download failed: \(error.localizedDescription)").show()

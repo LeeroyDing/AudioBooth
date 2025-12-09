@@ -183,7 +183,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
     activationDidCompleteWith activationState: WCSessionActivationState,
     error: Error?
   ) {
-    if let error = error {
+    if let error {
       AppLogger.watchConnectivity.error(
         "Watch session activation failed: \(error)"
       )

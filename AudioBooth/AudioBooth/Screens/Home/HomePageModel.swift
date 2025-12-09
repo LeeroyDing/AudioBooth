@@ -154,13 +154,13 @@ extension HomePageModel {
         orderedSections.append(Section(id: "listening-stats", title: "", items: .stats))
 
       case .continueListening:
-        if let section = continueListeningSection {
-          orderedSections.append(section)
+        if let continueListeningSection {
+          orderedSections.append(continueListeningSection)
         }
 
       case .availableOffline:
-        if let section = offlineSection {
-          orderedSections.append(section)
+        if let offlineSection {
+          orderedSections.append(offlineSection)
         }
 
       default:

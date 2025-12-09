@@ -243,7 +243,7 @@ extension WatchConnectivityManager: WCSessionDelegate {
     activationDidCompleteWith activationState: WCSessionActivationState,
     error: Error?
   ) {
-    if let error = error {
+    if let error {
       AppLogger.watchConnectivity.error("Watch session activation failed: \(error)")
     } else {
       AppLogger.watchConnectivity.info(
@@ -328,8 +328,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
       return WatchBook(dictionary: dict, currentTime: currentTime)
     }
 
-    if let current = currentBook, !books.contains(where: { $0.id == current.id }) {
-      books.insert(current, at: 0)
+    if let currentBook, !books.contains(where: { $0.id == currentBook.id }) {
+      books.insert(currentBook, at: 0)
     }
 
     continueListeningBooks = books

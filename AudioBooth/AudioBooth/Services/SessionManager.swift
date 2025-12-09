@@ -178,11 +178,11 @@ final class SessionManager {
     item: LocalBook?,
     mediaProgress: MediaProgress
   ) async throws -> LocalBook {
-    if let existingSession = current, existingSession.libraryItemID != itemID {
+    if let current, current.libraryItemID != itemID {
       AppLogger.session.info(
         "Session exists for different book, server will close old session when starting new one"
       )
-      current = nil
+      self.current = nil
       cancelScheduledSessionClose()
     }
 

@@ -64,7 +64,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
     var remaining: TimeInterval
     let progress: CGFloat
 
-    if let chapters = chapters, chapters.current != nil {
+    if let chapters, chapters.current != nil {
       current = chapters.currentElapsedTime(currentTime: currentTime)
       remaining = chapters.currentRemainingTime(currentTime: currentTime)
       progress = CGFloat(chapters.currentProgress(currentTime: currentTime))

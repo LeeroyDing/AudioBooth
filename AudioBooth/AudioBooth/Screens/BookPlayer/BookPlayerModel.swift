@@ -180,7 +180,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onBookmarksTapped() {
-    if let player = player {
+    if let player {
       let time = player.currentTime()
       if time.isValid && !time.isIndefinite {
         bookmarks?.currentTime = Int(ceil(CMTimeGetSeconds(time)))
@@ -219,7 +219,7 @@ extension BookPlayerModel {
       mediaProgress: mediaProgress
     )
 
-    if let pendingSeekTime = pendingSeekTime {
+    if let pendingSeekTime {
       mediaProgress.currentTime = pendingSeekTime
       self.pendingSeekTime = nil
       AppLogger.player.info("Using pending seek time: \(pendingSeekTime)s")
@@ -317,8 +317,8 @@ extension BookPlayerModel {
     timerViewModel.setPlayer(player)
     timer = timerViewModel
 
-    if let localBook = item {
-      bookmarks = BookmarkViewerSheetViewModel(item: .local(localBook), initialTime: 0)
+    if let item {
+      bookmarks = BookmarkViewerSheetViewModel(item: .local(item), initialTime: 0)
     }
 
     if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
@@ -999,8 +999,8 @@ extension BookPlayerModel {
     } else if !isNowPlaying && isPlaying {
       AppLogger.player.debug("🎵 State: Stopping playback")
       PlaybackHistory.record(itemID: id, action: .pause, position: mediaProgress.currentTime)
-      if let last = lastPlaybackAt {
-        let timeListened = now.timeIntervalSince(last)
+      if let lastPlaybackAt {
+        let timeListened = now.timeIntervalSince(lastPlaybackAt)
         sessionManager.current?.pendingListeningTime += timeListened
         mediaProgress.lastPlayedAt = Date()
         syncSessionProgress()

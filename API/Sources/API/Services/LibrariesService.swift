@@ -52,7 +52,7 @@ public final class LibrariesService: ObservableObject, @unchecked Sendable {
   public func fetch(serverID: String? = nil) async throws -> [Library] {
     let networkService: NetworkService
 
-    if let serverID = serverID {
+    if let serverID {
       guard let server = audiobookshelf.authentication.servers[serverID] else {
         throw Audiobookshelf.AudiobookshelfError.networkError("Server not found")
       }

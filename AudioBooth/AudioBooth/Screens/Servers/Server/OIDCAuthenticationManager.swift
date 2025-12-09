@@ -95,7 +95,7 @@ final class OIDCAuthenticationManager: NSObject {
     let state = queryItems.first { $0.name == "state" }?.value
     let error = queryItems.first { $0.name == "error" }?.value
 
-    if let error = error {
+    if let error {
       AppLogger.authentication.error(
         "Authentication failed with error parameter: \(error)"
       )

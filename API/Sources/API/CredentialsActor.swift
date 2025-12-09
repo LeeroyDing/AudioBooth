@@ -25,8 +25,8 @@ actor CredentialsActor {
         return server.token
       }
 
-      if let existingTask = refreshTask {
-        return try await existingTask.value
+      if let refreshTask {
+        return try await refreshTask.value
       }
 
       let task = Task<Credentials, Error> { @MainActor [server] in

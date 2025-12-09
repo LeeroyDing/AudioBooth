@@ -386,7 +386,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
     if success {
       AppLogger.download.info("Download completed for \(self.bookID)")
-    } else if let error = error {
+    } else if let error {
       let isCancelled = (error as? URLError)?.code == .cancelled || error is CancellationError
       if !isCancelled {
         AppLogger.download.error("Download failed: \(error.localizedDescription)")

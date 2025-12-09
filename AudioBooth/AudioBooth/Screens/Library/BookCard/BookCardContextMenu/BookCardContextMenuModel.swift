@@ -61,10 +61,10 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
       if let firstAuthor = item.media.metadata.authors?.first {
         return BookCard.Author(id: firstAuthor.id, name: firstAuthor.name)
       } else if let authorName = item.authorName {
-        let firstAuthorName = authorName.split(separator: ",").first.map {
+        let name = authorName.split(separator: ",").first.map {
           String($0.trimmingCharacters(in: .whitespaces))
         }
-        if let name = firstAuthorName,
+        if let name,
           let filterData,
           let author = filterData.authors.first(where: { $0.name == name })
         {
@@ -78,10 +78,10 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
       if let firstNarrator = item.media.metadata.narrators?.first {
         return BookCard.Narrator(name: firstNarrator)
       } else if let narratorName = item.media.metadata.narratorName {
-        let firstNarratorName = narratorName.split(separator: ",").first.map {
+        let name = narratorName.split(separator: ",").first.map {
           String($0.trimmingCharacters(in: .whitespaces))
         }
-        if let name = firstNarratorName {
+        if let name {
           return BookCard.Narrator(name: name)
         }
       }
@@ -92,10 +92,10 @@ final class BookCardContextMenuModel: BookCardContextMenu.Model {
       if let firstSeries = item.series?.first {
         return BookCard.Series(id: firstSeries.id, name: firstSeries.name)
       } else if let seriesName = item.media.metadata.seriesName {
-        let firstSeriesName = seriesName.split(separator: ",").first.map {
+        let name = seriesName.split(separator: ",").first.map {
           String($0.trimmingCharacters(in: .whitespaces))
         }
-        if let name = firstSeriesName {
+        if let name {
           let cleanedName: String
           if let hashIndex = name.range(of: " #") {
             cleanedName = String(name[..<hashIndex.lowerBound])

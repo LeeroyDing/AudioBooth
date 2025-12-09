@@ -55,7 +55,7 @@ public final class BooksService {
     if collapseSeries {
       query["collapseseries"] = "1"
     }
-    if let filter = filter {
+    if let filter {
       query["filter"] = filter
     }
 

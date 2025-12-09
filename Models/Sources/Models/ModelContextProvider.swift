@@ -16,7 +16,7 @@ public final class ModelContextProvider {
   }
 
   public var context: ModelContext {
-    if let serverID = activeServerID, let context = contexts[serverID] {
+    if let activeServerID, let context = contexts[activeServerID] {
       return context
     }
 

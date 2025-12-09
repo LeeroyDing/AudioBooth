@@ -328,7 +328,7 @@ final class BookPlayerModel: PlayerView.Model {
   }
 
   override func stop() {
-    if let timeObserver = timeObserver, let player = player {
+    if let timeObserver, let player {
       player.removeTimeObserver(timeObserver)
       self.timeObserver = nil
     }
@@ -403,7 +403,7 @@ final class BookPlayerModel: PlayerView.Model {
 
     if track.index != currentTrackIndex {
       loadTrack(track, seekTo: chapter.start)
-    } else if let player = player {
+    } else if let player {
       let trackStartTime = calculateTrackStartTime(trackIndex: track.index)
       let seekTime = chapter.start - trackStartTime
       player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
@@ -420,7 +420,7 @@ final class BookPlayerModel: PlayerView.Model {
 
   private func loadTrack(_ track: WatchTrack, seekTo globalTime: Double) {
     let trackURL: URL
-    if let localBook = localBook,
+    if let localBook,
       let localTrack = localBook.tracks.first(where: { $0.index == track.index }),
       let localURL = localBook.localURL(for: localTrack)
     {
@@ -639,7 +639,7 @@ final class BookPlayerModel: PlayerView.Model {
 
   @MainActor
   deinit {
-    if let timeObserver = timeObserver, let player = player {
+    if let timeObserver, let player {
       player.removeTimeObserver(timeObserver)
     }
     player?.pause()

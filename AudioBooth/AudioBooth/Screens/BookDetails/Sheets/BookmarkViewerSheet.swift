@@ -46,10 +46,10 @@ struct BookmarkViewerSheet: View {
           editingBookmark = nil
         }
         Button("Save") {
-          if let bookmark = editingBookmark {
-            bookmark.title = editTitle
-            model.onEditBookmark(bookmark)
-            editingBookmark = nil
+          if let editingBookmark {
+            editingBookmark.title = editTitle
+            model.onEditBookmark(editingBookmark)
+            self.editingBookmark = nil
           }
         }
       } message: {

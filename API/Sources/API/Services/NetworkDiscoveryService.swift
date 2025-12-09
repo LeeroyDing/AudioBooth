@@ -25,7 +25,7 @@ public final class NetworkDiscoveryService: @unchecked Sendable {
       }
 
       for await server in group {
-        if let server = server {
+        if let server {
           discoveredServers.append(server)
         }
       }

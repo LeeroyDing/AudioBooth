@@ -28,7 +28,7 @@ public final class AuthenticationService: ObservableObject {
 
   public private(set) var server: Server? {
     didSet {
-      if let server = server {
+      if let server {
         UserDefaults.standard.set(server.id, forKey: Keys.activeServerID)
       } else {
         UserDefaults.standard.removeObject(forKey: Keys.activeServerID)
@@ -46,7 +46,7 @@ public final class AuthenticationService: ObservableObject {
       return try? JSONDecoder().decode(User.Permissions.self, from: data)
     }
     set {
-      if let newValue = newValue {
+      if let newValue {
         guard let data = try? JSONEncoder().encode(newValue) else { return }
         UserDefaults.standard.set(data, forKey: Keys.permissions)
       } else {
@@ -335,7 +335,7 @@ public final class AuthenticationService: ObservableObject {
     customHeaders: [String: String],
     existingServerID: String?
   ) throws -> String {
-    if let existingServerID = existingServerID {
+    if let existingServerID {
       guard let existingServer = servers[existingServerID] else {
         throw Audiobookshelf.AudiobookshelfError.networkError("Server not found")
       }

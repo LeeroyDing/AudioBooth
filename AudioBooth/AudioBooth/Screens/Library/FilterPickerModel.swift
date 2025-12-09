@@ -29,8 +29,8 @@ final class FilterPickerModel: FilterPicker.Model {
   }
 
   override func onFilterChanged() {
-    if let filter = selectedFilter {
-      onFilterApplied(filter)
+    if let selectedFilter {
+      onFilterApplied(selectedFilter)
     } else {
       onFilterCleared()
     }
