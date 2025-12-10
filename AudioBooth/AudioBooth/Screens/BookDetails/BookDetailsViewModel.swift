@@ -3,8 +3,6 @@ import Combine
 import Foundation
 import Logging
 import Models
-import SafariServices
-import UIKit
 
 final class BookDetailsViewModel: BookDetailsView.Model {
   private var booksService: BooksService { Audiobookshelf.shared.books }
@@ -304,7 +302,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   override func onPlayTapped() {
     if let book {
       if book.mediaType == .ebook {
-        openEbookInSafari(book)
+        if let ebookURL = book.ebookURL {
+          self.ebookReader = EbookReaderViewModel(ebookURL: ebookURL)
+        } else {
+          Toast(error: "Ebook URL not available").show()
+        }
       } else if playerManager.current?.id == bookID {
         if let currentPlayer = playerManager.current as? BookPlayerModel {
           currentPlayer.onTogglePlaybackTapped()
@@ -324,20 +326,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       }
     } else {
       Toast(error: "Book not available").show()
-    }
-  }
-
-  private func openEbookInSafari(_ book: Book) {
-    guard let ebookURL = book.ebookURL else { return }
-
-    let safariViewController = SFSafariViewController(url: ebookURL)
-    safariViewController.modalPresentationStyle = .overFullScreen
-
-    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first,
-      let rootViewController = window.rootViewController
-    {
-      rootViewController.present(safariViewController, animated: true)
     }
   }
 
@@ -430,14 +418,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
     }
 
-    let safariViewController = SFSafariViewController(url: url)
-    safariViewController.modalPresentationStyle = .overFullScreen
-
-    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first,
-      let rootViewController = window.rootViewController
-    {
-      rootViewController.present(safariViewController, animated: true)
-    }
+    self.ebookReader = EbookReaderViewModel(ebookURL: url)
   }
 }

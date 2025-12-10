@@ -12,7 +12,6 @@ struct BookDetailsView: View {
   @State private var collectionSelector: CollectionMode?
   @State private var selectedTabIndex: Int = 0
   @State private var isDescriptionExpanded: Bool = false
-
   private enum CoordinateSpaces {
     case scrollView
   }
@@ -23,6 +22,11 @@ struct BookDetailsView: View {
         landscapeLayout
       } else {
         portraitLayout
+      }
+    }
+    .fullScreenCover(item: $model.ebookReader) { model in
+      NavigationStack {
+        EbookReaderView(model: model)
       }
     }
     .overlay {
@@ -726,6 +730,7 @@ extension BookDetailsView {
     var canManageCollections: Bool
     var bookmarks: BookmarkViewerSheet.Model?
     var ereaderDevices: [String]
+    var ebookReader: EbookReaderView.Model?
 
     var tabs: [ContentTab]
 
@@ -761,6 +766,7 @@ extension BookDetailsView {
       canManageCollections: Bool = false,
       bookmarks: BookmarkViewerSheet.Model? = nil,
       ereaderDevices: [String] = [],
+      ebookReader: EbookReaderView.Model? = nil,
       tabs: [ContentTab]
     ) {
       self.bookID = bookID
@@ -785,6 +791,7 @@ extension BookDetailsView {
       self.canManageCollections = canManageCollections
       self.bookmarks = bookmarks
       self.ereaderDevices = ereaderDevices
+      self.ebookReader = ebookReader
       self.tabs = tabs
     }
   }
