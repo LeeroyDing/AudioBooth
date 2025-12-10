@@ -59,13 +59,12 @@ struct EbookReaderView: View {
     VStack(spacing: 16) {
       ProgressView()
         .scaleEffect(1.5)
-        .tint(.white)
+        .tint(.primary)
       Text("Loading ebook...")
         .font(.headline)
-        .foregroundColor(.white.opacity(0.9))
+        .foregroundColor(.primary.opacity(0.9))
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.black)
   }
 
   private func errorView(_ error: String) -> some View {
@@ -80,7 +79,6 @@ struct EbookReaderView: View {
       .buttonStyle(.borderedProminent)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.black)
   }
 
   private func readerView(_ viewController: UIViewController) -> some View {

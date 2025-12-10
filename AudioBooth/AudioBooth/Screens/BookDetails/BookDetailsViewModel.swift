@@ -3,6 +3,8 @@ import Combine
 import Foundation
 import Logging
 import Models
+import SafariServices
+import UIKit
 
 final class BookDetailsViewModel: BookDetailsView.Model {
   private var booksService: BooksService { Audiobookshelf.shared.books }
@@ -426,5 +428,21 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
 
     ebookReader = EbookReaderViewModel(source: .remote(url), bookID: nil)
+  }
+}
+
+extension BookDetailsViewModel {
+  private func openEbookInSafari(_ book: Book) {
+    guard let ebookURL = book.ebookURL else { return }
+
+    let safariViewController = SFSafariViewController(url: ebookURL)
+    safariViewController.modalPresentationStyle = .overFullScreen
+
+    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+      let window = windowScene.windows.first,
+      let rootViewController = window.rootViewController
+    {
+      rootViewController.present(safariViewController, animated: true)
+    }
   }
 }

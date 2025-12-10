@@ -205,21 +205,34 @@ struct BookDetailsView: View {
         LazyImage(url: model.coverURL) { state in
           state.image?
             .resizable()
-            .scaledToFill()
+            .aspectRatio(1, contentMode: .fill)
             .blur(radius: 5)
             .opacity(0.3)
         }
 
-        CoverImage(url: model.coverURL)
-          .frame(width: 250, height: 250)
-          .overlay(alignment: .bottom) {
-            if let progress = model.progress, progress > 0 {
-              progressBar(progress)
-            }
+        LazyImage(url: model.coverURL) { state in
+          if let image = state.image {
+            image
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+          } else {
+            Color.gray.opacity(0.3)
+              .overlay {
+                Image(systemName: "book.closed")
+                  .foregroundColor(.gray)
+                  .font(.title2)
+              }
           }
-          .clipShape(RoundedRectangle(cornerRadius: 12))
-          .shadow(radius: 4)
-          .padding(24)
+        }
+        .overlay(alignment: .bottom) {
+          if let progress = model.progress, progress > 0 {
+            progressBar(progress)
+          }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(radius: 4)
+        .frame(width: 250, height: 250)
+        .padding(24)
       }
     }
   }
