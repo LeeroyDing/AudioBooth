@@ -85,84 +85,74 @@ struct TimerPickerSheet: View {
       return false
     }()
 
-    Button(action: {
-      isCustomExpended = true
-      model.selected = .custom(TimeInterval(model.customHours * 3600 + model.customMinutes * 60))
-    }) {
-      VStack {
-        if isCustomExpended {
-          VStack(spacing: 16) {
-            VStack(spacing: 16) {
-              HStack {
-                Text("Custom time")
-                  .font(.system(size: 16, weight: .medium))
-                  .foregroundColor(.primary)
-                Spacer()
-                Text(formatCustomTime(hours: model.customHours, minutes: model.customMinutes))
-                  .font(.system(size: 16, weight: .medium))
-                  .foregroundColor(.secondary)
-              }
+    VStack(spacing: 0) {
+      Button(action: {
+        isCustomExpended = true
+        model.selected = .custom(TimeInterval(model.customHours * 3600 + model.customMinutes * 60))
+      }) {
+        HStack {
+          Text("Custom time")
+            .font(.system(size: 16, weight: .medium))
+            .foregroundColor(.primary)
+          Spacer()
+          Text(formatCustomTime(hours: model.customHours, minutes: model.customMinutes))
+            .font(.system(size: 16, weight: .medium))
+            .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 8)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
 
-              HStack {
-                HStack {
-                  Picker("", selection: $model.customHours) {
-                    ForEach(0..<24, id: \.self) { i in
-                      Text("\(i)").tag(i)
-                    }
-                  }
-                  .pickerStyle(WheelPickerStyle())
-                  .onChange(of: model.customHours) { oldValue, newValue in
-                    if oldValue == 0 && newValue > 0 && model.customMinutes == 0 {
-                      model.customMinutes = 1
-                    } else if oldValue > 0 && newValue == 0 && model.customMinutes == 0 {
-                      model.customMinutes = 1
-                    }
-                  }
-
-                  Text(model.customHours == 1 ? "hour" : "hours")
-                    .font(.system(size: 16))
-                    .foregroundColor(.primary)
-                }
-
-                HStack {
-                  Picker("", selection: $model.customMinutes) {
-                    let range = model.customHours > 0 ? 0..<60 : 1..<60
-                    ForEach(range, id: \.self) { i in
-                      Text("\(i)").tag(i)
-                    }
-                  }
-                  .pickerStyle(WheelPickerStyle())
-
-                  Text(model.customMinutes == 1 ? "min" : "mins")
-                    .font(.system(size: 16))
-                    .foregroundColor(.primary)
+      if isCustomExpended {
+        VStack(spacing: 16) {
+          HStack {
+            HStack {
+              Picker("Hours", selection: $model.customHours) {
+                ForEach(0..<24, id: \.self) { i in
+                  Text("\(i)").tag(i)
                 }
               }
-              .padding(.horizontal, 10)
-              .frame(height: 120)
+              .pickerStyle(WheelPickerStyle())
+              .onChange(of: model.customHours) { oldValue, newValue in
+                if oldValue == 0 && newValue > 0 && model.customMinutes == 0 {
+                  model.customMinutes = 1
+                } else if oldValue > 0 && newValue == 0 && model.customMinutes == 0 {
+                  model.customMinutes = 1
+                }
+              }
+
+              Text(model.customHours == 1 ? "hour" : "hours")
+                .font(.system(size: 16))
+                .foregroundColor(.primary)
+            }
+
+            HStack {
+              Picker("Minutes", selection: $model.customMinutes) {
+                let range = model.customHours > 0 ? 0..<60 : 1..<60
+                ForEach(range, id: \.self) { i in
+                  Text("\(i)").tag(i)
+                }
+              }
+              .pickerStyle(WheelPickerStyle())
+
+              Text(model.customMinutes == 1 ? "min" : "mins")
+                .font(.system(size: 16))
+                .foregroundColor(.primary)
             }
           }
-        } else {
-          HStack {
-            Text("Custom time")
-              .font(.system(size: 16, weight: .medium))
-              .foregroundColor(.primary)
-            Spacer()
-            Text(formatCustomTime(hours: model.customHours, minutes: model.customMinutes))
-              .font(.system(size: 16, weight: .medium))
-              .foregroundColor(.secondary)
-          }
+          .padding(.horizontal, 10)
+          .frame(height: 120)
         }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 8)
       }
-      .padding(.vertical, 12)
-      .padding(.horizontal, 8)
-      .overlay {
-        RoundedRectangle(cornerRadius: 8)
-          .stroke(isSelected ? .blue : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
-      }
-      .contentShape(Rectangle())
     }
-    .buttonStyle(.plain)
+    .overlay {
+      RoundedRectangle(cornerRadius: 8)
+        .stroke(isSelected ? .blue : .primary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+    }
     .padding(.horizontal, 20)
     .animation(.easeInOut(duration: 0.3), value: isSelected)
     .onChange(of: [model.customHours, model.customMinutes]) { old, new in
