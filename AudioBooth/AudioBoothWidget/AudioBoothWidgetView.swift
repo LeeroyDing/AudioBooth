@@ -38,6 +38,7 @@ struct AudioBoothWidgetView: View {
       if let coverImage = entry.coverImage {
         Image(uiImage: coverImage)
           .resizable()
+          .widgetAccentedRenderingMode(.desaturated)
           .aspectRatio(contentMode: .fill)
           .frame(width: 70, height: 70)
           .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -78,6 +79,7 @@ struct AudioBoothWidgetView: View {
       if let coverImage = entry.coverImage {
         Image(uiImage: coverImage)
           .resizable()
+          .widgetAccentedRenderingMode(.desaturated)
           .aspectRatio(contentMode: .fill)
           .frame(width: 120, height: 120)
           .clipShape(RoundedRectangle(cornerRadius: 12))

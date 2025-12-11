@@ -1277,8 +1277,8 @@ extension BookPlayerModel {
       title: item.title,
       author: item.authorNames,
       coverURL: item.coverURL,
-      currentTime: playbackProgress.total - playbackProgress.totalTimeRemaining,
-      duration: playbackProgress.total,
+      currentTime: mediaProgress.currentTime,
+      duration: mediaProgress.duration,
       isPlaying: isPlaying
     )
 
