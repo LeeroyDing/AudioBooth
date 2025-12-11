@@ -58,6 +58,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("collapseSeriesInLibrary")
   var collapseSeriesInLibrary: Bool = false
 
+  @AppStorage("groupSeriesInOffline")
+  var groupSeriesInOffline: Bool = false
+
   @AppStorage("librarySortBy")
   var librarySortBy: BooksService.SortBy = .title
 

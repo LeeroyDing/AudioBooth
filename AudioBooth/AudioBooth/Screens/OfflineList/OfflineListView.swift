@@ -34,6 +34,18 @@ struct OfflineListView: View {
     .searchable(text: $model.searchText, prompt: "Filter books")
     .toolbar {
       ToolbarItem(placement: .navigationBarTrailing) {
+        Button {
+          model.onGroupSeriesToggled()
+        } label: {
+          Image(systemName: model.isGroupedBySeries ? "rectangle.stack.fill" : "rectangle.stack")
+        }
+      }
+
+      if #available(iOS 26.0, *) {
+        ToolbarSpacer(.fixed, placement: .navigationBarTrailing)
+      }
+
+      ToolbarItem(placement: .navigationBarTrailing) {
         Button(model.editMode == .active ? "Done" : "Select") {
           model.onEditModeTapped()
         }
@@ -91,14 +103,59 @@ struct OfflineListView: View {
 
   private var content: some View {
     List {
-      ForEach(model.books) { book in
-        bookRow(book)
+      ForEach(model.items) { item in
+        switch item {
+        case .book(let bookModel):
+          bookRow(bookModel)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+
+        case .series(let group):
+          DisclosureGroup {
+            ForEach(group.books) { seriesBook in
+              bookRow(seriesBook.book, sequence: seriesBook.sequence)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+            }
+          } label: {
+            HStack(spacing: 12) {
+              if let coverURL = group.coverURL {
+                CoverImage(url: coverURL)
+                  .frame(width: 60, height: 60)
+                  .clipShape(RoundedRectangle(cornerRadius: 6))
+                  .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                      .stroke(.gray.opacity(0.3), lineWidth: 1)
+                  )
+              }
+
+              VStack(alignment: .leading, spacing: 4) {
+                Text(group.name)
+                  .font(.subheadline)
+                  .fontWeight(.medium)
+                  .foregroundColor(.primary)
+
+                Text("^[\(group.books.count) book](inflect: true)")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+              }
+            }
+            .padding(.vertical, 8)
+          }
+          .listRowBackground(Color.clear)
+        }
       }
-      .onMove { from, to in
-        model.onReorder(from: from, to: to)
-      }
+      .onMove(
+        perform: model.isGroupedBySeries
+          ? nil
+          : { from, to in
+            model.onReorder(from: from, to: to)
+          }
+      )
       .onDelete(
-        perform: model.editMode == .active
+        perform: model.editMode == .active || model.isGroupedBySeries
           ? nil
           : { indexSet in
             model.onDelete(at: indexSet)
@@ -110,7 +167,7 @@ struct OfflineListView: View {
   }
 
   @ViewBuilder
-  private func bookRow(_ book: BookCard.Model) -> some View {
+  private func bookRow(_ book: BookCard.Model, sequence: String? = nil) -> some View {
     if model.editMode == .active {
       HStack(spacing: 12) {
         Button {
@@ -124,11 +181,11 @@ struct OfflineListView: View {
         }
         .buttonStyle(.plain)
 
-        Row(book: book)
+        Row(book: book, sequence: sequence)
       }
     } else {
       NavigationLink(value: NavigationDestination.book(id: book.id)) {
-        Row(book: book)
+        Row(book: book, sequence: sequence)
       }
       .buttonStyle(.plain)
     }
@@ -138,45 +195,31 @@ struct OfflineListView: View {
 extension OfflineListView {
   struct Row: View {
     let book: BookCard.Model
+    let sequence: String?
 
     var body: some View {
       HStack(spacing: 12) {
-        CoverImage(url: book.coverURL)
-          .overlay(alignment: .bottom) { progressBar }
-          .frame(width: 60, height: 60)
-          .clipShape(RoundedRectangle(cornerRadius: 6))
-          .overlay(
-            RoundedRectangle(cornerRadius: 6)
-              .stroke(.gray.opacity(0.3), lineWidth: 1)
-          )
+        cover
 
         VStack(alignment: .leading, spacing: 6) {
           Text(book.title)
-            .font(.body)
+            .font(.caption)
+            .foregroundColor(.primary)
             .fontWeight(.medium)
-            .lineLimit(2)
+            .lineLimit(1)
+            .allowsTightening(true)
 
           if let author = book.author {
-            HStack(spacing: 4) {
-              Image(systemName: "pencil")
-                .font(.caption2)
-              Text(author)
-                .font(.caption)
-            }
-            .foregroundColor(.secondary)
-            .lineLimit(1)
+            rowMetadata(icon: "pencil", value: author)
           }
 
-          if let narrator = book.narrator {
-            HStack(spacing: 4) {
-              Image(systemName: "person.wave.2.fill")
-                .font(.caption2)
-              Text(narrator)
-                .font(.caption)
-            }
-            .foregroundColor(.secondary)
-            .lineLimit(1)
+          if let sequence = sequence {
+            rowMetadata(icon: "number", value: sequence)
+          } else if let narrator = book.narrator, !narrator.isEmpty {
+            rowMetadata(icon: "person.wave.2.fill", value: narrator)
           }
+
+          Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -186,9 +229,31 @@ extension OfflineListView {
             .foregroundColor(.secondary)
         }
       }
-      .padding(.vertical, 4)
       .contentShape(Rectangle())
       .onAppear(perform: book.onAppear)
+    }
+
+    var cover: some View {
+      CoverImage(url: book.coverURL)
+        .overlay(alignment: .bottom) { progressBar }
+        .frame(width: 60, height: 60)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .overlay(
+          RoundedRectangle(cornerRadius: 6)
+            .stroke(.gray.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    func rowMetadata(icon: String, value: String) -> some View {
+      HStack(spacing: 4) {
+        Image(systemName: icon)
+          .font(.caption2)
+          .foregroundColor(.secondary)
+        Text(value)
+          .font(.caption2)
+          .foregroundColor(.primary)
+      }
+      .lineLimit(1)
     }
 
     @ViewBuilder
@@ -207,15 +272,47 @@ extension OfflineListView {
   }
 }
 
+enum OfflineListItem: Identifiable {
+  case book(BookCard.Model)
+  case series(SeriesGroup)
+
+  var id: String {
+    switch self {
+    case .book(let model): return model.id
+    case .series(let group): return group.id
+    }
+  }
+}
+
+struct SeriesBookItem: Identifiable {
+  let book: BookCard.Model
+  let sequence: String
+
+  var id: String { book.id }
+}
+
+struct SeriesGroup: Identifiable {
+  let id: String
+  let name: String
+  let books: [SeriesBookItem]
+  let coverURL: URL?
+
+  var displayName: String {
+    "\(name) (\(books.count) \(books.count == 1 ? "book" : "books"))"
+  }
+}
+
 extension OfflineListView {
   @Observable
   class Model: ObservableObject {
     var books: [BookCard.Model]
+    var items: [OfflineListItem]
     var isLoading: Bool
     var isPerformingBatchAction: Bool
     var editMode: EditMode
     var selectedBookIDs: Set<String>
     var searchText: String
+    var isGroupedBySeries: Bool
 
     func onAppear() {}
     func onEditModeTapped() {}
@@ -226,21 +323,26 @@ extension OfflineListView {
     func onSelectAllTapped() {}
     func onReorder(from: IndexSet, to: Int) {}
     func onDelete(at: IndexSet) {}
+    func onGroupSeriesToggled() {}
 
     init(
       books: [BookCard.Model] = [],
+      items: [OfflineListItem] = [],
       isLoading: Bool = false,
       isPerformingBatchAction: Bool = false,
       editMode: EditMode = .inactive,
       selectedBookIDs: Set<String> = [],
-      searchText: String = ""
+      searchText: String = "",
+      isGroupedBySeries: Bool = false
     ) {
       self.books = books
+      self.items = items
       self.isLoading = isLoading
       self.isPerformingBatchAction = isPerformingBatchAction
       self.editMode = editMode
       self.selectedBookIDs = selectedBookIDs
       self.searchText = searchText
+      self.isGroupedBySeries = isGroupedBySeries
     }
   }
 }

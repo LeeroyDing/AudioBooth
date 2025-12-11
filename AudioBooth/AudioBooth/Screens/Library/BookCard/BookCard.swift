@@ -100,11 +100,11 @@ struct BookCard: View {
             .font(.caption2)
             .foregroundColor(.secondary)
             .lineLimit(1)
-        } else if let narrator = model.narrator {
+        } else if let narrator = model.narrator, !narrator.isEmpty {
           rowMetadata(icon: "person.wave.2.fill", value: narrator)
         }
 
-        Spacer()
+        Spacer(minLength: 0)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 

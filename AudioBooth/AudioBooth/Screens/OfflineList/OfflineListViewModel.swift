@@ -12,9 +12,12 @@ final class OfflineListViewModel: OfflineListView.Model {
   private var filteredBooks: [LocalBook] = []
   private var booksObservation: Task<Void, Never>?
   private var isReordering = false
+  private var groupingEnabled: Bool = false
 
   init() {
     super.init()
+    groupingEnabled = UserPreferences.shared.groupSeriesInOffline
+    isGroupedBySeries = groupingEnabled
   }
 
   override func onAppear() {
@@ -99,6 +102,13 @@ final class OfflineListViewModel: OfflineListView.Model {
     }
   }
 
+  override func onGroupSeriesToggled() {
+    groupingEnabled.toggle()
+    isGroupedBySeries = groupingEnabled
+    UserPreferences.shared.groupSeriesInOffline = groupingEnabled
+    updateDisplayedBooks()
+  }
+
   private func setupBooksObservation() {
     booksObservation = Task { [weak self] in
       for await books in LocalBook.observeAll() {
@@ -116,18 +126,78 @@ final class OfflineListViewModel: OfflineListView.Model {
     }
   }
 
+  private func buildDisplayItems(from localBooks: [LocalBook]) -> [OfflineListItem] {
+    guard groupingEnabled else {
+      return localBooks.map { .book(BookCardModel($0)) }
+    }
+
+    var seriesGroups: [String: (seriesID: String, seriesName: String, books: [LocalBook])] = [:]
+    var booksWithoutSeries: [LocalBook] = []
+
+    for book in localBooks {
+      if let firstSeries = book.series.first {
+        let key = firstSeries.id
+        if seriesGroups[key] == nil {
+          seriesGroups[key] = (firstSeries.id, firstSeries.name, [])
+        }
+        seriesGroups[key]?.books.append(book)
+      } else {
+        booksWithoutSeries.append(book)
+      }
+    }
+
+    var displayItems: [OfflineListItem] = []
+
+    let sortedGroups = seriesGroups.sorted { $0.value.seriesName < $1.value.seriesName }
+
+    for (_, groupData) in sortedGroups {
+      let sortedBooks = groupData.books.sorted { book1, book2 in
+        let seq1 = Double(book1.series.first?.sequence ?? "0") ?? 0
+        let seq2 = Double(book2.series.first?.sequence ?? "0") ?? 0
+        return seq1 < seq2
+      }
+
+      let seriesBooks = sortedBooks.map { localBook in
+        SeriesBookItem(
+          book: BookCardModel(localBook),
+          sequence: localBook.series.first?.sequence ?? ""
+        )
+      }
+
+      let coverURL = sortedBooks.first?.coverURL
+
+      let group = SeriesGroup(
+        id: groupData.seriesID,
+        name: groupData.seriesName,
+        books: seriesBooks,
+        coverURL: coverURL
+      )
+
+      displayItems.append(.series(group))
+    }
+
+    for book in booksWithoutSeries {
+      displayItems.append(.book(BookCardModel(book)))
+    }
+
+    return displayItems
+  }
+
   private func updateDisplayedBooks() {
     let searchTerm = searchText.lowercased().trimmingCharacters(in: .whitespaces)
 
+    let booksToDisplay: [LocalBook]
     if searchTerm.isEmpty {
-      books = filteredBooks.map { BookCardModel($0) }
+      booksToDisplay = filteredBooks
     } else {
-      let filtered = filteredBooks.filter { book in
+      booksToDisplay = filteredBooks.filter { book in
         book.title.lowercased().contains(searchTerm)
           || book.authorNames.lowercased().contains(searchTerm)
       }
-      books = filtered.map { BookCardModel($0) }
     }
+
+    items = buildDisplayItems(from: booksToDisplay)
+    books = booksToDisplay.map { BookCardModel($0) }
   }
 
   private func saveDisplayOrder() async {
