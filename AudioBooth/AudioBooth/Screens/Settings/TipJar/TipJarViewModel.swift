@@ -35,6 +35,8 @@ final class TipJarViewModel: TipJarView.Model {
 
         tips = packages.map { package in
           var title = package.storeProduct.localizedTitle
+          var price = package.localizedPriceString
+
           switch package.identifier {
           case "tip_small":
             title += " ☕"
@@ -42,6 +44,8 @@ final class TipJarViewModel: TipJarView.Model {
             title += " 🍕"
           case "tip_large":
             title += " 🍱"
+          case "$rc_monthly":
+            price += "/mo"
           default:
             break
           }
@@ -50,7 +54,7 @@ final class TipJarViewModel: TipJarView.Model {
             id: package.identifier,
             title: title,
             description: package.storeProduct.localizedDescription,
-            price: package.localizedPriceString
+            price: price
           )
         }
       } catch {

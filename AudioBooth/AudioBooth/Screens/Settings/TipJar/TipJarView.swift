@@ -9,41 +9,82 @@ struct TipJarView: View {
   var body: some View {
     if !model.tips.isEmpty {
       Section {
-        VStack(spacing: 16) {
-          HStack(spacing: 12) {
-            ForEach(model.tips) { tip in
-              Button(action: { model.onTipSelected(tip) }) {
-                VStack(spacing: 8) {
-                  Text(tip.title)
-                    .font(.callout)
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.center)
+        VStack(spacing: 12) {
+          ForEach(model.subscriptionTips) { tip in
+            Button(action: { model.onTipSelected(tip) }) {
+              HStack(spacing: 12) {
+                Image(systemName: "heart")
+                  .font(.system(size: 28))
+                  .foregroundStyle(.pink)
 
-                  Text(tip.price)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.primary)
+                Text(tip.description)
+                  .font(.footnote)
+                  .foregroundStyle(.primary)
+                  .frame(maxWidth: .infinity, alignment: .leading)
 
-                  Text(tip.description)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.vertical, 20)
-                .padding(.horizontal, 8)
-                .background(
-                  RoundedRectangle(cornerRadius: 22)
-                    .fill(Color(.systemBackground))
-                )
-                .overlay(
-                  RoundedRectangle(cornerRadius: 22)
-                    .strokeBorder(Color(.systemGray5), lineWidth: 1)
-                )
+                Text(tip.price)
+                  .font(.headline)
+                  .fontWeight(.semibold)
+                  .foregroundStyle(.primary)
               }
-              .buttonStyle(.plain)
-              .allowsHitTesting(model.isPurchasing == nil)
-              .opacity([nil, tip.id].contains(model.isPurchasing) ? 1.0 : 0.4)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 20)
+              .padding(.horizontal, 20)
+              .background(
+                RoundedRectangle(cornerRadius: 20)
+                  .fill(.pink.opacity(0.05))
+              )
+              .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                  .strokeBorder(
+                    .pink.opacity(0.3),
+                    lineWidth: 2
+                  )
+              )
+            }
+            .buttonStyle(.plain)
+            .allowsHitTesting(model.isPurchasing == nil)
+            .opacity([nil, tip.id].contains(model.isPurchasing) ? 1.0 : 0.4)
+          }
+
+          if !model.oneTimeTips.isEmpty {
+            HStack(spacing: 12) {
+              ForEach(model.oneTimeTips) { tip in
+                Button(action: { model.onTipSelected(tip) }) {
+                  VStack(spacing: 8) {
+                    Text(tip.title)
+                      .font(.callout)
+                      .allowsTightening(true)
+                      .foregroundStyle(.primary)
+                      .multilineTextAlignment(.center)
+                      .fixedSize(horizontal: false, vertical: true)
+
+                    Text(tip.price)
+                      .font(.title2)
+                      .fontWeight(.bold)
+                      .foregroundStyle(.primary)
+
+                    Text(tip.description)
+                      .font(.caption2)
+                      .foregroundStyle(.secondary)
+                      .multilineTextAlignment(.center)
+                  }
+                  .frame(maxWidth: .infinity, maxHeight: .infinity)
+                  .padding(.vertical, 20)
+                  .padding(.horizontal, 8)
+                  .background(
+                    RoundedRectangle(cornerRadius: 22)
+                      .fill(Color(.systemBackground))
+                  )
+                  .overlay(
+                    RoundedRectangle(cornerRadius: 22)
+                      .strokeBorder(Color(.systemGray5), lineWidth: 2)
+                  )
+                }
+                .buttonStyle(.plain)
+                .allowsHitTesting(model.isPurchasing == nil)
+                .opacity([nil, tip.id].contains(model.isPurchasing) ? 1.0 : 0.4)
+              }
             }
           }
 
@@ -61,7 +102,7 @@ struct TipJarView: View {
           }
         }
       } header: {
-        Text("Support Development")
+        Text("Sponsor")
           .padding(.horizontal)
       } footer: {
         if model.isSandbox {
@@ -95,6 +136,14 @@ extension TipJarView {
     var isPurchasing: String?
     var lastPurchaseSuccess: Bool
     var isSandbox: Bool
+
+    var subscriptionTips: [Tip] {
+      tips.filter { $0.id.hasPrefix("$rc_") }
+    }
+
+    var oneTimeTips: [Tip] {
+      tips.filter { !$0.id.hasPrefix("$rc_") }
+    }
 
     func onTipSelected(_ tip: Tip) {}
 

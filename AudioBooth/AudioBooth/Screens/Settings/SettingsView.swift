@@ -50,6 +50,42 @@ struct SettingsView: View {
 
         TipJarView(model: model.tipJar)
 
+        Section("Support") {
+          Link(destination: URL(string: "https://github.com/AudioBooth/AudioBooth/issues")!) {
+            HStack {
+              Image(systemName: "questionmark.bubble")
+              Text("Help & Feedback")
+              Spacer()
+              Image(systemName: "arrow.up.forward")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+
+          Link(destination: URL(string: "https://discord.gg/D2BgqfBVCJ")!) {
+            HStack {
+              Image(systemName: "bubble.left.and.bubble.right")
+              Text("Join our Discord")
+              Spacer()
+              Image(systemName: "arrow.up.forward")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+
+          Link(destination: URL(string: "mailto:AudioBooth@proton.me")!) {
+            HStack {
+              Image(systemName: "envelope")
+              Text("Email Support")
+              Spacer()
+              Image(systemName: "arrow.up.forward")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+          }
+        }
+        .tint(.primary)
+
         debug
 
         Section {

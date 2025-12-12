@@ -20,8 +20,8 @@
       "internalID" : "6753634954",
       "localizations" : [
         {
-          "description" : "You‘re amazing! Thank you!",
-          "displayName" : "Buy Me Dinner",
+          "description" : "Large tip to thank and support the developer.",
+          "displayName" : "Large Tip",
           "locale" : "en_US"
         }
       ],
@@ -35,8 +35,8 @@
       "internalID" : "6753635438",
       "localizations" : [
         {
-          "description" : "Your support helps a lot!",
-          "displayName" : "Buy Me Lunch",
+          "description" : "Medium tip to thank and support the developer.",
+          "displayName" : "Medium Tip",
           "locale" : "en_US"
         }
       ],
@@ -50,8 +50,8 @@
       "internalID" : "6753635437",
       "localizations" : [
         {
-          "description" : "A great way to say thanks!",
-          "displayName" : "Buy Me a Coffee",
+          "description" : "Small tip to thank and support the developer.",
+          "displayName" : "Small Tip",
           "locale" : "en_US"
         }
       ],
@@ -68,7 +68,7 @@
     "_developerTeamID" : "7MM2M9KD2W",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 781479886.50441098,
+    "_lastSynchronizedDate" : 787262493.23129201,
     "_locale" : "en_US",
     "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",
@@ -78,7 +78,43 @@
     "_timeRate" : 0
   },
   "subscriptionGroups" : [
+    {
+      "id" : "21858308",
+      "localizations" : [
 
+      ],
+      "name" : "Sponsor",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "0.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6756503199",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Help sustain AudioBooth with monthly support",
+              "displayName" : "Supporter",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "me.jgrenier.AudioBS.supporter",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Supporter",
+          "subscriptionGroupID" : "21858308",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
   ],
   "version" : {
     "major" : 4,
