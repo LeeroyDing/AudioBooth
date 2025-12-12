@@ -275,6 +275,12 @@ extension HomePageModel {
       )
       try? Bookmark.syncFromAPI(userData: data.user)
 
+      let version = data.serverSettings.version
+      if version.compare("2.22.0", options: .numeric) == .orderedAscending {
+        error =
+          "Some features may be limited on server version \(version). For the best experience, please update your server."
+      }
+
       let personalized = try await Audiobookshelf.shared.libraries.fetchPersonalized()
       processSections(personalized.sections)
     } catch {

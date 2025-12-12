@@ -48,6 +48,21 @@ struct HomePage: View {
   var content: some View {
     ScrollView {
       VStack(spacing: 24) {
+        if let error = model.error {
+          Text(error)
+            .font(.subheadline)
+            .multilineTextAlignment(.leading)
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .center)
+            .background(.red.opacity(0.3))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay {
+              RoundedRectangle(cornerRadius: 12)
+                .stroke(.red.opacity(0.5), lineWidth: 2)
+            }
+            .padding(.horizontal)
+        }
+
         ForEach(model.sections, id: \.id) { section in
           sectionContent(section)
         }
@@ -95,9 +110,7 @@ struct HomePage: View {
       ServerListPage(model: ServerListModel())
     }
     .onAppear {
-      if !Audiobookshelf.shared.isAuthenticated {
-        showingServerPicker = true
-      } else if libraries.current == nil {
+      if !authentication.isAuthenticated || libraries.current == nil {
         showingServerPicker = true
       }
       model.onAppear()
@@ -252,6 +265,8 @@ extension HomePage {
     var isRoot: Bool
     var title: String
 
+    var error: String?
+
     struct Section {
       let id: String
       let title: String
@@ -284,11 +299,13 @@ extension HomePage {
       isLoading: Bool = false,
       isRoot: Bool = true,
       title: String = "Home",
+      error: String? = nil,
       sections: [Section] = []
     ) {
       self.isLoading = isLoading
       self.isRoot = isRoot
       self.title = title
+      self.error = error
       self.sections = sections
     }
   }
@@ -314,6 +331,8 @@ extension HomePage.Model {
     ]
 
     return HomePage.Model(
+      error:
+        "Some features may be limited on server version 2.20.0. For the best experience, please update your server.",
       sections: [
         Section(
           id: "continue-listening",
