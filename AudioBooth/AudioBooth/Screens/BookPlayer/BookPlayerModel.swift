@@ -139,6 +139,8 @@ final class BookPlayerModel: BookPlayer.Model {
           AppLogger.player.error("Failed to recreate session: \(error)")
         }
       }
+    } else {
+      applySmartRewind()
     }
 
     player.play()
@@ -250,6 +252,11 @@ extension BookPlayerModel {
 
     let newTime = max(0, mediaProgress.currentTime - smartRewindInterval)
     mediaProgress.currentTime = newTime
+
+    if let player {
+      let seekTime = CMTime(seconds: newTime, preferredTimescale: 1000)
+      player.seek(to: seekTime)
+    }
 
     AppLogger.player.info(
       "Smart rewind applied: rewound \(Int(smartRewindInterval))s after \(Int(timeSinceLastPlayed / 60)) minutes of pause"
