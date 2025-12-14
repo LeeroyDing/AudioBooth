@@ -66,10 +66,9 @@ extension Book {
   public struct LibraryFile: Codable, Sendable {
     public let ino: String
     public let metadata: Metadata
-    public let isSupplementary: Bool?
     public let addedAt: Date
     public let updatedAt: Date
-    public let fileType: String
+    public let fileType: FileType
 
     public struct Metadata: Codable, Sendable {
       public let filename: String
@@ -188,5 +187,22 @@ extension Book {
     public let sequence: String?
     public let numBooks: Int
     public let libraryItemIds: [String]
+  }
+}
+
+extension Book.LibraryFile {
+  public enum FileType: String, Codable, Sendable {
+    case image
+    case audio
+    case ebook
+    case text
+    case metadata
+    case unknown
+
+    public init(from decoder: Decoder) throws {
+      let container = try decoder.singleValueContainer()
+      let raw = try container.decode(RawValue.self)
+      self = Self(rawValue: raw) ?? .unknown
+    }
   }
 }

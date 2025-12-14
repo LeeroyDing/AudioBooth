@@ -114,6 +114,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
   }
 
   private func updateContext(_ context: [String: Any]) {
+    guard session?.isReachable == true else { return }
     do {
       try session?.updateApplicationContext(context)
     } catch {

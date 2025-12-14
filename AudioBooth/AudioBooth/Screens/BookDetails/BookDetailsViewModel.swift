@@ -111,7 +111,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       let narrators = book.media.metadata.narrators ?? []
 
       let ebooks = book.libraryFiles?
-        .filter { $0.isSupplementary == true && $0.fileType == "ebook" }
+        .filter { $0.fileType == .ebook }
         .map { libraryFile in
           BookDetailsView.Model.SupplementaryEbook(
             filename: libraryFile.metadata.filename,
