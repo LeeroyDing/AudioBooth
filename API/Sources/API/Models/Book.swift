@@ -58,7 +58,13 @@ extension Book {
   }
 
   public var mediaType: MediaType {
-    (tracks?.count ?? 0) > 0 ? .audiobook : .ebook
+    if let numTracks = media.numTracks ?? tracks?.count, numTracks > 0 {
+      return .audiobook
+    } else if duration > 0 {
+      return .audiobook
+    } else {
+      return .ebook
+    }
   }
 }
 
@@ -84,6 +90,7 @@ extension Book {
     public let metadata: Metadata
     public let duration: Double?
     public let size: Int64?
+    public let numTracks: Int?
     public let chapters: [Chapter]?
     public let tracks: [Track]?
     public let tags: [String]?
