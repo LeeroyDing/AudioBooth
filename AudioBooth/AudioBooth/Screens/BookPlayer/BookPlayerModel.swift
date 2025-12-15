@@ -13,7 +13,9 @@ import WidgetKit
 
 final class BookPlayerModel: BookPlayer.Model {
   private let audiobookshelf = Audiobookshelf.shared
+  private let playerManager = PlayerManager.shared
   private let sessionManager = SessionManager.shared
+  private let userPreferences = UserPreferences.shared
 
   private let audioSession = AVAudioSession.sharedInstance()
   private var player: AVPlayer?
@@ -32,7 +34,7 @@ final class BookPlayerModel: BookPlayer.Model {
   private let downloadManager = DownloadManager.shared
   private let watchConnectivity = WatchConnectivityManager.shared
 
-  private var cover: UIImage?
+  private var artwork: MPMediaItemArtwork?
   private var nowPlayingInfo: [String: Any] = [:]
 
   private var recoveryAttempts = 0
@@ -108,7 +110,7 @@ final class BookPlayerModel: BookPlayer.Model {
   }
 
   override func onPlayTapped() {
-    if UserPreferences.shared.shakeToExtendTimer,
+    if userPreferences.shakeToExtendTimer,
       let timer = timer as? TimerPickerSheetViewModel,
       let completedAlert = timer.completedAlert
     {
@@ -231,7 +233,7 @@ extension BookPlayerModel {
   }
 
   private func applySmartRewind() {
-    let smartRewindInterval = UserPreferences.shared.smartRewindInterval
+    let smartRewindInterval = userPreferences.smartRewindInterval
 
     guard smartRewindInterval > 0 else {
       AppLogger.player.debug("Smart rewind is disabled")
@@ -279,7 +281,7 @@ extension BookPlayerModel {
         AppLogger.player.error("Failed to get track at time 0")
         Toast(error: "Failed to get track").show()
         isLoading = false
-        PlayerManager.shared.clearCurrent()
+        playerManager.clearCurrent()
         throw Audiobookshelf.AudiobookshelfError.networkError("Failed to get track")
       }
 
@@ -389,7 +391,7 @@ extension BookPlayerModel {
   }
 
   private func observeSkipIntervalChanges() {
-    let preferences = UserPreferences.shared
+    let preferences = userPreferences
 
     preferences.objectWillChange
       .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
@@ -420,7 +422,7 @@ extension BookPlayerModel {
         try await setupSession()
 
         if item?.isDownloaded == false {
-          let autoDownloadMode = UserPreferences.shared.autoDownloadBooks
+          let autoDownloadMode = userPreferences.autoDownloadBooks
           let networkMonitor = NetworkMonitor.shared
 
           let shouldAutoDownload: Bool
@@ -452,7 +454,7 @@ extension BookPlayerModel {
         } catch {
           AppLogger.player.error("Failed to setup player: \(error)")
           Toast(error: "Failed to setup audio player").show()
-          PlayerManager.shared.clearCurrent()
+          playerManager.clearCurrent()
         }
       }
 
@@ -464,7 +466,12 @@ extension BookPlayerModel {
     Task {
       do {
         let request = ImageRequest(url: coverURL)
-        cover = try await ImagePipeline.shared.image(for: request)
+        let cover = try await ImagePipeline.shared.image(for: request)
+        artwork = MPMediaItemArtwork(
+          boundsSize: cover.size,
+          requestHandler: { _ in cover }
+        )
+
         setupNowPlayingMetadata()
       } catch {
         AppLogger.player.error(
@@ -520,7 +527,7 @@ extension BookPlayerModel {
 
   private func setupRemoteCommandCenter() {
     let commandCenter = MPRemoteCommandCenter.shared()
-    let preferences = UserPreferences.shared
+    let preferences = userPreferences
 
     commandCenter.playCommand.isEnabled = true
     commandCenter.playCommand.addTarget { [weak self] _ in
@@ -639,7 +646,11 @@ extension BookPlayerModel {
       return .success
     }
 
-    setupNowPlayingMetadata()
+    if nowPlayingInfo.values.isEmpty {
+      setupNowPlayingMetadata()
+    }
+
+    updateNowPlayingInfo()
   }
 
   private func setupNowPlayingMetadata() {
@@ -649,13 +660,9 @@ extension BookPlayerModel {
     nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
     nowPlayingInfo[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
 
-    if let cover {
-      nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: cover.size) { _ in
-        return cover
-      }
+    if let artwork {
+      nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     }
-
-    updateNowPlayingInfo()
   }
 
   private func updateNowPlayingInfo() {
@@ -1136,7 +1143,7 @@ extension BookPlayerModel {
       AppLogger.player.warning("Max recovery attempts reached, giving up")
       let errorMessage = error?.localizedDescription ?? "Stream unavailable"
       Toast(error: "Playback failed: \(errorMessage)").show()
-      PlayerManager.shared.clearCurrent()
+      playerManager.clearCurrent()
       return
     }
 
@@ -1200,7 +1207,7 @@ extension BookPlayerModel {
         handleStreamFailure(error: error)
       } else {
         Toast(error: "Unable to reconnect. Please try again later.").show()
-        PlayerManager.shared.clearCurrent()
+        playerManager.clearCurrent()
       }
     }
   }

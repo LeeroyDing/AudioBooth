@@ -14,6 +14,7 @@ struct SeriesCard: View {
   var body: some View {
     NavigationLink(value: NavigationDestination.series(id: model.id, name: model.title)) {
       content
+        .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
   }
@@ -63,7 +64,7 @@ struct SeriesCard: View {
               .frame(width: coverSize, height: coverSize)
               .clipped()
               .cornerRadius(6)
-              .shadow(color: .black.opacity(0.5), radius: 4, x: 2, y: 0)
+              .shadow(radius: 2)
               .zIndex(Double(10 - index))
               .alignmentGuide(.leading) { _ in
                 bookCount == 1 ? 0 : CGFloat(-index) * spacing
@@ -75,6 +76,7 @@ struct SeriesCard: View {
         .aspectRatio(2.0, contentMode: .fit)
         .overlay(alignment: .bottom) {
           progressBar
+            .clipShape(UnevenRoundedRectangle(cornerRadii: .init(bottomLeading: 6, bottomTrailing: 6)))
         }
 
         if model.bookCount > 0 {
