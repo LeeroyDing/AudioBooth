@@ -37,13 +37,21 @@ public final class MediaProgress {
   }
 
   public convenience init(from apiProgress: User.MediaProgress) {
+    var progress = max(apiProgress.progress, apiProgress.ebookProgress ?? 0)
+    var currentTime = apiProgress.currentTime
+
+    if apiProgress.isFinished {
+      progress = 1.0
+      currentTime = apiProgress.duration
+    }
+
     self.init(
       bookID: apiProgress.libraryItemId,
       id: apiProgress.id,
       lastPlayedAt: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000)),
-      currentTime: apiProgress.currentTime,
+      currentTime: currentTime,
       duration: apiProgress.duration,
-      progress: max(apiProgress.progress, apiProgress.ebookProgress ?? 0),
+      progress: progress,
       isFinished: apiProgress.isFinished,
       lastUpdate: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
     )
@@ -178,6 +186,7 @@ extension MediaProgress {
   public static func markAsFinished(for bookID: String) throws {
     if let existingProgress = try MediaProgress.fetch(bookID: bookID) {
       existingProgress.progress = 1.0
+      existingProgress.currentTime = existingProgress.duration
       existingProgress.isFinished = true
       existingProgress.lastUpdate = Date()
       try existingProgress.save()
@@ -224,10 +233,6 @@ extension MediaProgress {
           local.progress = remote.progress
           local.isFinished = remote.isFinished
           local.lastUpdate = remote.lastUpdate
-        }
-
-        if local.isFinished {
-          local.progress = 1.0
         }
 
         cache[local.bookID] = local.progress

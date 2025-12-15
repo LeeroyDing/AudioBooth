@@ -367,6 +367,7 @@ extension BookPlayerModel {
 
         if existingItem.isDownloaded {
           try await setupAudioPlayer()
+          isLoading = false
         }
       }
     } catch {
@@ -428,9 +429,9 @@ extension BookPlayerModel {
   }
 
   private func onLoad() {
-    Task {
-      isLoading = true
+    isLoading = true
 
+    Task {
       loadCover()
 
       observeMediaProgress()

@@ -374,12 +374,17 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   override func onResetProgressTapped() {
     Task {
       do {
+        var duration = 0.0
         if let book {
           try await book.resetProgress()
+          duration = book.duration
         } else if let localBook {
           try await localBook.resetProgress()
+          duration = localBook.duration
         }
         progress = 0
+        timeRemaining = Duration.seconds(duration)
+          .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
         Toast(success: "Progress reset").show()
       } catch {
         Toast(error: "Failed to reset progress").show()
