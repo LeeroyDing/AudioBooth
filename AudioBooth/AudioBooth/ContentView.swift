@@ -32,7 +32,6 @@ struct ContentView: View {
       if let currentPlayer = playerManager.current {
         BookPlayer(model: .constant(currentPlayer))
           .presentationDetents([.large])
-          .interactiveDismissDisabled(UIAccessibility.isVoiceOverRunning)
           .presentationDragIndicator(UIAccessibility.isVoiceOverRunning ? .hidden : .visible)
       }
     }

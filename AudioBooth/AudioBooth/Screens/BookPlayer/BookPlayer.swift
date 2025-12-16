@@ -151,14 +151,15 @@ struct BookPlayer: View {
       CoverImage(url: model.coverURL)
         .frame(minWidth: 200, maxWidth: 400, minHeight: 200, maxHeight: 400)
         .aspectRatio(1, contentMode: .fit)
-        .overlay(alignment: .topLeading) {
-          timerOverlay
-        }
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
-        .padding(.horizontal, 30)
+
     }
     .accessibilityLabel("Book details")
+    .overlay(alignment: .topLeading) {
+      timerOverlay
+    }
+    .padding(.horizontal, 30)
     .buttonStyle(.plain)
   }
 
@@ -172,16 +173,20 @@ struct BookPlayer: View {
           width: .narrow
         )
       )
-      timerBadge(text: Text(text))
+      let remaining = Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds]))
+      let accessibilityLabel = "Sleep timer: \(remaining) remaining"
+      timerBadge(text: Text(text), accessibilityLabel: accessibilityLabel)
     case .chapters(let count):
-      timerBadge(text: Text(count > 1 ? "End of \(count) chapters" : "End of chapter"))
+      let label = count > 1 ? "End of \(count) chapters" : "End of chapter"
+      let accessibilityLabel = "Sleep timer: \(label)"
+      timerBadge(text: Text(label), accessibilityLabel: accessibilityLabel)
     case .none:
       EmptyView()
     }
   }
 
   @ViewBuilder
-  private func timerBadge(text: Text) -> some View {
+  private func timerBadge(text: Text, accessibilityLabel: String) -> some View {
     HStack(spacing: 4) {
       Image(systemName: "timer")
       text
@@ -194,6 +199,8 @@ struct BookPlayer: View {
     .foregroundColor(.white)
     .clipShape(Capsule())
     .padding(4)
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(accessibilityLabel)
   }
 
   @ViewBuilder
@@ -235,6 +242,7 @@ struct BookPlayer: View {
             .foregroundColor((model.isLoading || isFirstChapter) ? .white.opacity(0.3) : .white)
         }
         .disabled(model.isLoading || isFirstChapter)
+        .accessibilityLabel("Previous chapter")
       }
 
       Button(action: { model.onSkipBackwardTapped(seconds: preferences.skipBackwardInterval) }) {
@@ -246,6 +254,7 @@ struct BookPlayer: View {
       }
       .fontWeight(.light)
       .disabled(model.isLoading)
+      .accessibilityLabel("Skip backward \(Int(preferences.skipBackwardInterval)) seconds")
 
       Button(action: model.onTogglePlaybackTapped) {
         ZStack {
@@ -266,6 +275,7 @@ struct BookPlayer: View {
         }
       }
       .disabled(model.isLoading)
+      .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
 
       Button(action: { model.onSkipForwardTapped(seconds: preferences.skipForwardInterval) }) {
         Image(systemName: "\(Int(preferences.skipForwardInterval)).arrow.trianglehead.clockwise")
@@ -274,6 +284,7 @@ struct BookPlayer: View {
       }
       .fontWeight(.light)
       .disabled(model.isLoading)
+      .accessibilityLabel("Skip forward \(Int(preferences.skipForwardInterval)) seconds")
 
       if let chapters = model.chapters {
         let isLastChapter = chapters.currentIndex == chapters.chapters.count - 1
@@ -283,6 +294,7 @@ struct BookPlayer: View {
             .foregroundColor((model.isLoading || isLastChapter) ? .white.opacity(0.3) : .white)
         }
         .disabled(model.isLoading || isLastChapter)
+        .accessibilityLabel("Next chapter")
       }
     }
   }

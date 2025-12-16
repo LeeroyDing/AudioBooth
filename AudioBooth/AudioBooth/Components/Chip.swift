@@ -22,6 +22,7 @@ struct Chip: View {
     HStack(spacing: spacing) {
       if let icon {
         Image(systemName: icon)
+          .accessibilityHidden(true)
           .font(iconFont)
       }
 

@@ -328,6 +328,7 @@ struct BookDetailsView: View {
         if let publisher = model.publisher {
           HStack {
             Image(systemName: "building.2")
+              .accessibilityHidden(true)
             Text("**Publisher:** \(publisher)")
           }
           .font(.subheadline)
@@ -336,6 +337,7 @@ struct BookDetailsView: View {
         if let publishedYear = model.publishedYear {
           HStack {
             Image(systemName: "calendar")
+              .accessibilityHidden(true)
             Text("**Published:** \(publishedYear)")
           }
           .font(.subheadline)
@@ -344,6 +346,7 @@ struct BookDetailsView: View {
         if let duration = model.durationText {
           HStack {
             Image(systemName: "clock")
+              .accessibilityHidden(true)
             Text("**Duration:** \(duration)")
           }
           .font(.subheadline)
@@ -352,6 +355,7 @@ struct BookDetailsView: View {
         if let progress = model.progress, progress > 0 {
           HStack {
             Image(systemName: "chart.bar.fill")
+              .accessibilityHidden(true)
             Text("**Progress:** \(progress.formatted(.percent.precision(.fractionLength(0))))")
           }
           .font(.subheadline)
@@ -360,6 +364,7 @@ struct BookDetailsView: View {
         if let timeRemaining = model.timeRemaining {
           HStack {
             Image(systemName: "clock.arrow.circlepath")
+              .accessibilityHidden(true)
             Text("**Time remaining:** \(timeRemaining)")
           }
           .font(.subheadline)
@@ -566,6 +571,7 @@ struct BookDetailsView: View {
           )
         )
         .frame(maxHeight: isDescriptionExpanded ? nil : 180, alignment: .top)
+        .contentShape(Rectangle())
         .clipped()
         .allowsHitTesting(false)
 
@@ -576,6 +582,7 @@ struct BookDetailsView: View {
             endPoint: .bottom
           )
           .frame(height: 60)
+          .accessibilityHidden(true)
         }
       }
     }
@@ -638,6 +645,7 @@ extension BookDetailsView {
             .font(.caption)
             .foregroundColor(.secondary)
         }
+        .accessibilityElement(children: .combine)
         .padding(.vertical, 4)
       }
     }
@@ -946,6 +954,7 @@ struct ParallaxHeader<Content: View, Space: Hashable>: View {
         .onChange(of: proxy.size.width) { _, new in height = min(370, new) }
     }
     .frame(height: height)
+    .accessibilityHidden(true)
   }
 
   private func offset(for proxy: GeometryProxy) -> CGFloat {
