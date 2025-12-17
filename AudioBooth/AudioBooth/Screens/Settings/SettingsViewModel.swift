@@ -10,6 +10,10 @@ final class SettingsViewModel: SettingsView.Model {
   private let audiobookshelf = Audiobookshelf.shared
 
   init() {
+    UserDefaults.standard.set(true, forKey: "pulse-disable-support-prompts")
+    UserDefaults.standard.set(true, forKey: "pulse-disable-report-issue-prompts")
+    UserDefaults.standard.set(true, forKey: "pulse-disable-settings-prompts")
+
     super.init(
       tipJar: TipJarViewModel(),
       playbackSessionList: PlaybackSessionListViewModel()
