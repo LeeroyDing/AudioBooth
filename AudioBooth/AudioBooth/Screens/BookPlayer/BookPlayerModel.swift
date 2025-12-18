@@ -59,7 +59,7 @@ final class BookPlayerModel: BookPlayer.Model {
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(itemID: book.id)
+      playbackProgress: PlaybackProgressViewModel(itemID: book.id, mediaProgress: mediaProgress)
     )
 
     setupDownloadStateBinding(bookID: book.id)
@@ -85,7 +85,7 @@ final class BookPlayerModel: BookPlayer.Model {
       timer: TimerPickerSheet.Model(),
       bookmarks: BookmarkViewerSheet.Model(),
       history: PlaybackHistorySheet.Model(),
-      playbackProgress: PlaybackProgressViewModel(itemID: item.bookID)
+      playbackProgress: PlaybackProgressViewModel(itemID: item.bookID, mediaProgress: mediaProgress)
     )
 
     setupDownloadStateBinding(bookID: item.bookID)
@@ -355,12 +355,10 @@ extension BookPlayerModel {
     }
 
     if let playbackProgress = playbackProgress as? PlaybackProgressViewModel {
-      let totalDuration = item?.orderedTracks.reduce(0.0) { $0 + $1.duration }
       playbackProgress.configure(
         player: player,
         chapters: chapters,
-        speed: speed,
-        totalDuration: totalDuration
+        speed: speed
       )
     }
 
@@ -762,10 +760,6 @@ extension BookPlayerModel {
             total: model.chapters.count
           )
         }
-      }
-
-      if let playbackProgress = self.playbackProgress as? PlaybackProgressViewModel {
-        playbackProgress.updateCurrentTime(self.mediaProgress.currentTime)
       }
 
       self.timerSecondsCounter += 1
