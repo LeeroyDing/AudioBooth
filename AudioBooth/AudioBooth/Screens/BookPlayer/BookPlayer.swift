@@ -119,6 +119,7 @@ struct BookPlayer: View {
         bottomControlBar
       }
       .padding(.horizontal, 24)
+      .disabled(model.isLoading)
     }
   }
 
@@ -142,6 +143,7 @@ struct BookPlayer: View {
       }
       .frame(maxWidth: .infinity)
       .padding(.horizontal, 24)
+      .disabled(model.isLoading)
     }
     .padding(.horizontal, 24)
   }
@@ -241,7 +243,7 @@ struct BookPlayer: View {
             .font(.system(size: 30, weight: .thin))
             .foregroundColor((model.isLoading || isFirstChapter) ? .white.opacity(0.3) : .white)
         }
-        .disabled(model.isLoading || isFirstChapter)
+        .disabled(isFirstChapter)
         .accessibilityLabel("Previous chapter")
       }
 
@@ -253,7 +255,6 @@ struct BookPlayer: View {
         .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
       .fontWeight(.light)
-      .disabled(model.isLoading)
       .accessibilityLabel("Skip backward \(Int(preferences.skipBackwardInterval)) seconds")
 
       Button(action: model.onTogglePlaybackTapped) {
@@ -274,7 +275,6 @@ struct BookPlayer: View {
           }
         }
       }
-      .disabled(model.isLoading)
       .accessibilityLabel(model.isPlaying ? "Pause" : "Play")
 
       Button(action: { model.onSkipForwardTapped(seconds: preferences.skipForwardInterval) }) {
@@ -283,7 +283,6 @@ struct BookPlayer: View {
           .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
       .fontWeight(.light)
-      .disabled(model.isLoading)
       .accessibilityLabel("Skip forward \(Int(preferences.skipForwardInterval)) seconds")
 
       if let chapters = model.chapters {
@@ -293,7 +292,7 @@ struct BookPlayer: View {
             .font(.system(size: 30, weight: .thin))
             .foregroundColor((model.isLoading || isLastChapter) ? .white.opacity(0.3) : .white)
         }
-        .disabled(model.isLoading || isLastChapter)
+        .disabled(isLastChapter)
         .accessibilityLabel("Next chapter")
       }
     }

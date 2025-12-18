@@ -8,6 +8,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   private var chapters: ChapterPickerSheet.Model?
   private var speed: SpeedPickerSheet.Model?
   private let preferences = UserPreferences.shared
+  private var onSeekCompleted: (() -> Void)?
 
   private let mediaProgress: MediaProgress
 
@@ -21,8 +22,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       remaining: 0,
       total: mediaProgress.duration,
       totalProgress: mediaProgress.progress,
-      totalTimeRemaining: mediaProgress.remaining,
-      isLoading: true
+      totalTimeRemaining: mediaProgress.remaining
     )
 
     observeMediaProgress()
@@ -43,15 +43,19 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   func configure(
     player: AVPlayer?,
     chapters: ChapterPickerSheet.Model?,
-    speed: SpeedPickerSheet.Model
+    speed: SpeedPickerSheet.Model,
+    onSeekCompleted: (() -> Void)? = nil
   ) {
     self.player = player
     self.chapters = chapters
     self.speed = speed
+    self.onSeekCompleted = onSeekCompleted
     updateProgress()
   }
 
   func updateProgress() {
+    guard !isDragging else { return }
+
     let currentTime = mediaProgress.currentTime
     var current: TimeInterval
     var remaining: TimeInterval
@@ -67,7 +71,7 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
       progress = CGFloat(currentTime / total)
     }
 
-    if let speed, preferences.chapterProgressionAdjustsWithSpeed {
+    if let speed, preferences.chapterProgressionAdjustsWithSpeed, speed.playbackSpeed != 1.0 {
       let playbackSpeed = Double(speed.playbackSpeed)
       let adjustedTotal = (current + remaining) / playbackSpeed
       current = (current / playbackSpeed).rounded()
@@ -88,17 +92,21 @@ final class PlaybackProgressViewModel: PlaybackProgressView.Model {
   }
 
   override func onProgressChanged(_ progress: Double) {
-    guard let player = player else { return }
+    guard let player else { return }
 
     if let chapter = chapters?.current {
       let duration = chapter.end - chapter.start
-      let seekTime = chapter.start + (duration * progress)
-      player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
-      PlaybackHistory.record(itemID: itemID, action: .seek, position: seekTime)
+      let currentTime = chapter.start + (duration * progress)
+      player.seek(to: CMTime(seconds: currentTime, preferredTimescale: 1000)) { [weak self] _ in
+        self?.onSeekCompleted?()
+      }
+      PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     } else {
-      let seekTime = total * progress
-      player.seek(to: CMTime(seconds: seekTime, preferredTimescale: 1000))
-      PlaybackHistory.record(itemID: itemID, action: .seek, position: seekTime)
+      let currentTime = total * progress
+      player.seek(to: CMTime(seconds: currentTime, preferredTimescale: 1000)) { [weak self] _ in
+        self?.onSeekCompleted?()
+      }
+      PlaybackHistory.record(itemID: itemID, action: .seek, position: currentTime)
     }
   }
 }

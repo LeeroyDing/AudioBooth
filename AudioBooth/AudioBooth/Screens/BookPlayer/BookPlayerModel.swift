@@ -105,6 +105,7 @@ final class BookPlayerModel: BookPlayer.Model {
   override func onPauseTapped() {
     pendingPlay = false
     player?.pause()
+    updateNowPlayingInfo()
   }
 
   override func onPlayTapped() {
@@ -146,26 +147,21 @@ final class BookPlayerModel: BookPlayer.Model {
     timerSecondsCounter = 0
     player.play()
     try? audioSession.setActive(true)
+    updateNowPlayingInfo()
   }
 
   override func onSkipForwardTapped(seconds: Double) {
     guard let player else { return }
-    let currentTime = player.currentTime()
-    let newTime = CMTimeAdd(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
-    player.seek(to: newTime)
-    let newTimeSeconds = CMTimeGetSeconds(newTime)
-    PlaybackHistory.record(itemID: id, action: .seek, position: newTimeSeconds)
+    let currentTime = CMTimeGetSeconds(player.currentTime())
+    let newTime = currentTime + seconds
+    seekToTime(newTime)
   }
 
   override func onSkipBackwardTapped(seconds: Double) {
     guard let player else { return }
-    let currentTime = player.currentTime()
-    let newTime = CMTimeSubtract(currentTime, CMTime(seconds: seconds, preferredTimescale: 1))
-    let zeroTime = CMTime(seconds: 0, preferredTimescale: 1)
-    let finalTime = CMTimeMaximum(newTime, zeroTime)
-    player.seek(to: finalTime)
-    let newTimeSeconds = CMTimeGetSeconds(finalTime)
-    PlaybackHistory.record(itemID: id, action: .seek, position: newTimeSeconds)
+    let currentTime = CMTimeGetSeconds(player.currentTime())
+    let newTime = max(0, currentTime - seconds)
+    seekToTime(newTime)
   }
 
   func seekToTime(_ time: TimeInterval) {
@@ -176,8 +172,9 @@ final class BookPlayerModel: BookPlayer.Model {
     }
 
     let seekTime = CMTime(seconds: time, preferredTimescale: 1000)
-    player.seek(to: seekTime) { _ in
+    player.seek(to: seekTime) { [weak self] _ in
       AppLogger.player.debug("Seeked to position: \(time)s")
+      self?.updateNowPlayingInfo()
     }
     PlaybackHistory.record(itemID: id, action: .seek, position: time)
   }
@@ -358,12 +355,15 @@ extension BookPlayerModel {
       playbackProgress.configure(
         player: player,
         chapters: chapters,
-        speed: speed
+        speed: speed,
+        onSeekCompleted: { [weak self] in
+          self?.updateNowPlayingInfo()
+        }
       )
     }
 
     configureAudioSession()
-    setupNowPlayingMetadata()
+    updateNowPlayingInfo()
   }
 
   private func loadLocalBookIfAvailable() async {
@@ -398,6 +398,7 @@ extension BookPlayerModel {
           self?.syncPlayback()
         }
 
+        self?.updateNowPlayingInfo()
         self?.observeSpeedChanged()
       }
     }
@@ -503,7 +504,7 @@ extension BookPlayerModel {
           requestHandler: { _ in cover }
         )
 
-        setupNowPlayingMetadata()
+        updateNowPlayingInfo()
       } catch {
         AppLogger.player.error(
           "Failed to load cover image for now playing: \(error)"
@@ -556,10 +557,8 @@ extension BookPlayerModel {
     }
   }
 
-  private func setupNowPlayingMetadata() {
+  private func updateNowPlayingInfo() {
     nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = title
-    nowPlayingInfo[MPMediaItemPropertyTitle] = title
-    nowPlayingInfo[MPMediaItemPropertyArtist] = author
     nowPlayingInfo[MPNowPlayingInfoPropertyMediaType] = MPNowPlayingInfoMediaType.audio.rawValue
     nowPlayingInfo[MPNowPlayingInfoPropertyExternalContentIdentifier] = id
 
@@ -567,16 +566,11 @@ extension BookPlayerModel {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     }
 
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-  }
-
-  private func updateNowPlayingInfo() {
     if let chapters {
-      nowPlayingInfo[MPMediaItemPropertyTitle] =
-        chapters.current?.title ?? nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
+      nowPlayingInfo[MPMediaItemPropertyTitle] = chapters.current?.title ?? title
       nowPlayingInfo[MPMediaItemPropertyArtist] = title
     } else {
-      nowPlayingInfo[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
+      nowPlayingInfo[MPMediaItemPropertyTitle] = title
       nowPlayingInfo[MPMediaItemPropertyArtist] = author
     }
 
@@ -725,7 +719,7 @@ extension BookPlayerModel {
 
     let wasPlaying = isPlaying
     configureAudioSession()
-    setupNowPlayingMetadata()
+    updateNowPlayingInfo()
 
     if wasPlaying {
       onPlayTapped()
@@ -771,8 +765,6 @@ extension BookPlayerModel {
       if self.timerSecondsCounter % 2 == 0 {
         self.syncPlayback()
       }
-
-      self.updateNowPlayingInfo()
     }
   }
 

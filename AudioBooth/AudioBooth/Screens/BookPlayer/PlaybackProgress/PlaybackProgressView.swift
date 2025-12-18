@@ -24,15 +24,19 @@ struct PlaybackProgressView: View {
         .gesture(
           DragGesture(minimumDistance: 0)
             .onChanged { value in
+              model.isDragging = true
               let progress = min(max(0, value.location.x / geometry.size.width), 1)
+              let total = model.current + model.remaining
               model.progress = progress
+              model.current = total * progress
+              model.remaining = total - model.current
             }
             .onEnded { value in
               let progress = min(max(0, value.location.x / geometry.size.width), 1)
               model.onProgressChanged(Double(progress))
+              model.isDragging = false
             }
         )
-        .disabled(model.isLoading)
       }
       .frame(height: 16)
 
@@ -80,7 +84,7 @@ extension PlaybackProgressView {
     var total: TimeInterval
     var totalProgress: Double
     var totalTimeRemaining: TimeInterval
-    var isLoading: Bool
+    var isDragging: Bool
 
     init(
       progress: Double,
@@ -89,7 +93,7 @@ extension PlaybackProgressView {
       total: TimeInterval,
       totalProgress: Double,
       totalTimeRemaining: TimeInterval,
-      isLoading: Bool
+      isDragging: Bool = false
     ) {
       self.progress = progress
       self.current = current
@@ -97,7 +101,7 @@ extension PlaybackProgressView {
       self.total = total
       self.totalProgress = totalProgress
       self.totalTimeRemaining = totalTimeRemaining
-      self.isLoading = isLoading
+      self.isDragging = isDragging
     }
 
     func onProgressChanged(_ progress: Double) {}
@@ -113,7 +117,6 @@ extension PlaybackProgressView.Model {
       total: 3600,
       totalProgress: 0,
       totalTimeRemaining: 3000,
-      isLoading: false
     )
   }
 }
