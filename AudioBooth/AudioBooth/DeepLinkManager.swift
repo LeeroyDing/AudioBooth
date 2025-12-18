@@ -34,18 +34,7 @@ class DeepLinkManager: ObservableObject {
     let playerManager = PlayerManager.shared
 
     Task {
-      do {
-        if let localBook = try LocalBook.fetch(bookID: bookID) {
-          playerManager.setCurrent(localBook)
-          playerManager.play()
-        } else {
-          let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
-          playerManager.setCurrent(book)
-          playerManager.play()
-        }
-      } catch {
-        print("Failed to load book for deep link: \(error)")
-      }
+      await playerManager.play(bookID)
     }
   }
 
@@ -54,18 +43,7 @@ class DeepLinkManager: ObservableObject {
     let playerManager = PlayerManager.shared
 
     Task {
-      do {
-        if playerManager.current?.id == bookID {
-          playerManager.showFullPlayer()
-        } else if let localBook = try LocalBook.fetch(bookID: bookID) {
-          playerManager.setCurrent(localBook)
-        } else {
-          let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
-          playerManager.setCurrent(book)
-        }
-      } catch {
-        print("Failed to load book for deep link: \(error)")
-      }
+      await playerManager.open(bookID)
     }
   }
 

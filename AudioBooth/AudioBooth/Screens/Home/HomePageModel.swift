@@ -4,6 +4,7 @@ import Logging
 import Models
 import SwiftData
 import SwiftUI
+import WidgetKit
 
 final class HomePageModel: HomePage.Model {
   private let downloadManager = DownloadManager.shared
@@ -171,6 +172,7 @@ extension HomePageModel {
     }
 
     self.sections = orderedSections
+    saveRecentBooksToWidget()
   }
 
   private func buildContinueListeningSection() -> Section? {
@@ -311,5 +313,61 @@ extension HomePageModel {
     }
 
     isLoading = false
+  }
+}
+
+extension HomePageModel {
+  private func saveRecentBooksToWidget() {
+    struct BookEntry: Codable {
+      let bookID: String
+      let title: String
+      let author: String
+      let coverURL: URL?
+    }
+
+    let sharedDefaults = UserDefaults(suiteName: "group.me.jgrenier.audioBS")
+
+    do {
+      let allProgress = try MediaProgress.fetchAll()
+      let sortedProgress =
+        allProgress
+        .sorted { $0.lastUpdate > $1.lastUpdate }
+
+      let offlineBooksByID = Dictionary(
+        uniqueKeysWithValues: availableOffline.map { ($0.bookID, $0) }
+      )
+      let continueListeningByID = Dictionary(
+        uniqueKeysWithValues: continueListeningBooks.map { ($0.id, $0) }
+      )
+
+      var books: [BookEntry] = []
+
+      for progress in sortedProgress {
+        guard books.count < 5 else { break }
+
+        if let localBook = offlineBooksByID[progress.bookID] {
+          let book = BookEntry(
+            bookID: localBook.bookID,
+            title: localBook.title,
+            author: localBook.authorNames,
+            coverURL: localBook.coverURL
+          )
+          books.append(book)
+        } else if let remoteBook = continueListeningByID[progress.bookID] {
+          let book = BookEntry(
+            bookID: remoteBook.id,
+            title: remoteBook.title,
+            author: remoteBook.authorName ?? "",
+            coverURL: remoteBook.coverURL
+          )
+          books.append(book)
+        }
+      }
+
+      let data = try JSONEncoder().encode(books)
+      sharedDefaults?.set(data, forKey: "recentBooks")
+      WidgetCenter.shared.reloadAllTimelines()
+    } catch {
+    }
   }
 }

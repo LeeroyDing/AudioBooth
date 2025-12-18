@@ -16,7 +16,7 @@ struct AudioBoothWidget: Widget {
       AudioBoothWidgetView(entry: entry)
     }
     .configurationDisplayName("Now Playing")
-    .description("Shows your currently playing audiobook")
-    .supportedFamilies([.systemSmall, .systemMedium])
+    .description("Shows your currently playing audiobook or recent books")
+    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
   }
 }

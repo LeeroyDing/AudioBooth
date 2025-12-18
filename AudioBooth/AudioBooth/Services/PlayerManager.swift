@@ -102,6 +102,40 @@ extension PlayerManager: PlayerManagerProtocol {
   func pause() {
     current?.onPauseTapped()
   }
+
+  func play(_ bookID: String) async {
+    do {
+      if current?.id == bookID {
+        play()
+      } else if let localBook = try LocalBook.fetch(bookID: bookID) {
+        setCurrent(localBook)
+        play()
+      } else {
+        let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
+        setCurrent(book)
+        play()
+      }
+    } catch {
+      print("Failed to play book: \(error)")
+    }
+  }
+
+  func open(_ bookID: String) async {
+    do {
+      if current?.id == bookID {
+        showFullPlayer()
+      } else if let localBook = try LocalBook.fetch(bookID: bookID) {
+        setCurrent(localBook)
+        showFullPlayer()
+      } else {
+        let book = try await Audiobookshelf.shared.books.fetch(id: bookID)
+        setCurrent(book)
+        showFullPlayer()
+      }
+    } catch {
+      print("Failed to open book: \(error)")
+    }
+  }
 }
 
 extension PlayerManager {
