@@ -251,7 +251,21 @@ extension BookPlayerModel {
       return
     }
 
-    let newTime = max(0, mediaProgress.currentTime - smartRewindInterval)
+    let currentTime = mediaProgress.currentTime
+    var rewindTarget = currentTime - smartRewindInterval
+
+    if let chapters = item?.orderedChapters, !chapters.isEmpty {
+      if let currentChapter = chapters.first(where: { chapter in
+        currentTime >= chapter.start && currentTime < chapter.end
+      }) {
+        rewindTarget = max(currentChapter.start, rewindTarget)
+        AppLogger.player.debug(
+          "Smart rewind bounded by chapter '\(currentChapter.title)' starting at \(currentChapter.start)s"
+        )
+      }
+    }
+
+    let newTime = max(0, rewindTarget)
     mediaProgress.currentTime = newTime
 
     if let player {
@@ -260,7 +274,7 @@ extension BookPlayerModel {
     }
 
     AppLogger.player.info(
-      "Smart rewind applied: rewound \(Int(smartRewindInterval))s after \(Int(timeSinceLastPlayed / 60)) minutes of pause"
+      "Smart rewind applied: rewound \(Int(currentTime - newTime))s after \(Int(timeSinceLastPlayed / 60)) minutes of pause"
     )
   }
 
@@ -331,6 +345,7 @@ extension BookPlayerModel {
     if let sessionChapters = item?.orderedChapters, !sessionChapters.isEmpty {
       chapters = ChapterPickerSheetViewModel(itemID: id, chapters: sessionChapters, player: player)
       timer.maxRemainingChapters = sessionChapters.count - 1
+      observeCurrentChapter()
       AppLogger.player.debug(
         "Loaded \(sessionChapters.count) chapters from play session info"
       )
@@ -386,6 +401,17 @@ extension BookPlayerModel {
         }
 
         self?.observeSpeedChanged()
+      }
+    }
+  }
+
+  private func observeCurrentChapter() {
+    withObservationTracking {
+      _ = chapters?.current
+    } onChange: { [weak self] in
+      RunLoop.current.perform {
+        self?.updateNowPlayingInfo()
+        self?.observeCurrentChapter()
       }
     }
   }
@@ -919,10 +945,9 @@ extension BookPlayerModel {
   }
 
   private func markAsFinishedIfNeeded() {
-    guard !mediaProgress.isFinished, player?.status == .readyToPlay else { return }
+    guard !mediaProgress.isFinished, player?.status == .readyToPlay, mediaProgress.duration > 0 else { return }
 
-    let remainingTime = mediaProgress.duration - mediaProgress.currentTime
-    let isNearEnd = remainingTime <= 120
+    let isNearEnd = mediaProgress.remaining <= 120
 
     var shouldMarkFinished = isNearEnd
 

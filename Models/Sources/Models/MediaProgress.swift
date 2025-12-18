@@ -21,7 +21,7 @@ public final class MediaProgress {
     id: String? = nil,
     lastPlayedAt: Date = Date(),
     currentTime: TimeInterval = 0,
-    duration: TimeInterval = 0,
+    duration: TimeInterval = .infinity,
     progress: Double = 0,
     isFinished: Bool = false,
     lastUpdate: Date = Date()
