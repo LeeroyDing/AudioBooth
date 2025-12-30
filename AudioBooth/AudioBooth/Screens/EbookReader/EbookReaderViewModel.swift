@@ -95,6 +95,7 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
       self.publication = publication
       self.supportsSettings = publication.conforms(to: .epub)
+      self.supportsSearch = publication.isSearchable
 
       let httpServer = GCDHTTPServer(assetRetriever: assetRetriever)
       self.httpServer = httpServer
@@ -225,6 +226,25 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     AppLogger.viewModel.info("Progress tapped - current: \(Int(progress * 100))%")
   }
 
+  override func onSearchTapped() {
+    guard let publication else { return }
+
+    let searchViewModel = EbookSearchViewModel(publication: publication)
+
+    searchViewModel.onResultSelected = { [weak self] locator, index in
+      self?.navigateToSearchResult(locator: locator)
+      self?.highlightSearchResult(locator: locator)
+      self?.search = nil
+    }
+
+    searchViewModel.onDismissed = { [weak self] in
+      self?.clearSearchHighlights()
+      self?.search = nil
+    }
+
+    search = searchViewModel
+  }
+
   override func onPreferencesChanged(_ preferences: EbookReaderPreferences) {
     AppLogger.viewModel.info("Applying preferences")
     applyPreferences(preferences)
@@ -238,6 +258,39 @@ final class EbookReaderViewModel: EbookReaderView.Model {
 
     let epubPrefs = preferences.toEPUBPreferences()
     epubNavigator.submitPreferences(epubPrefs)
+  }
+
+  private func navigateToSearchResult(locator: Locator) {
+    guard let navigator else { return }
+
+    Task {
+      await navigator.go(to: locator, options: NavigatorGoOptions(animated: true))
+      AppLogger.viewModel.info("Navigated to search result")
+    }
+  }
+
+  private func highlightSearchResult(locator: Locator) {
+    guard let decorableNavigator = navigator as? DecorableNavigator else {
+      return
+    }
+
+    let decoration = Decoration(
+      id: "selectedSearchResult",
+      locator: locator,
+      style: .highlight(tint: .yellow, isActive: false)
+    )
+
+    decorableNavigator.apply(decorations: [decoration], in: "search")
+    AppLogger.viewModel.info("Applied search result highlight")
+  }
+
+  private func clearSearchHighlights() {
+    guard let decorableNavigator = navigator as? DecorableNavigator else {
+      return
+    }
+
+    decorableNavigator.apply(decorations: [], in: "search")
+    AppLogger.viewModel.info("Cleared search highlights")
   }
 
   private func syncProgressToServer(_ progress: Double) {

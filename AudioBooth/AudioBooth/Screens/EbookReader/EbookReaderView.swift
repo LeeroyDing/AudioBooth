@@ -21,6 +21,18 @@ struct EbookReaderView: View {
     .navigationBarTitleDisplayMode(.inline)
     .toolbarBackground(.hidden, for: .navigationBar)
     .toolbar {
+      ToolbarItem(placement: .navigationBarLeading) {
+        if showControls, !model.isLoading, model.error == nil, model.supportsSearch {
+          Button {
+            model.onSearchTapped()
+          } label: {
+            Label("Search", systemImage: "magnifyingglass")
+          }
+          .transition(.opacity)
+          .tint(.primary)
+        }
+      }
+
       ToolbarItem(placement: .navigationBarTrailing) {
         if showControls || model.isLoading {
           Button {
@@ -52,6 +64,9 @@ struct EbookReaderView: View {
       if let chapters = model.chapters {
         EbookChapterPickerSheet(model: chapters)
       }
+    }
+    .sheet(item: $model.search) { searchModel in
+      EbookSearchView(model: searchModel)
     }
     .onAppear(perform: model.onAppear)
     .onDisappear(perform: model.onDisappear)
@@ -221,12 +236,15 @@ extension EbookReaderView {
     var chapters: EbookChapterPickerSheet.Model?
     var preferences: EbookReaderPreferences
     var supportsSettings: Bool
+    var search: EbookSearchView.Model?
+    var supportsSearch: Bool
 
     func onAppear() {}
     func onDisappear() {}
     func onTableOfContentsTapped() {}
     func onSettingsTapped() {}
     func onProgressTapped() {}
+    func onSearchTapped() {}
     func onPreferencesChanged(_ preferences: EbookReaderPreferences) {}
 
     init(
@@ -238,7 +256,9 @@ extension EbookReaderView {
       progress: Double = 0.0,
       chapters: EbookChapterPickerSheet.Model? = nil,
       preferences: EbookReaderPreferences = EbookReaderPreferences(),
-      supportsSettings: Bool = false
+      supportsSettings: Bool = false,
+      search: EbookSearchView.Model? = nil,
+      supportsSearch: Bool = false
     ) {
       self.isLoading = isLoading
       self.error = error
@@ -247,6 +267,8 @@ extension EbookReaderView {
       self.chapters = chapters
       self.preferences = preferences
       self.supportsSettings = supportsSettings
+      self.search = search
+      self.supportsSearch = supportsSearch
     }
   }
 }
