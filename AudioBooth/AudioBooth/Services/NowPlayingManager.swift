@@ -10,6 +10,8 @@ final class NowPlayingManager {
   private let title: String
   private let author: String?
   private var artwork: MPMediaItemArtwork?
+  private let preferences = UserPreferences.shared
+  private var playbackState: MPNowPlayingPlaybackState = .paused
 
   init(
     id: String,
@@ -36,20 +38,44 @@ final class NowPlayingManager {
     info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
     info[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
 
-    MPNowPlayingInfoCenter.default().playbackState = .interrupted
-
     update()
 
     if let coverURL {
       loadArtwork(from: coverURL)
     }
+
+    Self.primeNowPlaying()
+  }
+
+  private static func primeNowPlaying() {
+    Task {
+      do {
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(.playback, mode: .spokenAudio)
+        try audioSession.setActive(true)
+
+        let url = URL(string: "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=")!
+        let player = AVPlayer(url: url)
+        player.volume = 0
+        player.play()
+        try? await Task.sleep(for: .milliseconds(100))
+        player.pause()
+      } catch {
+        AppLogger.player.debug("Failed to prime Now Playing: \(error)")
+      }
+    }
   }
 
   func update(chapter: String, current: TimeInterval, duration: TimeInterval) {
-    info[MPMediaItemPropertyTitle] = chapter
-    info[MPMediaItemPropertyArtist] = title
     info[MPMediaItemPropertyArtwork] = artwork
 
+    if preferences.showFullBookDuration {
+      update(current: current)
+      return
+    }
+
+    info[MPMediaItemPropertyTitle] = chapter
+    info[MPMediaItemPropertyArtist] = title
     info[MPMediaItemPropertyPlaybackDuration] = duration
     info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = current
 
@@ -64,7 +90,6 @@ final class NowPlayingManager {
 
   func update(speed: Float) {
     info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = Double(speed)
-    info[MPNowPlayingInfoPropertyPlaybackRate] = Double(speed)
 
     update()
   }
@@ -72,10 +97,9 @@ final class NowPlayingManager {
   func update(rate: Float, current: TimeInterval) {
     info[MPNowPlayingInfoPropertyPlaybackRate] = Double(rate)
     info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = current
+    playbackState = rate > 0 ? .playing : .paused
 
     update()
-
-    MPNowPlayingInfoCenter.default().playbackState = rate > 0 ? .playing : .paused
   }
 
   func clear() {
@@ -84,6 +108,7 @@ final class NowPlayingManager {
 
   func update() {
     MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    MPNowPlayingInfoCenter.default().playbackState = playbackState
   }
 
   private func loadArtwork(from url: URL) {

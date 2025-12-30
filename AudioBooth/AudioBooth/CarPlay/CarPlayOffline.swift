@@ -44,7 +44,7 @@ final class CarPlayOffline {
   private func buildBookItems() async -> [CPListItem] {
     do {
       let offlineBooks = try LocalBook.fetchAll()
-        .filter({ $0.isDownloaded && $0.ebookFile == nil })
+        .filter({ $0.isDownloaded && $0.duration > 0 })
         .sorted()
 
       return offlineBooks.map { localBook in
@@ -72,8 +72,7 @@ final class CarPlayOffline {
     }
 
     item.handler = { [weak self] _, completion in
-      self?.onBookSelected(bookID: localBook.bookID)
-      completion()
+      self?.onBookSelected(bookID: localBook.bookID, completion: completion)
     }
 
     return item
@@ -84,9 +83,19 @@ final class CarPlayOffline {
     return try? await ImagePipeline.shared.image(for: request)
   }
 
-  private func onBookSelected(bookID: String) {
-    guard let book = try? LocalBook.fetch(bookID: bookID) else { return }
-    PlayerManager.shared.setCurrent(book)
-    nowPlaying?.showNowPlaying()
+  private func onBookSelected(bookID: String, completion: @escaping () -> Void) {
+    guard let book = try? LocalBook.fetch(bookID: bookID) else {
+      completion()
+      return
+    }
+
+    Task {
+      PlayerManager.shared.setCurrent(book)
+
+      try? await Task.sleep(for: .milliseconds(500))
+
+      nowPlaying?.showNowPlaying()
+      completion()
+    }
   }
 }

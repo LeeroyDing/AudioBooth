@@ -1,4 +1,5 @@
 import API
+import AVFoundation
 import BackgroundTasks
 import Foundation
 import Logging
@@ -355,9 +356,15 @@ final class SessionManager {
 
     let nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
     let playbackRate = nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? 0.0
+    let carPlayConnected = isCarPlayConnected()
 
     if playbackRate > 0 {
       AppLogger.session.info("Playback is still active, rescheduling session close")
+      UserDefaults.standard.set(0, forKey: retryCountKey)
+      scheduleSessionClose()
+      task.setTaskCompleted(success: false)
+    } else if carPlayConnected {
+      AppLogger.session.info("CarPlay is connected, rescheduling session close")
       UserDefaults.standard.set(0, forKey: retryCountKey)
       scheduleSessionClose()
       task.setTaskCompleted(success: false)
@@ -446,10 +453,18 @@ final class SessionManager {
 
         let nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
         let playbackRate = nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? 0.0
+        let carPlayConnected = isCarPlayConnected()
 
         if playbackRate > 0 {
           AppLogger.session.info(
             "Inactivity timeout reached but playback is active - not closing session"
+          )
+          return
+        }
+
+        if carPlayConnected {
+          AppLogger.session.info(
+            "Inactivity timeout reached but CarPlay is connected - not closing session"
           )
           return
         }
@@ -465,6 +480,12 @@ final class SessionManager {
   private func cancelInactivityTask() {
     inactivityTask?.cancel()
     inactivityTask = nil
+  }
+
+  private func isCarPlayConnected() -> Bool {
+    AVAudioSession.sharedInstance().currentRoute.outputs.contains { output in
+      output.portType == AVAudioSession.Port.carAudio
+    }
   }
 
   enum SessionError: Error {

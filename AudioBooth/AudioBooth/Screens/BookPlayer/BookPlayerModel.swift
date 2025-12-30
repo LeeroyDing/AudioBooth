@@ -226,18 +226,12 @@ extension BookPlayerModel {
 
     mediaProgress.currentTime = time
 
-    var current: TimeInterval?
-    if let model = playbackProgress as? PlaybackProgressViewModel {
-      current = model.current
-      nowPlaying.update(rate: 0, current: model.current)
-      model.updateProgress()
-    }
-
     let seekTime = CMTime(seconds: time, preferredTimescale: 1000)
     player.seek(to: seekTime) { _ in
       AppLogger.player.debug("Seeked to position: \(time)s")
-      if player.rate != 0, let current {
-        self.nowPlaying.update(rate: player.rate, current: current)
+      if player.timeControlStatus == .playing, let model = self.playbackProgress as? PlaybackProgressViewModel {
+        model.updateProgress()
+        self.nowPlaying.update(rate: player.rate, current: model.current)
       }
     }
     PlaybackHistory.record(itemID: id, action: .seek, position: time)
@@ -514,6 +508,8 @@ extension BookPlayerModel {
     }
 
     configureAudioSession()
+
+    nowPlaying.update(rate: 0, current: playbackProgress.current)
   }
 
   private func loadLocalBookIfAvailable() async {
@@ -743,21 +739,27 @@ extension BookPlayerModel {
   private func setupPlayerObservers() {
     guard let player else { return }
 
-    player.publisher(for: \.rate)
+    player.publisher(for: \.timeControlStatus)
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] rate in
+      .sink { [weak self] status in
         guard let self else { return }
 
-        let isNowPlaying = rate > 0
+        let isNowPlaying = status == .playing
         self.handlePlaybackStateChange(isNowPlaying)
         self.isPlaying = isNowPlaying
+
+        if status == .waitingToPlayAtSpecifiedRate {
+          self.isLoading = true
+        } else if status == .playing || status == .paused {
+          self.isLoading = false
+        }
 
         if isNowPlaying && self.timeObserver == nil {
           AppLogger.player.info("Time observer was nil, re-setting up")
           self.setupTimeObserver()
         }
 
-        nowPlaying.update(rate: rate, current: playbackProgress.current)
+        nowPlaying.update(rate: player.rate, current: playbackProgress.current)
       }
       .store(in: &cancellables)
 
@@ -772,6 +774,7 @@ extension BookPlayerModel {
             let duration = currentItem.duration
             if duration.isValid && !duration.isIndefinite {
             }
+
           case .failed:
             self?.isLoading = false
             let errorMessage = currentItem.error?.localizedDescription ?? "Unknown error"
@@ -930,9 +933,13 @@ extension BookPlayerModel {
         AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
       {
         AppLogger.player.info("Audio interruption ended - resuming playback")
+        try? audioSession.setActive(true)
+        nowPlaying.update(rate: player?.rate ?? 0, current: playbackProgress.current)
         player?.play()
       } else if let interval = interruptionBeganAt?.timeIntervalSinceNow, interval < 60 * 5 {
         AppLogger.player.info("Audio interruption ended - resuming playback")
+        try? audioSession.setActive(true)
+        nowPlaying.update(rate: player?.rate ?? 0, current: playbackProgress.current)
         player?.play()
       } else {
         AppLogger.player.info("Audio interruption ended - not resuming")
@@ -1152,7 +1159,7 @@ extension BookPlayerModel {
   private func syncPlayback() {
     savePlaybackStateToWidget()
 
-    let actualIsPlaying = player?.rate ?? 0 > 0
+    let actualIsPlaying = player?.timeControlStatus == .playing
 
     let chapters: [[String: Any]] =
       item?.orderedChapters.enumerated().map { index, chapter in

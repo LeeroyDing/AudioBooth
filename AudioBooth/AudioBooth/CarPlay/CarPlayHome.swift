@@ -8,6 +8,7 @@ final class CarPlayHome {
   private let interfaceController: CPInterfaceController
   private weak var nowPlaying: CarPlayNowPlaying?
   private var currentPlayerCancellable: AnyCancellable?
+  private var loadingCancellable: Task<Void, Never>?
   private var selected: CarPlayLibrary?
 
   let template: CPListTemplate
@@ -22,7 +23,8 @@ final class CarPlayHome {
 
     currentPlayerCancellable = PlayerManager.shared.$current.sink { [weak self] _ in
       Task {
-        await self?.loadSections()
+        guard let self, self.loadingCancellable == nil else { return }
+        await self.loadSections()
       }
     }
   }
@@ -61,9 +63,46 @@ final class CarPlayHome {
     return try? await ImagePipeline.shared.image(for: request)
   }
 
-  private func onBookSelected(_ book: Book) {
-    PlayerManager.shared.setCurrent(book)
-    nowPlaying?.showNowPlaying()
+  private func onBookSelected(_ book: Book, completion: @escaping () -> Void) {
+    loadingCancellable = Task {
+      PlayerManager.shared.setCurrent(book)
+
+      await waitForPlayerReady()
+      try? await Task.sleep(for: .milliseconds(500))
+
+      nowPlaying?.showNowPlaying()
+      completion()
+      loadingCancellable = nil
+
+      await loadSections()
+    }
+  }
+
+  private func waitForPlayerReady() async {
+    guard PlayerManager.shared.current?.isLoading == true else { return }
+
+    await withCheckedContinuation { continuation in
+      observePlayerLoading(continuation: continuation)
+    }
+  }
+
+  private func observePlayerLoading(continuation: CheckedContinuation<Void, Never>) {
+    withObservationTracking {
+      _ = PlayerManager.shared.current?.isLoading
+    } onChange: {
+      Task { @MainActor [weak self] in
+        guard let self else {
+          continuation.resume()
+          return
+        }
+
+        if PlayerManager.shared.current?.isLoading == false {
+          continuation.resume()
+        } else {
+          observePlayerLoading(continuation: continuation)
+        }
+      }
+    }
   }
 
   private func showLibrary(filterType: CarPlayLibrary.FilterType) {
@@ -92,7 +131,10 @@ extension CarPlayHome {
       return nil
     }
 
-    let items = books.map { book in
+    let audioBooks = books.filter { $0.duration > 0 }
+    guard !audioBooks.isEmpty else { return nil }
+
+    let items = audioBooks.map { book in
       createListItem(for: book)
     }
 
@@ -114,7 +156,10 @@ extension CarPlayHome {
         continue
       }
 
-      let items = books.map { book in
+      let audioBooks = books.filter { $0.duration > 0 }
+      guard !audioBooks.isEmpty else { continue }
+
+      let items = audioBooks.map { book in
         createListItem(for: book)
       }
 
@@ -185,8 +230,7 @@ extension CarPlayHome {
     }
 
     item.handler = { [weak self] _, completion in
-      self?.onBookSelected(book)
-      completion()
+      self?.onBookSelected(book, completion: completion)
     }
 
     return item

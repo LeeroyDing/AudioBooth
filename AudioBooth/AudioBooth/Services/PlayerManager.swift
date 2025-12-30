@@ -1,5 +1,6 @@
 import API
 import Combine
+import Logging
 import MediaPlayer
 import Models
 import PlayerIntents
@@ -166,6 +167,14 @@ extension PlayerManager {
   }
 
   private func setupRemoteCommandCenter() {
+    do {
+      let audioSession = AVAudioSession.sharedInstance()
+      try audioSession.setCategory(.playback, mode: .spokenAudio)
+      try audioSession.setActive(true)
+    } catch {
+      AppLogger.player.error("Failed to configure audio session: \(error)")
+    }
+
     let commandCenter = MPRemoteCommandCenter.shared()
 
     commandCenter.playCommand.isEnabled = true
