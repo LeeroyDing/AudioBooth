@@ -58,7 +58,7 @@ struct GeneralPreferencesView: View {
         }
       }
 
-      Section {
+      Section("Downloads") {
         Picker("Auto-Download Books", selection: $preferences.autoDownloadBooks) {
           ForEach(AutoDownloadMode.allCases) { mode in
             Text(mode.displayName).tag(mode)

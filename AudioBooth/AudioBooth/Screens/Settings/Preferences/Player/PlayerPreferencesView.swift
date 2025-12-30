@@ -9,6 +9,7 @@ struct PlayerPreferencesView: View {
         VStack(alignment: .leading) {
           Text("Skip forward and back".uppercased())
             .bold()
+            .accessibilityAddTraits(.isHeader)
 
           Text("Choose how far to skip forward and back while listening.")
         }
@@ -62,6 +63,7 @@ struct PlayerPreferencesView: View {
         VStack(alignment: .leading) {
           Text("Smart Rewind".uppercased())
             .bold()
+            .accessibilityAddTraits(.isHeader)
 
           Text("Rewind after being paused for 10 minutes.")
         }
@@ -80,6 +82,7 @@ struct PlayerPreferencesView: View {
         }
         .font(.subheadline)
         .bold()
+        .accessibilityLabel("Smart Rewind Duration")
       }
       .listRowSeparator(.hidden)
       .listSectionSpacing(.custom(12))
@@ -88,6 +91,7 @@ struct PlayerPreferencesView: View {
         VStack(alignment: .leading) {
           Text("Timer".uppercased())
             .bold()
+            .accessibilityAddTraits(.isHeader)
 
           Text("Extends timer when you shake your phone or resume playing on your headphones.")
         }
@@ -105,6 +109,7 @@ struct PlayerPreferencesView: View {
         }
         .font(.subheadline)
         .bold()
+        .accessibilityLabel("Timer Audio Fade Out")
       }
       .listRowSeparator(.hidden)
       .listSectionSpacing(.custom(12))
@@ -113,6 +118,7 @@ struct PlayerPreferencesView: View {
         VStack(alignment: .leading) {
           Text("Lock Screen Controls".uppercased())
             .bold()
+            .accessibilityAddTraits(.isHeader)
 
           Text("Configure how the lock screen playback controls behave.")
         }
@@ -124,6 +130,7 @@ struct PlayerPreferencesView: View {
         }
         .font(.subheadline)
         .bold()
+        .accessibilityLabel("Lock Screen Next/Previous Buttons")
 
         Toggle(
           "Allow Playback Position Change",
@@ -139,6 +146,7 @@ struct PlayerPreferencesView: View {
         VStack(alignment: .leading) {
           Text("Playback Speed Adjustments".uppercased())
             .bold()
+            .accessibilityAddTraits(.isHeader)
 
           Text("Configure how time displays are affected by playback speed.")
         }
@@ -158,6 +166,7 @@ struct PlayerPreferencesView: View {
         VStack(alignment: .leading) {
           Text("Progress Display".uppercased())
             .bold()
+            .accessibilityAddTraits(.isHeader)
 
           Text("Choose how playback progress is displayed.")
         }
