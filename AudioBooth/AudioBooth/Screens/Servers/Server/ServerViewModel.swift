@@ -445,6 +445,12 @@ final class ServerViewModel: ServerView.Model {
 
       if let server, server.status == .authenticationError {
         let reauthViewModel = AuthenticationViewModel(server: server)
+        reauthViewModel.onAuthenticationSuccess = { [weak self] in
+          self?.reauthenticationModel = nil
+          Task {
+            await self?.fetchLibraries()
+          }
+        }
         self.reauthenticationModel = reauthViewModel
       }
     }
