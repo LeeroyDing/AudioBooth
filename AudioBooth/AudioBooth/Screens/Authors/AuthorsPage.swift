@@ -1,7 +1,9 @@
 import Combine
+import NukeUI
 import SwiftUI
 
 struct AuthorsPage: View {
+  @AppStorage("authorsPageSortOrder") var sortOrder: SortOrder = .firstLast
   @StateObject var model: Model
 
   var body: some View {
@@ -37,11 +39,12 @@ struct AuthorsPage: View {
             )
           )
         } else {
-          authorsContent
+          authorsRowContent
         }
       }
     }
     .navigationTitle("Authors")
+    .navigationBarTitleDisplayMode(.inline)
     .refreshable {
       await model.refresh()
     }
@@ -49,30 +52,218 @@ struct AuthorsPage: View {
       text: $model.searchViewModel.searchText,
       prompt: "Search books, series, and authors"
     )
+    .toolbar {
+      ToolbarItem(placement: .navigationBarTrailing) {
+        Menu {
+          Picker("Sort Order", selection: $sortOrder) {
+            Text("First Last").tag(SortOrder.firstLast)
+            Text("Last First").tag(SortOrder.lastFirst)
+          }
+        } label: {
+          Image(systemName: "arrow.up.arrow.down")
+            .foregroundColor(.primary)
+        }
+      }
+    }
     .onAppear(perform: model.onAppear)
   }
 
-  var authorsContent: some View {
-    ScrollView {
-      LazyVStack {
-        AuthorsView(authors: model.authors)
-          .padding(.horizontal)
+  var authorSections: [AuthorSection] {
+    let sortedAuthors = model.authors.sorted { lhs, rhs in
+      switch sortOrder {
+      case .firstLast:
+        return lhs.name < rhs.name
+      case .lastFirst:
+        return lastNameFirst(lhs.name) < lastNameFirst(rhs.name)
+      }
+    }
 
-        if let authorsModel = model as? AuthorsPageModel {
-          Color.clear
-            .frame(height: 1)
-            .onAppear {
-              Task {
-                await authorsModel.loadNextPageIfNeeded()
-              }
-            }
+    let grouped = Dictionary(grouping: sortedAuthors) { author in
+      switch sortOrder {
+      case .firstLast:
+        return String(author.name.prefix(1).uppercased())
+      case .lastFirst:
+        let lastName = lastNameFirst(author.name)
+        return String(lastName.prefix(1).uppercased())
+      }
+    }
+
+    return grouped.map { letter, authors in
+      AuthorSection(id: letter, letter: letter, authors: authors)
+    }.sorted { $0.letter < $1.letter }
+  }
+
+  private func lastNameFirst(_ name: String) -> String {
+    let components = name.components(separatedBy: " ")
+    guard components.count > 1 else { return name }
+    return components.last ?? name
+  }
+
+  var authorsRowContent: some View {
+    ScrollViewReader { proxy in
+      ScrollView {
+        authorsList
+      }
+      .overlay(alignment: .trailing) {
+        AlphabetScrollBar(
+          availableSections: Set(authorSections.map(\.letter)),
+          scrollProxy: proxy
+        )
+      }
+      .scrollIndicators(.hidden)
+    }
+  }
+
+  var authorsList: some View {
+    LazyVStack(alignment: .leading, spacing: 0) {
+      ForEach(authorSections) { section in
+        Section {
+          ForEach(section.authors, id: \.id) { author in
+            authorRow(for: author)
+          }
+        } header: {
+          sectionHeader(for: section.letter)
+        }
+        .id(section.letter)
+      }
+    }
+  }
+
+  func authorRow(for author: AuthorCard.Model) -> some View {
+    NavigationLink(value: NavigationDestination.author(id: author.id, name: author.name)) {
+      HStack(spacing: 12) {
+        authorImage(for: author)
+
+        VStack(alignment: .leading, spacing: 2) {
+          Text(author.name)
+            .font(.body)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+          if author.bookCount > 0 {
+            Text("\(author.bookCount) \(author.bookCount == 1 ? "book" : "books")")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
         }
       }
+      .padding(.horizontal)
+      .padding(.vertical, 8)
+    }
+    .buttonStyle(.plain)
+  }
+
+  @ViewBuilder
+  func authorImage(for author: AuthorCard.Model) -> some View {
+    if let imageURL = author.imageURL {
+      LazyImage(url: imageURL) { state in
+        if let image = state.image {
+          image
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 40, height: 40)
+            .clipShape(Circle())
+        } else {
+          placeholderImage
+        }
+      }
+    } else {
+      placeholderImage
+    }
+  }
+
+  var placeholderImage: some View {
+    Circle()
+      .fill(Color.gray.opacity(0.3))
+      .frame(width: 40, height: 40)
+      .overlay(
+        Image(systemName: "person.circle")
+          .foregroundColor(.gray)
+      )
+  }
+
+  func sectionHeader(for letter: String) -> some View {
+    Text(letter)
+      .font(.headline)
+      .foregroundColor(.secondary)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(.horizontal)
+      .padding(.vertical, 8)
+      .background(Color(uiColor: .systemBackground))
+  }
+}
+
+struct AlphabetScrollBar: View {
+  let availableSections: Set<String>
+  let scrollProxy: ScrollViewProxy
+
+  private let allLetters = [
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "#",
+  ]
+
+  @GestureState private var dragLocation: CGPoint = .zero
+  @State private var lastScrolledLetter: String = ""
+
+  private let haptics = UIImpactFeedbackGenerator(style: .light)
+
+  var body: some View {
+    VStack(spacing: 0) {
+      ForEach(allLetters, id: \.self) { letter in
+        Text(letter)
+          .font(.caption2)
+          .fontWeight(.semibold)
+          .foregroundColor(.accentColor)
+          .frame(minWidth: 30, alignment: .trailing)
+          .padding(.trailing, 4)
+          .contentShape(Rectangle())
+          .background(dragObserver(for: letter))
+      }
+    }
+    .background(Color.clear)
+    .contentShape(Rectangle())
+    .gesture(
+      DragGesture(minimumDistance: 0, coordinateSpace: .global)
+        .updating($dragLocation) { value, state, _ in
+          state = value.location
+        }
+    )
+  }
+
+  private func dragObserver(for letter: String) -> some View {
+    GeometryReader { geometry in
+      Color.clear
+        .onChange(of: dragLocation) { _, newLocation in
+          if geometry.frame(in: .global).contains(newLocation) {
+            scrollToLetter(letter)
+          }
+        }
+    }
+  }
+
+  private func scrollToLetter(_ letter: String) {
+    guard availableSections.contains(letter), letter != lastScrolledLetter else { return }
+
+    lastScrolledLetter = letter
+    haptics.impactOccurred()
+
+    withAnimation(.easeOut(duration: 0.1)) {
+      scrollProxy.scrollTo(letter, anchor: .top)
     }
   }
 }
 
 extension AuthorsPage {
+  enum SortOrder: String {
+    case firstLast = "First Last"
+    case lastFirst = "Last First"
+  }
+
+  struct AuthorSection: Identifiable {
+    let id: String
+    let letter: String
+    let authors: [AuthorCard.Model]
+  }
+
   @Observable class Model: ObservableObject {
     var isLoading: Bool
 
