@@ -72,22 +72,19 @@ class DeepLinkManager: ObservableObject {
       let connection = ExportConnection(connection, includeToken: includeToken),
       let data = try? encoder.encode(connection),
       let base64 = data.base64EncodedString()
-        .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
     else {
       return nil
     }
 
-    return URL(string: "audiobooth://connection?data=\(base64)")
+    return URL(string: "audiobooth://connection/\(base64)")
   }
 
   static func decodeConnectionDeepLink(_ url: URL) -> ExportConnection? {
     guard url.scheme == "audiobooth" || url.scheme == "audiobs",
       let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
       components.host == "connection",
-      let queryItems = components.queryItems,
-      let dataItem = queryItems.first(where: { $0.name == "data" }),
-      let base64 = dataItem.value,
-      let data = Data(base64Encoded: base64)
+      let data = Data(base64Encoded: String(components.path.dropFirst()))
     else {
       return nil
     }
