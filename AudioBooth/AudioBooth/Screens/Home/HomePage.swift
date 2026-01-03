@@ -181,6 +181,7 @@ struct HomePage: View {
               .font(.title2)
               .fontWeight(.semibold)
               .foregroundColor(.primary)
+              .accessibilityAddTraits(.isHeader)
 
             Spacer()
 
@@ -209,6 +210,7 @@ struct HomePage: View {
           .fontWeight(.semibold)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal)
+          .accessibilityAddTraits(.isHeader)
 
         ScrollView(.horizontal, showsIndicators: false) {
           LazyHStack(alignment: .top, spacing: 16) {
@@ -225,6 +227,7 @@ struct HomePage: View {
           .fontWeight(.semibold)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal)
+          .accessibilityAddTraits(.isHeader)
 
         ScrollView(.horizontal, showsIndicators: false) {
           HStack(alignment: .top, spacing: 16) {
@@ -242,6 +245,7 @@ struct HomePage: View {
           .fontWeight(.semibold)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal)
+          .accessibilityAddTraits(.isHeader)
 
         ScrollView(.horizontal, showsIndicators: false) {
           HStack(alignment: .top, spacing: 16) {
@@ -259,6 +263,7 @@ struct HomePage: View {
           .fontWeight(.semibold)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal)
+          .accessibilityAddTraits(.isHeader)
 
         ScrollView(.horizontal, showsIndicators: false) {
           HStack(alignment: .top, spacing: 16) {

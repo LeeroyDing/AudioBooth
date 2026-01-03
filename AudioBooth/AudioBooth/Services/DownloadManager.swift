@@ -171,6 +171,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     let config = URLSessionConfiguration.background(
       withIdentifier: "me.jgrenier.AudioBS.download.\(bookID)"
     )
+    config.timeoutIntervalForRequest = 120
     config.sessionSendsLaunchEvents = true
     config.isDiscretionary = false
     let delegate = URLSessionProxyDelegate(delegate: self)
