@@ -316,38 +316,65 @@ extension WatchConnectivityManager: WCSessionDelegate {
     replyHandler: @escaping ([String: Any]) -> Void
   ) async {
     do {
-      let playSession = try await Audiobookshelf.shared.sessions.start(
-        itemID: bookID,
-        forceTranscode: !forDownload,
-        sessionType: forDownload ? .download : .watch
-      )
-
-      guard let serverURL = Audiobookshelf.shared.authentication.serverURL else {
-        replyHandler(["error": "No server URL"])
+      guard
+        let serverURL = Audiobookshelf.shared.authentication.serverURL,
+        let token = Audiobookshelf.shared.authentication.server?.token
+      else {
+        replyHandler(["error": "No server URL or token"])
         return
       }
 
-      let baseURLString = serverURL.absoluteString.trimmingCharacters(
-        in: CharacterSet(charactersIn: "/")
-      )
-      guard let baseURL = URL(string: "\(baseURLString)/public/session/\(playSession.id)") else {
-        replyHandler(["error": "Failed to construct base URL"])
-        return
+      let book: Book
+      let sessionID: String?
+      let audioTracks: [Book.Media.Track]
+
+      if forDownload {
+        book = try await Audiobookshelf.shared.books.fetch(id: bookID)
+        sessionID = nil
+        audioTracks = book.tracks ?? []
+      } else {
+        let playSession = try await Audiobookshelf.shared.sessions.start(
+          itemID: bookID,
+          forceTranscode: true,
+          sessionType: .watch
+        )
+        book = playSession.libraryItem
+        sessionID = playSession.id
+        audioTracks = playSession.audioTracks ?? []
       }
 
-      let tracks: [[String: Any]] = (playSession.audioTracks ?? []).map { audioTrack in
-        let trackURL = baseURL.appendingPathComponent("track/\(audioTrack.index)")
+      let tracks: [[String: Any]] = audioTracks.map { audioTrack in
+        let trackURL: String
+        if forDownload, let ino = audioTrack.ino {
+          var url = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
+          switch token {
+          case .legacy(let tokenValue):
+            url.append(queryItems: [URLQueryItem(name: "token", value: tokenValue)])
+          case .bearer(let accessToken, _, _):
+            url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
+          }
+          trackURL = url.absoluteString
+        } else if let sessionID = sessionID {
+          let baseURLString = serverURL.absoluteString.trimmingCharacters(
+            in: CharacterSet(charactersIn: "/")
+          )
+          trackURL =
+            "\(baseURLString)/public/session/\(sessionID)/track/\(audioTrack.index)"
+        } else {
+          trackURL = ""
+        }
+
         return [
           "index": audioTrack.index,
           "duration": audioTrack.duration,
           "size": audioTrack.metadata?.size ?? 0,
           "ext": audioTrack.metadata?.ext ?? "",
-          "url": trackURL.absoluteString,
+          "url": trackURL,
         ]
       }
 
       let chapters: [[String: Any]] =
-        playSession.chapters?.enumerated().map { index, chapter in
+        book.chapters?.enumerated().map { index, chapter in
           [
             "id": index,
             "title": chapter.title,
@@ -356,19 +383,25 @@ extension WatchConnectivityManager: WCSessionDelegate {
           ]
         } ?? []
 
-      AppLogger.watchConnectivity.info(
-        "Created session \(playSession.id) for book \(bookID), forDownload=\(forDownload)"
-      )
+      if let sessionID = sessionID {
+        AppLogger.watchConnectivity.info(
+          "Created session \(sessionID) for book \(bookID), forDownload=\(forDownload)"
+        )
+      } else {
+        AppLogger.watchConnectivity.info(
+          "Fetched book \(bookID) for download, forDownload=\(forDownload)"
+        )
+      }
 
-      let coverURLString = watchCompatibleCoverURL(from: playSession.libraryItem.coverURL())
+      let coverURLString = watchCompatibleCoverURL(from: book.coverURL())
 
       replyHandler([
         "id": bookID,
-        "sessionID": playSession.id,
-        "title": playSession.libraryItem.title,
-        "authorName": playSession.libraryItem.authorName ?? "",
+        "sessionID": sessionID ?? "",
+        "title": book.title,
+        "authorName": book.authorName ?? "",
         "coverURL": coverURLString ?? "",
-        "duration": playSession.duration,
+        "duration": book.duration,
         "tracks": tracks,
         "chapters": chapters,
       ])

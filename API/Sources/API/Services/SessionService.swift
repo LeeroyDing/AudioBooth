@@ -6,27 +6,25 @@ public final class SessionService {
 
   public enum SessionType {
     case player
-    case download
     case watch
 
     var deviceID: String {
       switch self {
       case .player: SessionService.deviceID
-      case .download: SessionService.deviceID + "-download"
       case .watch: SessionService.deviceID + "-watch"
       }
     }
 
     var clientName: String {
       switch self {
-      case .player, .download: "AudioBooth iOS"
+      case .player: "AudioBooth iOS"
       case .watch: "AudioBooth Watch"
       }
     }
 
     var mediaPlayer: String {
       switch self {
-      case .player, .download: "ios"
+      case .player: "ios"
       case .watch: "watchos"
       }
     }

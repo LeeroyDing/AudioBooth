@@ -81,35 +81,15 @@ extension DownloadManager {
         return
       }
 
-      guard let item = try? LocalBook.fetch(bookID: bookID) else {
-        return
-      }
+      let serverDirectory = appGroupURL.appendingPathComponent(serverID)
+      let audiobookDirectory = serverDirectory.appendingPathComponent("audiobooks").appendingPathComponent(bookID)
+      let ebookDirectory = serverDirectory.appendingPathComponent("ebooks").appendingPathComponent(bookID)
 
-      // Determine if this is an audiobook or ebook
-      let isEbook = item.tracks.isEmpty
-      let directory = isEbook ? "ebooks" : "audiobooks"
+      try? FileManager.default.removeItem(at: audiobookDirectory)
+      try? FileManager.default.removeItem(at: ebookDirectory)
 
-      let bookDirectory =
-        appGroupURL
-        .appendingPathComponent(serverID)
-        .appendingPathComponent(directory)
-        .appendingPathComponent(bookID)
-
-      do {
-        if FileManager.default.fileExists(atPath: bookDirectory.path) {
-          try FileManager.default.removeItem(at: bookDirectory)
-        }
-
-        if isEbook {
-          item.ebookFile = nil
-        } else {
-          for track in item.orderedTracks {
-            track.relativePath = nil
-          }
-        }
-        try? item.save()
-      } catch {
-        Toast(error: "Failed to delete download: \(error.localizedDescription)").show()
+      if let item = try? LocalBook.fetch(bookID: bookID) {
+        try? item.delete()
       }
     }
   }
@@ -158,8 +138,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
   private let progressContinuation: AsyncStream<Double>.Continuation
 
-  private var book: LocalBook?
-  private var session: Session?
+  private var apiBook: Book?
   private var totalBytes: Int64 = 0
   private var bytesDownloadedSoFar: Int64 = 0
 
@@ -272,30 +251,27 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
   }
 
   private func executeAudiobookDownload() async throws {
-    let playSession = try await audiobookshelf.sessions.start(
-      itemID: bookID,
-      sessionType: .download
-    )
+    let book = try await audiobookshelf.books.fetch(id: bookID)
 
     guard !isCancelled else {
       throw CancellationError()
     }
 
-    guard let session = Session(from: playSession) else {
-      throw URLError(.badServerResponse)
-    }
-
-    self.session = session
-
-    let existingItem = try? LocalBook.fetch(bookID: bookID)
-    let book = existingItem ?? LocalBook(from: playSession.libraryItem)
-    self.book = book
-    self.totalBytes = book.orderedTracks.reduce(0) { $0 + ($1.size ?? 0) }
-    try? book.save()
+    self.apiBook = book
+    self.totalBytes = (book.tracks ?? []).reduce(0) { $0 + ($1.metadata?.size ?? 0) }
 
     try await downloadTracks()
 
-    try? book.save()
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+      throw URLError(.userAuthenticationRequired)
+    }
+
+    let localBook = LocalBook(from: book)
+    for track in localBook.tracks {
+      guard let ext = track.ext else { continue }
+      track.relativePath = URL(string: "\(serverID)/audiobooks/\(bookID)/\(track.index)\(ext)")
+    }
+    try? localBook.save()
   }
 
   private func executeEbookDownload() async throws {
@@ -313,21 +289,22 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       ext = pathExt.isEmpty ? ".epub" : ".\(pathExt)"
     }
 
-    let existingItem = try? LocalBook.fetch(bookID: bookID)
-    let localBook = existingItem ?? LocalBook(from: book)
-    self.book = localBook
-    try? localBook.save()
-
     try await downloadEbook(from: ebookURL, ext: ext)
 
+    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+      throw URLError(.userAuthenticationRequired)
+    }
+
+    let localBook = LocalBook(from: book)
+    localBook.ebookFile = URL(string: "\(serverID)/ebooks/\(bookID)/\(bookID)\(ext)")
     try? localBook.save()
   }
 
   private func downloadTracks() async throws {
-    guard let book, let session else { throw URLError(.unknown) }
+    guard let apiBook else { throw URLError(.unknown) }
 
-    let tracks = book.orderedTracks
-    guard !tracks.isEmpty else { throw URLError(.badURL) }
+    let apiTracks = apiBook.tracks ?? []
+    guard !apiTracks.isEmpty else { throw URLError(.badURL) }
 
     guard
       let appGroupURL = FileManager.default.containerURL(
@@ -337,7 +314,11 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       throw URLError(.fileDoesNotExist)
     }
 
-    guard let serverID = Audiobookshelf.shared.authentication.server?.id else {
+    guard
+      let serverID = Audiobookshelf.shared.authentication.server?.id,
+      let serverURL = Audiobookshelf.shared.authentication.serverURL,
+      let token = Audiobookshelf.shared.authentication.server?.token
+    else {
       throw URLError(.userAuthenticationRequired)
     }
 
@@ -351,17 +332,31 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
     resourceValues.isExcludedFromBackup = true
     try? audiobooksDirectory.setResourceValues(resourceValues)
 
-    for track in tracks {
+    for apiTrack in apiTracks {
       guard !isCancelled else { throw CancellationError() }
 
-      guard let ext = track.ext else { throw URLError(.badURL) }
+      guard
+        let ext = apiTrack.metadata?.ext,
+        let ino = apiTrack.ino
+      else {
+        throw URLError(.badURL)
+      }
 
-      let trackURL = session.url(for: track)
-      let trackFile = bookDirectory.appendingPathComponent("\(track.index)\(ext)")
+      var trackURL = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)/download")
+      switch token {
+      case .legacy(let token):
+        trackURL.append(queryItems: [URLQueryItem(name: "token", value: token)])
+      case .bearer(let accessToken, _, _):
+        trackURL.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
+      }
+
+      let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
 
       try await withCheckedThrowingContinuation { continuation in
         let downloadTask = downloadSession.downloadTask(with: trackURL)
-        downloadTask.countOfBytesClientExpectsToReceive = Int64(track.size ?? 500_000_000)
+        downloadTask.countOfBytesClientExpectsToReceive = Int64(
+          apiTrack.metadata?.size ?? 500_000_000
+        )
 
         self.currentTrack = downloadTask
         self.continuation = continuation
@@ -370,9 +365,7 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
         downloadTask.resume()
       }
 
-      track.relativePath = URL(string: "\(serverID)/audiobooks/\(bookID)/\(track.index)\(ext)")
-
-      if let size = track.size {
+      if let size = apiTrack.metadata?.size {
         bytesDownloadedSoFar += size
       }
     }
@@ -414,7 +407,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       downloadTask.resume()
     }
 
-    book?.ebookFile = URL(string: "\(serverID)/ebooks/\(bookID)/\(ebookFile.lastPathComponent)")
     progressContinuation.yield(1.0)
   }
 
@@ -428,12 +420,6 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
       downloadSession.finishTasksAndInvalidate()
     } else {
       downloadSession.invalidateAndCancel()
-    }
-
-    if let session {
-      Task {
-        try await audiobookshelf.sessions.close(session.id)
-      }
     }
 
     if success {
@@ -497,6 +483,20 @@ extension DownloadOperation: URLSessionDownloadDelegate {
     didFinishDownloadingTo location: URL
   ) {
     guard currentTrack == downloadTask, continuation != nil else { return }
+
+    if let httpResponse = downloadTask.response as? HTTPURLResponse {
+      guard (200...299).contains(httpResponse.statusCode) else {
+        let statusDescription = HTTPURLResponse.localizedString(
+          forStatusCode: httpResponse.statusCode
+        ).capitalized
+        let error = URLError(
+          .badServerResponse,
+          userInfo: [NSLocalizedDescriptionKey: statusDescription]
+        )
+        continuation?.resume(throwing: error)
+        return
+      }
+    }
 
     do {
       try trackDownloadCompleted(location: location)

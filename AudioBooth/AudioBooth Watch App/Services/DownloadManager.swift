@@ -446,6 +446,20 @@ extension DownloadOperation: URLSessionDownloadDelegate {
   ) {
     guard currentTrack == downloadTask, continuation != nil else { return }
 
+    if let httpResponse = downloadTask.response as? HTTPURLResponse {
+      guard (200...299).contains(httpResponse.statusCode) else {
+        let statusDescription = HTTPURLResponse.localizedString(
+          forStatusCode: httpResponse.statusCode
+        ).capitalized
+        let error = URLError(
+          .badServerResponse,
+          userInfo: [NSLocalizedDescriptionKey: statusDescription]
+        )
+        continuation?.resume(throwing: error)
+        return
+      }
+    }
+
     do {
       try trackDownloadCompleted(location: location)
     } catch {
