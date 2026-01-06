@@ -34,6 +34,17 @@ struct TimePicker: View {
 struct PlayerPreferencesView: View {
   @ObservedObject var preferences = UserPreferences.shared
 
+  private var autoTimerModeAccessibilityValue: String {
+    switch preferences.autoTimerMode {
+    case .off:
+      return "Off"
+    case .duration(let seconds):
+      return "\(Int(seconds / 60)) minutes"
+    case .chapters(let count):
+      return "End of \(count) \(count == 1 ? "chapter" : "chapters")"
+    }
+  }
+
   var body: some View {
     Form {
       Section {
@@ -172,24 +183,27 @@ struct PlayerPreferencesView: View {
         }
         .font(.caption)
 
-        Picker("Sleep Timer", selection: $preferences.autoTimerDuration) {
-          Text("Off").tag(0.0)
-          Text("5 min").tag(300.0)
-          Text("10 min").tag(600.0)
-          Text("15 min").tag(900.0)
-          Text("20 min").tag(1200.0)
-          Text("30 min").tag(1800.0)
-          Text("45 min").tag(2700.0)
-          Text("60 min").tag(3600.0)
+        Picker("Sleep Timer", selection: $preferences.autoTimerMode) {
+          Text("Off").tag(AutoTimerMode.off)
+          Divider()
+          Text("5 min").tag(AutoTimerMode.duration(300.0))
+          Text("10 min").tag(AutoTimerMode.duration(600.0))
+          Text("15 min").tag(AutoTimerMode.duration(900.0))
+          Text("20 min").tag(AutoTimerMode.duration(1200.0))
+          Text("30 min").tag(AutoTimerMode.duration(1800.0))
+          Text("45 min").tag(AutoTimerMode.duration(2700.0))
+          Text("60 min").tag(AutoTimerMode.duration(3600.0))
+          Divider()
+          Text("End of chapter").tag(AutoTimerMode.chapters(1))
+          Text("End of 2 chapters").tag(AutoTimerMode.chapters(2))
+          Text("End of 3 chapters").tag(AutoTimerMode.chapters(3))
         }
         .font(.subheadline)
         .bold()
-        .accessibilityLabel("Auto Timer Duration")
-        .accessibilityValue(
-          preferences.autoTimerDuration == 0 ? "Off" : "\(Int(preferences.autoTimerDuration / 60)) minutes"
-        )
+        .accessibilityLabel("Auto Timer Mode")
+        .accessibilityValue(autoTimerModeAccessibilityValue)
 
-        if preferences.autoTimerDuration > 0 {
+        if preferences.autoTimerMode != .off {
           HStack {
             Text("Start Time")
             Spacer()

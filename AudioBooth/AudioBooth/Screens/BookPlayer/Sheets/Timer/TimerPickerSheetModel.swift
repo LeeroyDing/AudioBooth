@@ -268,19 +268,28 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   func activateAutoTimerIfNeeded() {
-    let duration = preferences.autoTimerDuration
+    let mode = preferences.autoTimerMode
 
-    guard duration > 0,
+    guard mode != .off,
       current == .none,
       isInAutoTimerWindow()
     else {
       return
     }
 
-    current = .preset(duration)
-    startSleepTimer(duration: duration)
+    switch mode {
+    case .duration(let duration):
+      current = .preset(duration)
+      startSleepTimer(duration: duration)
+      AppLogger.player.info("Auto-timer activated: \(duration) seconds")
 
-    AppLogger.player.info("Auto-timer activated: \(duration) seconds")
+    case .chapters(let count):
+      current = .chapters(count)
+      AppLogger.player.info("Auto-timer activated: \(count) chapters")
+
+    case .off:
+      break
+    }
   }
 
   func onShakeDetected() {

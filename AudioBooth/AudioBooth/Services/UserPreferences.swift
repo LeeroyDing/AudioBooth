@@ -79,8 +79,8 @@ final class UserPreferences: ObservableObject {
   @AppStorage("accentColor")
   var accentColor: Color?
 
-  @AppStorage("autoTimerDuration")
-  var autoTimerDuration: TimeInterval = 0
+  @AppStorage("autoTimerMode")
+  var autoTimerMode: AutoTimerMode = .off
 
   @AppStorage("autoTimerWindowStart")
   var autoTimerWindowStart: Int = 22 * 60
@@ -92,6 +92,7 @@ final class UserPreferences: ObservableObject {
     migrateShowListeningStats()
     migrateAutoDownloadBooks()
     migrateShakeToExtendTimer()
+    migrateAutoTimerDuration()
   }
 
   private func migrateShowListeningStats() {
@@ -115,6 +116,15 @@ final class UserPreferences: ObservableObject {
       let wasEnabled = UserDefaults.standard.bool(forKey: "shakeToExtendTimer")
       UserDefaults.standard.removeObject(forKey: "shakeToExtendTimer")
       shakeSensitivity = wasEnabled ? .medium : .off
+    }
+  }
+
+  private func migrateAutoTimerDuration() {
+    if let duration = UserDefaults.standard.object(forKey: "autoTimerDuration") as? TimeInterval {
+      UserDefaults.standard.removeObject(forKey: "autoTimerDuration")
+      if duration > 0 {
+        autoTimerMode = .duration(duration)
+      }
     }
   }
 }
@@ -223,6 +233,43 @@ enum VolumeBoost: String, CaseIterable {
     case .low: "Low"
     case .medium: "Medium"
     case .high: "High"
+    }
+  }
+}
+
+enum AutoTimerMode: Codable, Equatable, Hashable {
+  case off
+  case duration(TimeInterval)
+  case chapters(Int)
+}
+
+extension AutoTimerMode: RawRepresentable {
+  init?(rawValue: String) {
+    let components = rawValue.components(separatedBy: ":")
+    guard let type = components.first else { return nil }
+
+    switch type {
+    case "off":
+      self = .off
+    case "duration":
+      guard components.count == 2, let duration = TimeInterval(components[1]) else { return nil }
+      self = .duration(duration)
+    case "chapters":
+      guard components.count == 2, let count = Int(components[1]) else { return nil }
+      self = .chapters(count)
+    default:
+      return nil
+    }
+  }
+
+  var rawValue: String {
+    switch self {
+    case .off:
+      return "off"
+    case .duration(let duration):
+      return "duration:\(duration)"
+    case .chapters(let count):
+      return "chapters:\(count)"
     }
   }
 }
