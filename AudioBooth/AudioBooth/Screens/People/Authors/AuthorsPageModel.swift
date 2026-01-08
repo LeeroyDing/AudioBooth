@@ -8,12 +8,11 @@ final class AuthorsPageModel: AuthorsPage.Model {
   private var fetchedAuthors: [AuthorCard.Model] = []
 
   private var currentPage: Int = 0
-  private var hasMorePages: Bool = true
   private var isLoadingNextPage: Bool = false
   private let itemsPerPage: Int = 50
 
   init() {
-    super.init()
+    super.init(hasMorePages: true)
     self.searchViewModel = SearchViewModel()
   }
 
@@ -72,7 +71,9 @@ final class AuthorsPageModel: AuthorsPage.Model {
     isLoading = false
   }
 
-  func loadNextPageIfNeeded() async {
-    await loadAuthors()
+  override func loadNextPageIfNeeded() {
+    Task {
+      await loadAuthors()
+    }
   }
 }

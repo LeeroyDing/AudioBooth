@@ -67,7 +67,7 @@ struct ContentView: View {
         }
 
         Tab("Authors", systemImage: "person.crop.rectangle.stack", value: .authors) {
-          AuthorsPage(model: AuthorsPageModel())
+          PeopleRootPage()
         }
 
         Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
@@ -125,7 +125,7 @@ struct ContentView: View {
             Text("Collections")
           }
 
-        AuthorsPage(model: AuthorsPageModel())
+        PeopleRootPage()
           .padding(.bottom, 0.5)
           .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
