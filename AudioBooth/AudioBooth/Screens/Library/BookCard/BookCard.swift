@@ -61,7 +61,7 @@ struct BookCard: View {
           .foregroundColor(.white)
           .padding(.horizontal, 8)
           .padding(.vertical, 4)
-          .background(Color.orange)
+          .background(Color.accentColor)
           .cornerRadius(12)
           .padding(8)
       } else if let sequence = model.sequence {
@@ -126,6 +126,10 @@ struct BookCard: View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) { progressBar }
       .overlay { downloadProgress }
+      .overlay(alignment: .bottomLeading) {
+        ebookIndicator
+          .padding(4)
+      }
       .clipShape(RoundedRectangle(cornerRadius: 8))
       .overlay(
         RoundedRectangle(cornerRadius: 8)
@@ -138,6 +142,10 @@ struct BookCard: View {
     CoverImage(url: model.coverURL)
       .overlay(alignment: .bottom) { progressBar }
       .overlay { downloadProgress }
+      .overlay(alignment: .bottomLeading) {
+        ebookIndicator
+          .padding(2)
+      }
       .frame(width: 60, height: 60)
       .clipShape(RoundedRectangle(cornerRadius: 6))
       .overlay(
@@ -210,6 +218,21 @@ struct BookCard: View {
     }
   }
 
+  @ViewBuilder
+  var ebookIndicator: some View {
+    if model.hasEbook {
+      HStack(spacing: 2) {
+        Image(systemName: "book.fill")
+          .font(.system(size: 10))
+          .foregroundColor(.white)
+      }
+      .padding(.horizontal, 4)
+      .padding(.vertical, 2)
+      .background(Color.accentColor)
+      .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+  }
+
 }
 
 extension BookCard {
@@ -264,6 +287,7 @@ extension BookCard {
     var downloadProgress: Double?
     let bookCount: Int?
     var contextMenu: BookCardContextMenu.Model?
+    let hasEbook: Bool
 
     func onAppear() {}
 
@@ -279,7 +303,8 @@ extension BookCard {
       publishedYear: String? = nil,
       downloadProgress: Double? = nil,
       bookCount: Int? = nil,
-      contextMenu: BookCardContextMenu.Model? = nil
+      contextMenu: BookCardContextMenu.Model? = nil,
+      hasEbook: Bool = false
     ) {
       self.id = id
       self.title = title
@@ -293,6 +318,7 @@ extension BookCard {
       self.downloadProgress = downloadProgress
       self.bookCount = bookCount
       self.contextMenu = contextMenu
+      self.hasEbook = hasEbook
     }
   }
 }

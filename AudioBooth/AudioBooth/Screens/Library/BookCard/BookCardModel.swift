@@ -29,7 +29,8 @@ final class BookCardModel: BookCard.Model {
       author: item.authorNames,
       narrator: narrator,
       publishedYear: item.publishedYear,
-      downloadProgress: nil
+      downloadProgress: nil,
+      hasEbook: item.ebookFile != nil
     )
 
     setupDownloadProgressObserver()
@@ -139,7 +140,8 @@ final class BookCardModel: BookCard.Model {
       narrator: narrator,
       publishedYear: publishedYear,
       downloadProgress: nil,
-      bookCount: bookCount
+      bookCount: bookCount,
+      hasEbook: item.media.ebookFile != nil || item.media.ebookFormat != nil
     )
 
     setupDownloadProgressObserver()

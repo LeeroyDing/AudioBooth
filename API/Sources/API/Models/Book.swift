@@ -106,6 +106,7 @@ extension Book {
     public let tracks: [Track]?
     public let tags: [String]?
     public let ebookFile: LibraryFile?
+    public let ebookFormat: String?
 
     public struct Metadata: Sendable {
       public let title: String
