@@ -694,18 +694,28 @@ extension BookDetailsView {
 }
 
 extension BookDetailsView {
-  private func chaptersContent(_ chapters: [Chapter]) -> some View {
+  private func chaptersContent(_ chapters: [BookDetailsView.Model.Chapter]) -> some View {
     VStack(alignment: .leading, spacing: 8) {
       ForEach(chapters, id: \.id) { chapter in
-        HStack {
-          Text(chapter.title)
-            .font(.subheadline)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        Button(action: { model.onChapterTapped(chapter) }) {
+          HStack(spacing: 8) {
+            Image(systemName: chapterIcon(for: chapter.status))
+              .font(.caption)
+              .foregroundColor(chapterColor(for: chapter.status))
+              .frame(width: 16)
 
-          Text(formatDuration(chapter.end - chapter.start))
-            .font(.caption)
-            .foregroundColor(.secondary)
+            Text(chapter.title)
+              .font(.subheadline)
+              .foregroundColor(chapterColor(for: chapter.status))
+              .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text(formatDuration(chapter.end - chapter.start))
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+          .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .padding(.vertical, 4)
       }
@@ -713,6 +723,28 @@ extension BookDetailsView {
     .padding()
     .background(Color.secondary.opacity(0.1))
     .cornerRadius(8)
+  }
+
+  private func chapterIcon(for status: BookDetailsView.Model.Chapter.Status) -> String {
+    switch status {
+    case .completed:
+      return "checkmark.circle.fill"
+    case .current:
+      return "play.circle.fill"
+    case .remaining:
+      return "circle"
+    }
+  }
+
+  private func chapterColor(for status: BookDetailsView.Model.Chapter.Status) -> Color {
+    switch status {
+    case .completed:
+      return .secondary
+    case .current:
+      return .accentColor
+    case .remaining:
+      return .primary
+    }
   }
 
   private func tracksContent(_ tracks: [Track]) -> some View {
@@ -856,6 +888,7 @@ extension BookDetailsView {
     func onWriteTagTapped() {}
     func onSupplementaryEbookTapped(_ ebook: SupplementaryEbook) {}
     func onSendToEbookTapped(_ device: String) {}
+    func onChapterTapped(_ chapter: Chapter) {}
 
     init(
       bookID: String,
@@ -917,7 +950,7 @@ extension BookDetailsView {
 
 extension BookDetailsView.Model {
   enum ContentTab {
-    case chapters([Chapter])
+    case chapters([BookDetailsView.Model.Chapter])
     case tracks([Track])
     case ebooks([SupplementaryEbook])
 
@@ -946,6 +979,20 @@ extension BookDetailsView.Model {
     let size: Int64
     let ino: String
   }
+
+  struct Chapter {
+    enum Status {
+      case completed
+      case current
+      case remaining
+    }
+
+    let id: Int
+    let start: TimeInterval
+    let end: TimeInterval
+    let title: String
+    let status: Status
+  }
 }
 
 extension BookDetailsView.Model {
@@ -972,12 +1019,12 @@ extension BookDetailsView.Model {
         "As the Colony continues to develop and thrive, there's too much to do! Territory to seize, nests to build, Champions to train! Anthony will have his mandibles full trying to teach his new protege Brilliant while trying to keep a war from breaking out with the ka'armodo. However, when the Mother Tree comes looking for his help against a particular breed of monster, there is no way he can refuse. After all, no ant can resist a fight against their ancient nemesis... the Termite! Book 7 of the hit monster-evolution LitRPG series with nearly 30 Million views on Royal Road. Grab your copy today!",
       tabs: [
         .chapters([
-          .init(id: 1, start: 0, end: 1000, title: "001"),
-          .init(id: 2, start: 1001, end: 2000, title: "002"),
-          .init(id: 3, start: 2001, end: 3000, title: "003"),
-          .init(id: 4, start: 3001, end: 4000, title: "004"),
-          .init(id: 5, start: 4001, end: 5000, title: "005"),
-          .init(id: 6, start: 5001, end: 6000, title: "006"),
+          .init(id: 1, start: 0, end: 1000, title: "001", status: .completed),
+          .init(id: 2, start: 1001, end: 2000, title: "002", status: .completed),
+          .init(id: 3, start: 2001, end: 3000, title: "003", status: .current),
+          .init(id: 4, start: 3001, end: 4000, title: "004", status: .remaining),
+          .init(id: 5, start: 4001, end: 5000, title: "005", status: .remaining),
+          .init(id: 6, start: 5001, end: 6000, title: "006", status: .remaining),
         ]),
         .tracks([
           .init(
