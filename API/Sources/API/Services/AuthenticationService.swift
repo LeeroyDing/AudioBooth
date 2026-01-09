@@ -473,6 +473,28 @@ public final class AuthenticationService: ObservableObject {
     }
   }
 
+  public func fetchYearStats(year: Int) async throws -> YearStats {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first."
+      )
+    }
+
+    let request = NetworkRequest<YearStats>(
+      path: "/api/me/stats/year/\(year)",
+      method: .get
+    )
+
+    do {
+      let response = try await networkService.send(request)
+      return response.value
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to fetch year stats: \(error.localizedDescription)"
+      )
+    }
+  }
+
   func refreshToken(for server: Server) async throws {
     guard case .bearer(_, let refreshToken, _) = server.token else {
       return

@@ -12,6 +12,8 @@ struct StatsPageView: View {
           ProgressView()
             .frame(maxWidth: .infinity, maxHeight: 200, alignment: .center)
         } else {
+          yearInReviewSection
+
           statsCardsSection
           recentSessionsSection
         }
@@ -21,6 +23,12 @@ struct StatsPageView: View {
     .navigationTitle("Your Stats")
     .navigationBarTitleDisplayMode(.large)
     .onAppear(perform: model.onAppear)
+  }
+
+  private var yearInReviewSection: some View {
+    YearInReviewCard(
+      model: YearInReviewCardModel(listeningDays: model.listeningDays)
+    )
   }
 
   private var statsCardsSection: some View {
@@ -125,6 +133,7 @@ extension StatsPageView {
     var itemsFinished: Int
     var daysListened: Int
     var recentSessions: [SessionData]
+    var listeningDays: [String: Double]
 
     struct SessionData: Identifiable {
       let id: String
@@ -140,13 +149,15 @@ extension StatsPageView {
       totalTime: Double = 0,
       itemsFinished: Int = 0,
       daysListened: Int = 0,
-      recentSessions: [SessionData] = []
+      recentSessions: [SessionData] = [],
+      listeningDays: [String: Double] = [:]
     ) {
       self.isLoading = isLoading
       self.totalTime = totalTime
       self.itemsFinished = itemsFinished
       self.daysListened = daysListened
       self.recentSessions = recentSessions
+      self.listeningDays = listeningDays
     }
   }
 }
@@ -170,6 +181,11 @@ extension StatsPageView.Model {
           timeListening: 1,
           updatedAt: Date().addingTimeInterval(-86400).timeIntervalSince1970 * 1000
         ),
+      ],
+      listeningDays: [
+        "2023-12-01": 120.0,
+        "2024-03-15": 200.0,
+        "2025-01-05": 180.0,
       ]
     )
   }

@@ -28,7 +28,7 @@ final class StatsPageViewModel: StatsPageView.Model {
     daysListened = stats.days.values.filter { $0 > 0 }.count
 
     do {
-      let allProgress = try await MediaProgress.fetchAll()
+      let allProgress = try MediaProgress.fetchAll()
       itemsFinished = allProgress.filter { $0.isFinished }.count
     } catch {
       itemsFinished = 0
@@ -44,6 +44,8 @@ final class StatsPageViewModel: StatsPageView.Model {
         )
       }
     }
+
+    listeningDays = stats.days
 
     isLoading = false
   }
