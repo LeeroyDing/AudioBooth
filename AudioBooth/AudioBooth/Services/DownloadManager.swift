@@ -379,8 +379,15 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
       let trackFile = bookDirectory.appendingPathComponent("\(apiTrack.index)\(ext)")
 
+      var request = URLRequest(url: trackURL)
+      if let customHeaders = Audiobookshelf.shared.authentication.server?.customHeaders {
+        for (key, value) in customHeaders {
+          request.setValue(value, forHTTPHeaderField: key)
+        }
+      }
+
       try await withCheckedThrowingContinuation { continuation in
-        let downloadTask = downloadSession.downloadTask(with: trackURL)
+        let downloadTask = downloadSession.downloadTask(with: request)
         downloadTask.countOfBytesClientExpectsToReceive = Int64(
           apiTrack.metadata?.size ?? 500_000_000
         )
@@ -423,8 +430,15 @@ private final class DownloadOperation: Operation, @unchecked Sendable {
 
     let ebookFile = bookDirectory.appendingPathComponent("\(bookID)\(ext)")
 
+    var request = URLRequest(url: ebookURL)
+    if let customHeaders = Audiobookshelf.shared.authentication.server?.customHeaders {
+      for (key, value) in customHeaders {
+        request.setValue(value, forHTTPHeaderField: key)
+      }
+    }
+
     try await withCheckedThrowingContinuation { continuation in
-      let downloadTask = downloadSession.downloadTask(with: ebookURL)
+      let downloadTask = downloadSession.downloadTask(with: request)
       downloadTask.countOfBytesClientExpectsToReceive = 50_000_000
 
       self.currentTrack = downloadTask
