@@ -112,7 +112,8 @@ final class BookCardModel: BookCard.Model {
         }
       case .progressFinishedAt:
         if let mediaProgress = try? MediaProgress.fetch(bookID: item.id), mediaProgress.isFinished {
-          details = "Finished \(mediaProgress.lastUpdate.formatted(date: .numeric, time: time))"
+          let date = mediaProgress.finishedAt ?? mediaProgress.lastUpdate
+          details = "Finished \(date.formatted(date: .numeric, time: time))"
         } else {
           details = nil
         }

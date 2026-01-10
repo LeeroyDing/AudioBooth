@@ -13,6 +13,7 @@ public final class MediaProgress {
   public var progress: Double
   public var ebookLocation: String?
   public var isFinished: Bool
+  public var finishedAt: Date?
   public var lastUpdate: Date
 
   public var remaining: TimeInterval { max(0, duration - currentTime) }
@@ -26,6 +27,7 @@ public final class MediaProgress {
     progress: Double = 0,
     ebookLocation: String? = nil,
     isFinished: Bool = false,
+    finishedAt: Date? = nil,
     lastUpdate: Date = Date()
   ) {
     self.bookID = bookID
@@ -36,6 +38,7 @@ public final class MediaProgress {
     self.progress = progress
     self.ebookLocation = ebookLocation
     self.isFinished = isFinished
+    self.finishedAt = finishedAt
     self.lastUpdate = lastUpdate
   }
 
@@ -57,6 +60,7 @@ public final class MediaProgress {
       progress: progress,
       ebookLocation: apiProgress.ebookLocation,
       isFinished: apiProgress.isFinished,
+      finishedAt: apiProgress.finishedAt.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) },
       lastUpdate: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
     )
   }
@@ -111,6 +115,7 @@ extension MediaProgress {
       existingProgress.progress = self.progress
       existingProgress.ebookLocation = self.ebookLocation
       existingProgress.isFinished = self.isFinished
+      existingProgress.finishedAt = self.finishedAt
       existingProgress.lastUpdate = self.lastUpdate
     } else {
       context.insert(self)
@@ -196,6 +201,7 @@ extension MediaProgress {
       existingProgress.progress = 1.0
       existingProgress.currentTime = existingProgress.duration
       existingProgress.isFinished = true
+      existingProgress.finishedAt = Date()
       existingProgress.lastUpdate = Date()
       try existingProgress.save()
     } else {
@@ -203,7 +209,8 @@ extension MediaProgress {
         bookID: bookID,
         duration: 0,
         progress: 1.0,
-        isFinished: true
+        isFinished: true,
+        finishedAt: Date()
       )
       try newProgress.save()
     }
@@ -227,6 +234,10 @@ extension MediaProgress {
         local.id = remote.id
         local.duration = remote.duration
 
+        if local.finishedAt == nil {
+          local.finishedAt = remote.finishedAt
+        }
+
         if remote.lastUpdate > local.lastUpdate {
           if remote.currentTime != local.currentTime {
             PlaybackHistory.record(
@@ -241,6 +252,7 @@ extension MediaProgress {
           local.progress = remote.progress
           local.ebookLocation = remote.ebookLocation
           local.isFinished = remote.isFinished
+          local.finishedAt = remote.finishedAt
           local.lastUpdate = remote.lastUpdate
         }
 
