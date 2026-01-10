@@ -183,6 +183,10 @@ final class LibraryPageModel: LibraryPage.Model {
     }
   }
 
+  override func onFilterButtonTapped() {
+    showingFilterSelection = true
+  }
+
   private func loadBooks() async {
     guard hasMorePages && !isLoadingNextPage && search.searchText.isEmpty else { return }
 
@@ -332,6 +336,7 @@ final class LibraryPageModel: LibraryPage.Model {
     guard filter != newFilter else { return }
 
     filter = newFilter
+    filters?.selectedFilter = newFilter
 
     if isRoot {
       UserPreferences.shared.libraryFilter = newFilter
@@ -346,6 +351,7 @@ final class LibraryPageModel: LibraryPage.Model {
     guard filter != nil else { return }
 
     filter = nil
+    filters?.selectedFilter = nil
 
     if isRoot {
       UserPreferences.shared.libraryFilter = .all

@@ -63,13 +63,26 @@ struct LibraryPage: View {
       }
     }
     .navigationTitle(model.title)
+    .sheet(isPresented: $model.showingFilterSelection) {
+      if let filters = model.filters {
+        NavigationStack {
+          FilterPicker(model: filters)
+        }
+      }
+    }
     .toolbar {
       if model.isRoot {
         ToolbarItem(placement: .navigationBarTrailing) {
-          if let filters = model.filters {
-            FilterPicker(model: filters)
-              .tint(.primary)
+          Button {
+            model.onFilterButtonTapped()
+          } label: {
+            Label(
+              filterButtonLabel ?? "All",
+              systemImage: filterButtonLabel == nil
+                ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill"
+            )
           }
+          .tint(.primary)
         }
 
         if #available(iOS 26.0, *) {
@@ -180,6 +193,24 @@ struct LibraryPage: View {
       Button(title, action: { model.onSortByTapped(sortBy) })
     }
   }
+
+  var filterButtonLabel: String? {
+    guard let filters = model.filters else { return nil }
+
+    switch filters.selectedFilter {
+    case .all: return nil
+    case .progress(let name): return name
+    case .authors(_, let name): return name
+    case .series(_, let name): return name
+    case .narrators(let name): return name
+    case .genres(let name): return name
+    case .tags(let name): return name
+    case .languages(let name): return name
+    case .publishers(let name): return name
+    case .publishedDecades(let decade): return decade
+    case nil: return nil
+    }
+  }
 }
 
 extension LibraryPage {
@@ -199,6 +230,7 @@ extension LibraryPage {
     var search: SearchView.Model
 
     var filters: FilterPicker.Model?
+    var showingFilterSelection: Bool = false
 
     func onAppear() {}
     func refresh() async {}
@@ -208,6 +240,7 @@ extension LibraryPage {
     func onDisplayModeTapped() {}
     func onCollapseSeriesToggled() {}
     func onDownloadAllTapped() {}
+    func onFilterButtonTapped() {}
 
     init(
       isLoading: Bool = true,
@@ -225,6 +258,7 @@ extension LibraryPage {
       self.sortBy = sortBy
       self.books = books
       self.search = search
+      self.filters = filters
       self.title = title
     }
   }
