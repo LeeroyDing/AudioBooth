@@ -73,6 +73,7 @@ struct AudioBoothApp: App {
       Group {
         ContentView()
           .tint(preferences.accentColor)
+          .preferredColorScheme(preferences.colorScheme.colorScheme)
       }
       .task {
         if libraries.current != nil {

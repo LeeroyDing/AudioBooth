@@ -56,6 +56,14 @@ struct GeneralPreferencesView: View {
           .font(.subheadline)
           .foregroundStyle(.red)
         }
+
+        Picker("Color Scheme", selection: $preferences.colorScheme) {
+          ForEach(ColorSchemeMode.allCases, id: \.rawValue) { mode in
+            Text(mode.displayText).tag(mode)
+          }
+        }
+        .font(.subheadline)
+        .bold()
       }
 
       Section("Downloads") {

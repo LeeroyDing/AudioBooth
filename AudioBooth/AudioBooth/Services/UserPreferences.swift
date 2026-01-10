@@ -97,6 +97,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("playerOrientation")
   var playerOrientation: PlayerOrientation = .auto
 
+  @AppStorage("colorScheme")
+  var colorScheme: ColorSchemeMode = .auto
+
   private init() {
     migrateShowListeningStats()
     migrateAutoDownloadBooks()
@@ -293,6 +296,28 @@ enum PlayerOrientation: String, CaseIterable {
     case .auto: "Auto"
     case .portrait: "Portrait"
     case .landscape: "Landscape"
+    }
+  }
+}
+
+enum ColorSchemeMode: String, CaseIterable {
+  case auto
+  case light
+  case dark
+
+  var displayText: String {
+    switch self {
+    case .auto: "Auto"
+    case .light: "Light"
+    case .dark: "Dark"
+    }
+  }
+
+  var colorScheme: ColorScheme? {
+    switch self {
+    case .auto: nil
+    case .light: .light
+    case .dark: .dark
     }
   }
 }
