@@ -307,9 +307,8 @@ extension BookPlayerModel {
 
   func closeSession() {
     Task {
-      try? await sessionManager.closeSession(
-        isDownloaded: item?.isDownloaded ?? false
-      )
+      let isDownloaded = downloadManager.downloadStates[id] == .downloaded
+      try? await sessionManager.closeSession(isDownloaded: isDownloaded)
     }
   }
 }
@@ -397,7 +396,7 @@ extension BookPlayerModel {
       do {
         try await setupSession()
 
-        if item?.isDownloaded == false {
+        if downloadManager.downloadStates[id] != .downloaded {
           let autoDownloadMode = userPreferences.autoDownloadBooks
           let networkMonitor = NetworkMonitor.shared
 
@@ -554,7 +553,7 @@ extension BookPlayerModel {
           "Found existing progress: \(self.mediaProgress.currentTime)s"
         )
 
-        if existingItem.isDownloaded {
+        if downloadManager.downloadStates[id] == .downloaded {
           try await setupAudioPlayer()
           isLoading = false
         }
@@ -918,8 +917,6 @@ extension BookPlayerModel {
 
         self.item = updatedItem
 
-        self.downloadState = updatedItem.isDownloaded ? .downloaded : .notDownloaded
-
         if updatedItem.isDownloaded, self.isPlayerUsingRemoteURL() {
           AppLogger.player.info("Download completed, refreshing player to use local files")
           await self.reloadPlayer()
@@ -1077,7 +1074,7 @@ extension BookPlayerModel {
       return
     }
 
-    let isDownloaded = item?.isDownloaded ?? false
+    let isDownloaded = downloadManager.downloadStates[id] == .downloaded
     guard !isDownloaded else {
       AppLogger.player.debug("Book is downloaded, cannot recover from stream failure")
       return
@@ -1101,7 +1098,7 @@ extension BookPlayerModel {
       return
     }
 
-    let isDownloaded = item?.isDownloaded ?? false
+    let isDownloaded = downloadManager.downloadStates[id] == .downloaded
 
     player.pause()
     isLoading = true

@@ -8,6 +8,7 @@ final class CarPlayOffline {
   private let interfaceController: CPInterfaceController
   private weak var nowPlaying: CarPlayNowPlaying?
   private var currentPlayerCancellable: AnyCancellable?
+  private let downloadManager = DownloadManager.shared
 
   let template: CPListTemplate
 
@@ -44,7 +45,7 @@ final class CarPlayOffline {
   private func buildBookItems() async -> [CPListItem] {
     do {
       let offlineBooks = try LocalBook.fetchAll()
-        .filter({ $0.isDownloaded && $0.duration > 0 })
+        .filter({ downloadManager.downloadStates[$0.bookID] == .downloaded && $0.duration > 0 })
         .sorted()
 
       return offlineBooks.map { localBook in

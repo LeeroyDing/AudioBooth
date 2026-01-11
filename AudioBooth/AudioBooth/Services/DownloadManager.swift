@@ -30,30 +30,9 @@ final class DownloadManager: NSObject, ObservableObject {
 
   private var activeOperations: [String: DownloadOperation] = [:]
   private var progressTasks: [String: Task<Void, Never>] = [:]
-  @Published private(set) var downloadStates: [String: DownloadState] = [:]
+  @Published var downloadStates: [String: DownloadState] = [:]
 
   var backgroundCompletionHandler: (() -> Void)?
-
-  override init() {
-    super.init()
-    loadDownloadedBooks()
-  }
-
-  private func loadDownloadedBooks() {
-    Task {
-      let downloadedBooks = try? LocalBook.fetchAll()
-      await MainActor.run {
-        var count = 0
-        for book in downloadedBooks ?? [] {
-          if book.isDownloaded {
-            downloadStates[book.bookID] = .downloaded
-            count += 1
-          }
-        }
-        AppLogger.download.info("Loaded \(count) downloaded books")
-      }
-    }
-  }
 
   func isDownloading(for bookID: String) -> Bool {
     activeOperations[bookID] != nil

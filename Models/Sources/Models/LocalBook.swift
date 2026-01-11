@@ -112,7 +112,7 @@ extension LocalBook {
       var mergedTracks: [Track] = []
       for newTrack in self.tracks {
         if let existingTrack = existingItem.tracks.first(where: { $0.index == newTrack.index }) {
-          newTrack.relativePath = existingTrack.relativePath
+          newTrack.relativePath = newTrack.relativePath ?? existingTrack.relativePath
         }
         mergedTracks.append(newTrack)
       }

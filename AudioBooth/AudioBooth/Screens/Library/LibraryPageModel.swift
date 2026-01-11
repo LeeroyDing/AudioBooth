@@ -4,6 +4,7 @@ import Models
 
 final class LibraryPageModel: LibraryPage.Model {
   private let audiobookshelf = Audiobookshelf.shared
+  private let downloadManager = DownloadManager.shared
 
   private var fetched: [BookCard.Model] = []
 
@@ -172,8 +173,9 @@ final class LibraryPageModel: LibraryPage.Model {
   override func onDownloadAllTapped() {
     Task {
       for book in books {
+        guard downloadManager.downloadStates[book.id] != .downloaded else { continue }
+
         if let localBook = try? LocalBook.fetch(bookID: book.id) {
-          guard !localBook.isDownloaded else { continue }
           try? localBook.download()
         } else {
           let remoteBook = try? await audiobookshelf.books.fetch(id: book.id)

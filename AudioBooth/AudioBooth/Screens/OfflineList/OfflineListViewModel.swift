@@ -115,7 +115,7 @@ final class OfflineListViewModel: OfflineListView.Model {
         guard !Task.isCancelled, let self else { break }
 
         if !self.isReordering {
-          self.allBooks = books.filter(\.isDownloaded).sorted()
+          self.allBooks = books.filter { downloadManager.downloadStates[$0.bookID] == .downloaded }.sorted()
           self.filteredBooks = self.allBooks
           self.updateDisplayedBooks()
         }

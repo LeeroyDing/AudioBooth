@@ -94,10 +94,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           tracks: localBook.tracks
         )
 
-        if localBook.isDownloaded {
-          downloadState = .downloaded
-        }
-
         isLoading = false
       } else if book == nil {
         isLoading = true
@@ -315,11 +311,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     itemObservation = Task { [weak self] in
       for await updatedItem in LocalBook.observe(where: \.bookID, equals: bookID) {
         self?.localBook = updatedItem
-        if updatedItem.isDownloaded {
-          self?.downloadState = .downloaded
-        } else if self?.downloadState == .downloaded {
-          self?.downloadState = .notDownloaded
-        }
       }
     }
   }

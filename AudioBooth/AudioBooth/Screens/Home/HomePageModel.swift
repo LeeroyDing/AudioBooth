@@ -113,7 +113,18 @@ extension HomePageModel {
       for await books in LocalBook.observeAll() {
         guard !Task.isCancelled else { break }
         self?.availableOffline = books
+        self?.updateDownloadStates(for: books)
         self?.rebuildSections()
+      }
+    }
+  }
+
+  private func updateDownloadStates(for books: [LocalBook]) {
+    for book in books {
+      if book.isDownloaded {
+        downloadManager.downloadStates[book.bookID] = .downloaded
+      } else {
+        downloadManager.downloadStates[book.bookID] = .notDownloaded
       }
     }
   }
@@ -294,14 +305,16 @@ extension HomePageModel {
     var downloadedBooks: [LocalBook] = []
 
     for book in availableOffline {
+      let isDownloaded = downloadManager.downloadStates[book.bookID] == .downloaded
+
       if !downloadManager.isDownloading(for: book.bookID),
-        !book.isDownloaded,
+        !isDownloaded,
         playerManager.current?.id != book.bookID
       {
         Task {
           try? book.delete()
         }
-      } else if book.isDownloaded {
+      } else if isDownloaded {
         downloadedBooks.append(book)
       }
     }
