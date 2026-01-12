@@ -12,7 +12,10 @@ final class AuthorsPageModel: AuthorsPage.Model {
   private let itemsPerPage: Int = 50
 
   init() {
-    super.init(hasMorePages: true)
+    super.init(
+      isLoading: true,
+      hasMorePages: true
+    )
     self.searchViewModel = SearchViewModel()
   }
 

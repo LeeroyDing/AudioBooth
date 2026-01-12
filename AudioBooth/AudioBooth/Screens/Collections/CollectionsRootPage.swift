@@ -45,7 +45,9 @@ struct CollectionsRootPage: View {
           CollectionDetailPage(
             model: CollectionDetailPageModel(collectionID: id, mode: .collections)
           )
-        case .series, .author, .narrator, .genre, .tag, .offline:
+        case .author(let id, let name):
+          AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
+        case .series, .narrator, .genre, .tag, .offline:
           LibraryPage(model: LibraryPageModel(destination: destination))
 
         case .stats:

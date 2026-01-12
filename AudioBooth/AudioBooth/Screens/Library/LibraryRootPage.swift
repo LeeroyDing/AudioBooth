@@ -14,7 +14,9 @@ struct LibraryRootPage: View {
             BookDetailsView(model: BookDetailsViewModel(bookID: id))
           case .offline:
             OfflineListView(model: OfflineListViewModel())
-          case .series, .author, .narrator, .genre, .tag:
+          case .author(let id, let name):
+            AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
+          case .series, .narrator, .genre, .tag:
             LibraryPage(model: LibraryPageModel(destination: destination))
           case .playlist, .collection, .stats:
             EmptyView()

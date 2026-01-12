@@ -57,4 +57,23 @@ public final class AuthorsService {
     let response = try await networkService.send(request)
     return response.value
   }
+
+  public func fetchDetails(authorID: String) async throws -> AuthorDetails {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first."
+      )
+    }
+
+    let query: [String: String] = ["include": "items,series"]
+
+    let request = NetworkRequest<AuthorDetails>(
+      path: "/api/authors/\(authorID)",
+      method: .get,
+      query: query
+    )
+
+    let response = try await networkService.send(request)
+    return response.value
+  }
 }
