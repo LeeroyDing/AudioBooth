@@ -240,9 +240,7 @@ final class SessionManager {
     AppLogger.session.info("Started local session: \(session.id)")
   }
 
-  func syncProgress(
-    currentTime: TimeInterval
-  ) async throws {
+  func syncProgress(currentTime: TimeInterval) async throws {
     guard let session = current else {
       throw SessionError.noActiveSession
     }
@@ -270,9 +268,7 @@ final class SessionManager {
         session.pendingListeningTime = 0
         try session.save()
         scheduleSessionClose()
-        AppLogger.session.info(
-          "Successfully synced remote session: \(session.id)"
-        )
+        AppLogger.session.info("Successfully synced remote session: \(session.id)")
         return
       } catch {
         try session.save()

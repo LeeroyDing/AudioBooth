@@ -33,6 +33,20 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     SessionService.deviceID + "-watch"
   }
 
+  func syncProgress(_ bookID: String) {
+    var context = session?.applicationContext ?? [:]
+
+    guard
+      var progress = context["progress"] as? [String: Double],
+      let current = try? MediaProgress.fetch(bookID: bookID)
+    else { return }
+
+    progress[bookID] = current.currentTime
+
+    context["progress"] = progress
+    updateContext(context)
+  }
+
   func syncContinueListening(books: [Book]) {
     var context = session?.applicationContext ?? [:]
 
@@ -164,6 +178,7 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     guard let url = url else { return nil }
 
     var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+    components?.queryItems = [URLQueryItem(name: "width", value: "200")]
     components?.queryItems = [URLQueryItem(name: "format", value: "jpg")]
     return components?.url?.absoluteString ?? url.absoluteString
   }

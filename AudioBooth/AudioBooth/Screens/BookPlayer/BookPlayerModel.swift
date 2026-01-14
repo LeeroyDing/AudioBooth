@@ -300,7 +300,7 @@ extension BookPlayerModel {
       }
     }
 
-    WidgetCenter.shared.reloadAllTimelines()
+    syncPlayback()
   }
 
   private func isSessionNotFoundError(_ error: Error) -> Bool {
@@ -896,10 +896,6 @@ extension BookPlayerModel {
       if self.timerSecondsCounter % 20 == 0 {
         self.updateMediaProgress()
       }
-
-      if self.timerSecondsCounter % 2 == 0 {
-        self.syncPlayback()
-      }
     }
   }
 }
@@ -1168,5 +1164,7 @@ extension BookPlayerModel {
       sharedDefaults.set(data, forKey: "playbackState")
       WidgetCenter.shared.reloadAllTimelines()
     }
+
+    WatchConnectivityManager.shared.syncProgress(item.bookID)
   }
 }

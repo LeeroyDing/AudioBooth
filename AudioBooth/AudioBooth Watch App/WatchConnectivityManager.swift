@@ -352,8 +352,6 @@ extension WatchConnectivityManager: WCSessionDelegate {
 
     continueListeningBooks = books
     persistBooks(books)
-
-    AppLogger.watchConnectivity.info("Received \(books.count) continue listening books")
   }
 
   private func handleProgress(_ data: [String: Double]) {
