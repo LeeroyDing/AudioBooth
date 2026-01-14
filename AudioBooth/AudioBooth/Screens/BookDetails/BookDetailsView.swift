@@ -265,7 +265,7 @@ struct BookDetailsView: View {
         }
         .overlay(alignment: .bottom) {
           if let progress = model.progress, progress > 0 {
-            progressBar(progress)
+            ProgressBarView(progress: model.progress)
           }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -286,7 +286,7 @@ struct BookDetailsView: View {
         .frame(width: 200, height: 200)
         .overlay(alignment: .bottom) {
           if let progress = model.progress, progress > 0 {
-            progressBar(progress)
+            ProgressBarView(progress: model.progress)
           }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -592,17 +592,6 @@ struct BookDetailsView: View {
     case .notDownloaded:
       return "Download"
     }
-  }
-
-  private func progressBar(_ progress: Double) -> some View {
-    GeometryReader { geometry in
-      let progressColor: Color = progress >= 1.0 ? .green : .orange
-
-      Rectangle()
-        .fill(progressColor)
-        .frame(width: geometry.size.width * progress, height: 8)
-    }
-    .frame(height: 8)
   }
 
   private func genresSection(_ genres: [String]) -> some View {

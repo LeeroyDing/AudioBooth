@@ -75,7 +75,7 @@ struct SeriesCard: View {
         }
         .aspectRatio(2.0, contentMode: .fit)
         .overlay(alignment: .bottom) {
-          progressBar
+          ProgressBarView(progress: model.progress)
             .clipShape(UnevenRoundedRectangle(cornerRadii: .init(bottomLeading: 6, bottomTrailing: 6)))
         }
 
@@ -104,20 +104,6 @@ struct SeriesCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-  }
-
-  @ViewBuilder
-  var progressBar: some View {
-    if let progress = model.progress, progress > 0 {
-      GeometryReader { geometry in
-        let progressColor: Color = progress >= 1.0 ? .green : .orange
-
-        Rectangle()
-          .fill(progressColor)
-          .frame(width: geometry.size.width * progress, height: 4)
-      }
-      .frame(height: 4)
-    }
   }
 }
 

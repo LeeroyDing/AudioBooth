@@ -28,27 +28,15 @@ struct ItemRow: View {
 
   var cover: some View {
     CoverImage(url: model.coverURL)
-      .overlay(alignment: .bottom) { progressBar }
+      .overlay(alignment: .bottom) {
+        ProgressBarView(progress: model.progress)
+      }
       .frame(width: 60, height: 60)
       .clipShape(RoundedRectangle(cornerRadius: 6))
       .overlay(
         RoundedRectangle(cornerRadius: 6)
           .stroke(.gray.opacity(0.3), lineWidth: 1)
       )
-  }
-
-  @ViewBuilder
-  var progressBar: some View {
-    if let progress = model.progress, progress > 0 {
-      GeometryReader { geometry in
-        let progressColor: Color = progress >= 1.0 ? .green : .orange
-
-        Rectangle()
-          .fill(progressColor)
-          .frame(width: geometry.size.width * progress, height: 4)
-      }
-      .frame(height: 4)
-    }
   }
 }
 

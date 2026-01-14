@@ -101,7 +101,7 @@ struct EbookSearchView: View {
         let text = locator.text.sanitized()
         (Text(text.before ?? "")
           + Text(text.highlight ?? "")
-          .foregroundStyle(.orange)
+          .foregroundStyle(Color.accentColor)
           .fontWeight(.semibold)
           + Text(text.after ?? ""))
           .font(.body)

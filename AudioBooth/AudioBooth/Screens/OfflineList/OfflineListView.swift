@@ -258,7 +258,9 @@ extension OfflineListView {
 
     var cover: some View {
       CoverImage(url: book.coverURL)
-        .overlay(alignment: .bottom) { progressBar }
+        .overlay(alignment: .bottom) {
+          ProgressBarView(progress: book.progress)
+        }
         .overlay(alignment: .topTrailing) {
           if let sequence = sequence {
             Text("#\(sequence)")
@@ -290,20 +292,6 @@ extension OfflineListView {
           .foregroundColor(.primary)
       }
       .lineLimit(1)
-    }
-
-    @ViewBuilder
-    var progressBar: some View {
-      if let progress = book.progress, progress > 0 {
-        GeometryReader { geometry in
-          let progressColor: Color = progress >= 1.0 ? .green : .orange
-
-          Rectangle()
-            .fill(progressColor)
-            .frame(width: geometry.size.width * progress, height: 4)
-        }
-        .frame(height: 4)
-      }
     }
   }
 }

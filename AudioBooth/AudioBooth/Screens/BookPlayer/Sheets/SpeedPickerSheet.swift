@@ -38,7 +38,6 @@ struct SpeedPickerSheet: View {
             in: 0.5...3.5,
             step: 0.05
           )
-          .accentColor(.orange)
 
           Button(action: { model.onSpeedIncrease() }) {
             Circle()

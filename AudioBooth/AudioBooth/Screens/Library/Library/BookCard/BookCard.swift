@@ -102,7 +102,9 @@ struct BookCard: View {
 
   var cover: some View {
     CoverImage(url: model.coverURL)
-      .overlay(alignment: .bottom) { progressBar }
+      .overlay(alignment: .bottom) {
+        ProgressBarView(progress: model.progress)
+      }
       .overlay { downloadProgress }
       .overlay(alignment: .bottomLeading) {
         ebookIndicator
@@ -112,22 +114,18 @@ struct BookCard: View {
       .overlay(alignment: .topTrailing) {
         Group {
           if let bookCount = model.bookCount {
-            HStack(spacing: 2) {
-              Image(systemName: "book")
-              Text("\(bookCount)")
+            badge {
+              HStack(spacing: 2) {
+                Image(systemName: "book")
+                Text("\(bookCount)")
+              }
             }
-          } else if let sequence = model.sequence {
-            Text("#\(sequence)")
+          } else if let sequence = model.sequence, !sequence.isEmpty {
+            badge {
+              Text("#\(sequence)")
+            }
           }
         }
-        .font(.caption2)
-        .fontWeight(.medium)
-        .foregroundStyle(Color.white)
-        .padding(.vertical, 2)
-        .padding(.horizontal, 4)
-        .background(Color.black.opacity(0.6))
-        .clipShape(.capsule)
-        .padding(4)
       }
       .clipShape(RoundedRectangle(cornerRadius: 8))
       .overlay(
@@ -137,9 +135,24 @@ struct BookCard: View {
       .contentShape(Rectangle())
   }
 
+  @ViewBuilder
+  func badge(content: () -> some View) -> some View {
+    content()
+      .font(.caption2)
+      .fontWeight(.medium)
+      .foregroundStyle(Color.white)
+      .padding(.vertical, 2)
+      .padding(.horizontal, 4)
+      .background(Color.black.opacity(0.6))
+      .clipShape(.capsule)
+      .padding(4)
+  }
+
   var rowCover: some View {
     CoverImage(url: model.coverURL)
-      .overlay(alignment: .bottom) { progressBar }
+      .overlay(alignment: .bottom) {
+        ProgressBarView(progress: model.progress)
+      }
       .overlay { downloadProgress }
       .overlay(alignment: .bottomLeading) {
         ebookIndicator
@@ -147,7 +160,7 @@ struct BookCard: View {
           .padding(.bottom, 6)
       }
       .overlay(alignment: .topTrailing) {
-        if let sequence = model.sequence {
+        if let sequence = model.sequence, !sequence.isEmpty {
           Text("#\(sequence)")
             .font(.caption2)
             .fontWeight(.medium)
@@ -192,18 +205,12 @@ struct BookCard: View {
   }
 
   var title: some View {
-    Group {
-      if displayMode == .row, let sequence = model.sequence {
-        Text(model.title) + Text(" #\(sequence)")
-      } else {
-        Text(model.title)
-      }
-    }
-    .font(.caption)
-    .foregroundColor(.primary)
-    .fontWeight(.medium)
-    .lineLimit(1)
-    .allowsTightening(true)
+    Text(model.title)
+      .font(.caption)
+      .foregroundColor(.primary)
+      .fontWeight(.medium)
+      .lineLimit(1)
+      .allowsTightening(true)
   }
 
   @ViewBuilder
@@ -214,20 +221,6 @@ struct BookCard: View {
         .foregroundColor(.secondary)
         .lineLimit(1)
         .allowsTightening(true)
-    }
-  }
-
-  @ViewBuilder
-  var progressBar: some View {
-    if let progress = model.progress, progress > 0 {
-      GeometryReader { geometry in
-        let progressColor: Color = progress >= 1.0 ? .green : .orange
-
-        Rectangle()
-          .fill(progressColor)
-          .frame(width: geometry.size.width * progress, height: 4)
-      }
-      .frame(height: 4)
     }
   }
 
