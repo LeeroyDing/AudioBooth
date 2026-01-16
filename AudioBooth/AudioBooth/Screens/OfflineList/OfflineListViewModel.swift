@@ -116,14 +116,16 @@ final class OfflineListViewModel: OfflineListView.Model {
       for await books in LocalBook.observeAll() {
         guard !Task.isCancelled, let self else { break }
 
-        if !self.isReordering {
-          self.allBooks = books.filter { $0.isDownloaded }.sorted()
-          self.filteredBooks = self.allBooks
-          self.updateDisplayedBooks()
-        }
+        Task { @MainActor in
+          if !self.isReordering {
+            self.allBooks = books.filter { $0.isDownloaded }.sorted()
+            self.filteredBooks = self.allBooks
+            self.updateDisplayedBooks()
+          }
 
-        self.isReordering = false
-        self.isLoading = false
+          self.isReordering = false
+          self.isLoading = false
+        }
       }
     }
   }

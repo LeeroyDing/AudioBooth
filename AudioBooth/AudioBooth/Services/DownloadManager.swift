@@ -21,6 +21,13 @@ final class DownloadManager: NSObject, ObservableObject {
     case downloaded
   }
 
+  struct DownloadInfo {
+    let title: String
+    let details: String?
+    let coverURL: URL?
+    let startedAt: Date
+  }
+
   private let operationQueue: OperationQueue = {
     let queue = OperationQueue()
     queue.maxConcurrentOperationCount = 1
@@ -31,6 +38,7 @@ final class DownloadManager: NSObject, ObservableObject {
   private var activeOperations: [String: DownloadOperation] = [:]
   private var progressTasks: [String: Task<Void, Never>] = [:]
   @Published var downloadStates: [String: DownloadState] = [:]
+  @Published var downloadInfos: [String: DownloadInfo] = [:]
 
   var backgroundCompletionHandler: (() -> Void)?
 
@@ -38,7 +46,11 @@ final class DownloadManager: NSObject, ObservableObject {
     activeOperations[bookID] != nil
   }
 
-  func startDownload(for bookID: String, type: DownloadType = .audiobook) {
+  func startDownload(
+    for bookID: String,
+    type: DownloadType = .audiobook,
+    info: DownloadInfo? = nil,
+  ) {
     guard activeOperations[bookID] == nil else {
       return
     }
@@ -46,7 +58,13 @@ final class DownloadManager: NSObject, ObservableObject {
     AppLogger.download.info("Starting \(type) download for book: \(bookID)")
     let operation = DownloadOperation(bookID: bookID, type: type)
     activeOperations[bookID] = operation
-    downloadStates[bookID] = .downloading(progress: 0)
+
+    Task { @MainActor [weak self] in
+      self?.downloadStates[bookID] = .downloading(progress: 0)
+      if let info {
+        self?.downloadInfos[bookID] = info
+      }
+    }
 
     let progressTask = Task { @MainActor [weak self] in
       for await progress in operation.progress {
@@ -56,17 +74,20 @@ final class DownloadManager: NSObject, ObservableObject {
     }
     progressTasks[bookID] = progressTask
 
-    operation.completionBlock = { @MainActor [weak self] in
-      self?.progressTasks[bookID]?.cancel()
-      self?.progressTasks.removeValue(forKey: bookID)
-      self?.activeOperations.removeValue(forKey: bookID)
+    operation.completionBlock = { [weak self] in
+      Task { @MainActor in
+        self?.progressTasks[bookID]?.cancel()
+        self?.progressTasks.removeValue(forKey: bookID)
+        self?.activeOperations.removeValue(forKey: bookID)
+        self?.downloadInfos.removeValue(forKey: bookID)
 
-      if operation.isFinished && !operation.isCancelled {
-        AppLogger.download.info("Download completed successfully for book: \(bookID)")
-        self?.downloadStates[bookID] = .downloaded
-      } else {
-        AppLogger.download.info("Download cancelled or failed for book: \(bookID)")
-        self?.downloadStates[bookID] = .notDownloaded
+        if operation.isFinished && !operation.isCancelled {
+          AppLogger.download.info("Download completed successfully for book: \(bookID)")
+          self?.downloadStates[bookID] = .downloaded
+        } else {
+          AppLogger.download.info("Download cancelled or failed for book: \(bookID)")
+          self?.downloadStates[bookID] = .notDownloaded
+        }
       }
     }
 
@@ -76,7 +97,11 @@ final class DownloadManager: NSObject, ObservableObject {
   func cancelDownload(for bookID: String) {
     AppLogger.download.info("Cancelling download for book: \(bookID)")
     activeOperations[bookID]?.cancel()
-    downloadStates[bookID] = .notDownloaded
+
+    Task { @MainActor in
+      downloadStates[bookID] = .notDownloaded
+      downloadInfos.removeValue(forKey: bookID)
+    }
   }
 }
 

@@ -45,15 +45,50 @@ extension BookActionable {
   public func download() throws {
     let downloadType: DownloadManager.DownloadType
 
+    let title: String
+    let duration: TimeInterval
+    let size: Int64
+    let coverURL: URL?
+
     if let book = self as? Book {
       downloadType = book.mediaType == .ebook ? .ebook : .audiobook
+
+      title = book.title
+      duration = book.duration
+      size = book.size ?? 0
+      coverURL = book.coverURL()
     } else if let localBook = self as? LocalBook {
       downloadType = localBook.tracks.isEmpty ? .ebook : .audiobook
+
+      title = localBook.title
+      duration = localBook.duration
+      size = localBook.tracks.reduce(0) { $0 + ($1.size ?? 0) }
+      coverURL = localBook.coverURL()
     } else {
-      downloadType = .audiobook
+      throw BookActionableError.unsupportedType
     }
 
-    DownloadManager.shared.startDownload(for: bookID, type: downloadType)
+    var details = Duration.seconds(duration).formatted(
+      .units(
+        allowed: [.hours, .minutes],
+        width: .narrow
+      )
+    )
+
+    if size > 0 {
+      details += " • \(size.formatted(.byteCount(style: .file)))"
+    }
+
+    DownloadManager.shared.startDownload(
+      for: bookID,
+      type: downloadType,
+      info: .init(
+        title: title,
+        details: details,
+        coverURL: coverURL,
+        startedAt: Date()
+      )
+    )
   }
 
   public func removeDownload() {
@@ -84,3 +119,7 @@ extension Book: BookActionable {
 }
 
 extension LocalBook: BookActionable {}
+
+enum BookActionableError: Error {
+  case unsupportedType
+}

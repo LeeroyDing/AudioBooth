@@ -5,25 +5,7 @@ struct OfflineListView: View {
   @StateObject var model: Model
 
   var body: some View {
-    NavigationStack {
-      content
-        .navigationDestination(for: NavigationDestination.self) { destination in
-          switch destination {
-          case .book(let id):
-            BookDetailsView(model: BookDetailsViewModel(bookID: id))
-          case .author(let id, let name):
-            AuthorDetailsView(model: AuthorDetailsViewModel(authorID: id, name: name))
-          case .series, .narrator, .genre, .tag:
-            LibraryPage(model: LibraryPageModel(destination: destination))
-          case .playlist(let id):
-            CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .playlists))
-          case .collection(let id):
-            CollectionDetailPage(model: CollectionDetailPageModel(collectionID: id, mode: .collections))
-          case .offline, .stats:
-            EmptyView()
-          }
-        }
-    }
+    content
   }
 
   var content: some View {
@@ -225,7 +207,6 @@ extension OfflineListView {
         VStack(alignment: .leading, spacing: 6) {
           Text(book.title)
             .font(.caption)
-            .foregroundColor(.primary)
             .fontWeight(.medium)
             .lineLimit(1)
             .allowsTightening(true)
@@ -233,14 +214,12 @@ extension OfflineListView {
           if let author = book.author {
             Text(author)
               .font(.caption2)
-              .foregroundColor(.secondary)
               .lineLimit(1)
           }
 
           if let details = book.details {
             Text(details)
               .font(.caption2)
-              .foregroundColor(.secondary)
               .lineLimit(1)
           }
         }
@@ -252,6 +231,7 @@ extension OfflineListView {
             .foregroundColor(.secondary)
         }
       }
+      .foregroundColor(.primary)
       .contentShape(Rectangle())
       .onAppear(perform: book.onAppear)
     }

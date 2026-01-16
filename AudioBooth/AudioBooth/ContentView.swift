@@ -67,7 +67,7 @@ struct ContentView: View {
         }
 
         Tab("Downloads", systemImage: "arrow.down.circle.fill", value: .downloads) {
-          OfflineListView(model: OfflineListViewModel())
+          DownloadsRootPage()
         }
 
         Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
@@ -125,7 +125,7 @@ struct ContentView: View {
             Text("Collections")
           }
 
-        OfflineListView(model: OfflineListViewModel())
+        DownloadsRootPage()
           .padding(.bottom, 0.5)
           .safeAreaInset(edge: .bottom) { miniPlayer }
           .tabItem {
