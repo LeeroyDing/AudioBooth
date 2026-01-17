@@ -958,7 +958,8 @@ extension BookPlayerModel {
     case .ended:
       applySmartRewind(reason: .onInterruption)
 
-      if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt,
+      if interruptionBeganAt != nil,
+        let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt,
         AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
       {
         AppLogger.player.info("Audio interruption ended - resuming playback")

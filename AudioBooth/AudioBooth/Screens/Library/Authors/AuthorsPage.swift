@@ -41,6 +41,10 @@ struct AuthorsPage: View {
       prompt: "Search books, series, and authors"
     )
     .toolbar {
+      ToolbarItem(placement: .topBarLeading) {
+        EmptyView()
+      }
+
       ToolbarItem(placement: .navigationBarTrailing) {
         Menu {
           Picker("Sort Order", selection: $sortOrder) {

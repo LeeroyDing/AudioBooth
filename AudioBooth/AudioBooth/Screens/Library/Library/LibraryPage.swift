@@ -85,7 +85,7 @@ struct LibraryPage: View {
           .tint(.primary)
         }
       } else {
-        ToolbarItem(placement: .navigationBarTrailing) {
+        ToolbarItem(placement: .topBarTrailing) {
           Button {
             model.onDownloadAllTapped()
           } label: {
@@ -95,7 +95,7 @@ struct LibraryPage: View {
         }
       }
 
-      ToolbarItem(placement: .navigationBarTrailing) {
+      ToolbarItem(placement: .topBarTrailing) {
         Menu {
           Toggle(
             isOn: Binding(
