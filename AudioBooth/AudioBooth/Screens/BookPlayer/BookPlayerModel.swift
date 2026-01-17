@@ -39,6 +39,7 @@ final class BookPlayerModel: BookPlayer.Model {
   private var maxRecoveryAttempts = 3
   private var isRecovering = false
   private var interruptionBeganAt: Date?
+  private var volumeObservation: NSKeyValueObservation?
 
   init(_ book: Book) {
     self.item = nil
@@ -258,6 +259,9 @@ extension BookPlayerModel {
     player = nil
 
     try? audioSession.setActive(false)
+
+    volumeObservation?.invalidate()
+    volumeObservation = nil
 
     itemObservation?.cancel()
     cancellables.removeAll()
@@ -861,6 +865,11 @@ extension BookPlayerModel {
       }
       .store(in: &cancellables)
 
+    volumeObservation = audioSession.observe(\.outputVolume, options: [.old, .new]) { [weak self] _, change in
+      guard let self, let old = change.oldValue, let new = change.newValue else { return }
+      self.handleVolumeChange(from: old, to: new)
+    }
+
     NotificationCenter.default.publisher(
       for: AVPlayerItem.newErrorLogEntryNotification,
       object: player.currentItem
@@ -988,6 +997,21 @@ extension BookPlayerModel {
 
     if wasPlaying {
       onPlayTapped()
+    }
+  }
+
+  private func handleVolumeChange(from old: Float, to new: Float) {
+    if new == 0 && old > 0 {
+      AppLogger.player.info("Volume dropped to 0 - pausing playback")
+      interruptionBeganAt = isPlaying ? Date() : nil
+      player?.pause()
+    } else if new > 0 && old == 0, let beganAt = interruptionBeganAt {
+      if Date().timeIntervalSince(beganAt) < 60 * 5 {
+        AppLogger.player.info("Volume restored from 0 - resuming playback")
+        applySmartRewind(reason: .onInterruption)
+        player?.play()
+      }
+      interruptionBeganAt = nil
     }
   }
 }
