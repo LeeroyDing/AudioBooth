@@ -216,7 +216,10 @@ extension PlayerManager {
 
     commandCenter.playCommand.isEnabled = true
     commandCenter.playCommand.addTarget { [weak self] _ in
-      guard let current = self?.current else { return .commandFailed }
+      guard
+        let current = self?.current,
+        AVAudioSession.sharedInstance().outputVolume > 0
+      else { return .commandFailed }
 
       current.onPlayTapped()
 
