@@ -28,13 +28,11 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       )
     }
 
-    let currentIndex = chapters.firstIndex(where: { chapter in
-      chapter.start...chapter.end ~= mediaProgress.currentTime
-    })
+    let currentIndex = convertedChapters.index(for: mediaProgress.currentTime)
 
     super.init(
       chapters: convertedChapters,
-      currentIndex: currentIndex ?? 0
+      currentIndex: currentIndex
     )
 
     observeMediaProgress()
@@ -46,19 +44,8 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
     } onChange: { [weak self] in
       guard let self else { return }
       RunLoop.main.perform {
-        self.updateCurrentChapterFromTime()
+        self.currentIndex = self.chapters.index(for: self.mediaProgress.currentTime)
         self.observeMediaProgress()
-      }
-    }
-  }
-
-  private func updateCurrentChapterFromTime() {
-    for (index, chapter) in chapters.enumerated() {
-      if chapter.start...chapter.end ~= mediaProgress.currentTime {
-        if currentIndex != index {
-          currentIndex = index
-        }
-        break
       }
     }
   }
@@ -105,5 +92,15 @@ final class ChapterPickerSheetViewModel: ChapterPickerSheet.Model {
       title: chapter.title,
       position: position
     )
+  }
+}
+
+extension Array where Element == ChapterPickerSheet.Model.Chapter {
+  func index(for time: TimeInterval) -> Int {
+    for (index, chapter) in enumerated() where chapter.start..<chapter.end ~= time {
+      return index
+    }
+
+    return Swift.max(0, count - 1)
   }
 }

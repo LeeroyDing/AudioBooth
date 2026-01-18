@@ -217,7 +217,8 @@ extension PlayerManager {
     commandCenter.playCommand.isEnabled = true
     commandCenter.playCommand.addTarget { [weak self] _ in
       guard
-        let current = self?.current,
+        let self,
+        let current,
         AVAudioSession.sharedInstance().outputVolume > 0
       else { return .commandFailed }
 
@@ -228,7 +229,7 @@ extension PlayerManager {
 
     commandCenter.pauseCommand.isEnabled = true
     commandCenter.pauseCommand.addTarget { [weak self] _ in
-      guard let current = self?.current else { return .commandFailed }
+      guard let self, let current else { return .commandFailed }
 
       current.onPauseTapped()
 
@@ -237,7 +238,7 @@ extension PlayerManager {
 
     commandCenter.togglePlayPauseCommand.isEnabled = true
     commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
-      guard let current = self?.current else { return .commandFailed }
+      guard let self, let current else { return .commandFailed }
 
       current.onTogglePlaybackTapped()
 
@@ -246,7 +247,7 @@ extension PlayerManager {
 
     commandCenter.stopCommand.isEnabled = true
     commandCenter.stopCommand.addTarget { [weak self] _ in
-      guard let current = self?.current else { return .commandFailed }
+      guard let self, let current else { return .commandFailed }
 
       current.onPauseTapped()
 
@@ -321,14 +322,18 @@ extension PlayerManager {
     commandCenter.changePlaybackPositionCommand.isEnabled =
       userPreferences.lockScreenAllowPlaybackPositionChange
     commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
-      guard let current = self?.current as? BookPlayerModel else { return .commandFailed }
+      guard let self, let current = current as? BookPlayerModel else { return .commandFailed }
 
       guard let positionEvent = event as? MPChangePlaybackPositionCommandEvent else {
         return .commandFailed
       }
 
-      let offset = current.chapters?.current?.start ?? 0
-      current.seekToTime(offset + positionEvent.positionTime)
+      if userPreferences.showFullBookDuration {
+        current.seekToTime(positionEvent.positionTime)
+      } else {
+        let offset = current.chapters?.current?.start ?? 0
+        current.seekToTime(offset + positionEvent.positionTime)
+      }
 
       return .success
     }
@@ -338,7 +343,7 @@ extension PlayerManager {
       NSNumber(value: $0)
     }
     commandCenter.changePlaybackRateCommand.addTarget { [weak self] event in
-      guard let current = self?.current else { return .commandFailed }
+      guard let self, let current else { return .commandFailed }
 
       guard let rateEvent = event as? MPChangePlaybackRateCommandEvent else {
         return .commandFailed
