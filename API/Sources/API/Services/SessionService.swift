@@ -45,9 +45,9 @@ public final class SessionService {
 
   public func start(
     itemID: String,
-    forceDirectPlay: Bool = false,
     forceTranscode: Bool = false,
-    sessionType: SessionType = .player
+    sessionType: SessionType = .player,
+    timeout: TimeInterval
   ) async throws -> PlaySession {
     guard let networkService = audiobookshelf.networkService else {
       throw Audiobookshelf.AudiobookshelfError.networkError(
@@ -97,11 +97,11 @@ public final class SessionService {
       path: "/api/items/\(itemID)/play",
       method: .post,
       body: PlayRequest(
-        forceDirectPlay: forceDirectPlay,
+        forceDirectPlay: !forceTranscode,
         forceTranscode: forceTranscode,
         sessionType: sessionType
       ),
-      timeout: 5
+      timeout: timeout
     )
 
     do {
@@ -128,9 +128,9 @@ public final class SessionService {
 
     let timeout: TimeInterval
     #if os(watchOS)
-    timeout = 15
+    timeout = 20
     #else
-    timeout = 5
+    timeout = 10
     #endif
 
     let request = NetworkRequest<Data>(

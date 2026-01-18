@@ -341,7 +341,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
         let playSession = try await Audiobookshelf.shared.sessions.start(
           itemID: bookID,
           forceTranscode: true,
-          sessionType: .watch
+          sessionType: .watch,
+          timeout: 30
         )
         book = playSession.libraryItem
         sessionID = playSession.id
@@ -444,7 +445,8 @@ extension WatchConnectivityManager: WCSessionDelegate {
           AppLogger.watchConnectivity.info("Book not found locally, fetching from server...")
           let session = try await Audiobookshelf.shared.sessions.start(
             itemID: bookID,
-            forceTranscode: false
+            forceTranscode: false,
+            timeout: 30
           )
 
           PlayerManager.shared.setCurrent(session.libraryItem)

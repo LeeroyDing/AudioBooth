@@ -34,7 +34,8 @@ final class SessionManager {
 
     let audiobookshelfSession = try await audiobookshelf.sessions.start(
       itemID: itemID,
-      forceTranscode: forceTranscode
+      forceTranscode: forceTranscode,
+      timeout: item == nil ? 30 : 10
     )
 
     guard let session = Session(from: audiobookshelfSession) else {
