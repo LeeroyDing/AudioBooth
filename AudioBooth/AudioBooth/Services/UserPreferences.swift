@@ -100,6 +100,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("colorScheme")
   var colorScheme: ColorSchemeMode = .auto
 
+  @AppStorage("continueSectionSize")
+  var continueSectionSize: ContinueSectionSize = .default
+
   private init() {
     migrateShowListeningStats()
     migrateAutoDownloadBooks()
@@ -318,6 +321,22 @@ enum ColorSchemeMode: String, CaseIterable {
     case .auto: nil
     case .light: .light
     case .dark: .dark
+    }
+  }
+}
+
+enum ContinueSectionSize: Int, CaseIterable {
+  case `default` = 120
+  case large = 160
+  case extraLarge = 200
+
+  var value: CGFloat { CGFloat(rawValue) }
+
+  var displayText: String {
+    switch self {
+    case .default: "Default"
+    case .large: "Large"
+    case .extraLarge: "Extra Large"
     }
   }
 }

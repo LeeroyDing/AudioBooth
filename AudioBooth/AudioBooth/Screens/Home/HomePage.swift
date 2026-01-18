@@ -180,36 +180,6 @@ struct HomePage: View {
         ListeningStatsCard(model: ListeningStatsCardModel())
           .padding(.horizontal)
 
-      case .offline(let items):
-        NavigationLink(value: NavigationDestination.offline) {
-          HStack {
-            Text(section.title)
-              .font(.title2)
-              .fontWeight(.semibold)
-              .foregroundColor(.primary)
-              .accessibilityAddTraits(.isHeader)
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-              .font(.body)
-              .foregroundColor(.secondary)
-          }
-          .padding(.horizontal)
-          .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-
-        ScrollView(.horizontal, showsIndicators: false) {
-          LazyHStack(alignment: .top, spacing: 16) {
-            ForEach(items, id: \.id) { book in
-              BookCard(model: book)
-                .frame(width: 120)
-            }
-          }
-          .padding(.horizontal)
-        }
-
       case .playlist(let id, let items):
         NavigationLink(value: NavigationDestination.playlist(id: id)) {
           HStack {
@@ -240,7 +210,7 @@ struct HomePage: View {
           .padding(.horizontal)
         }
 
-      case .continueListening(let items):
+      case .continueBooks(let items):
         Text(section.title)
           .font(.title2)
           .fontWeight(.semibold)
@@ -252,7 +222,7 @@ struct HomePage: View {
           LazyHStack(alignment: .top, spacing: 16) {
             ForEach(items, id: \.id) { item in
               BookCard(model: item)
-                .frame(width: 120)
+                .frame(width: preferences.continueSectionSize.value)
             }
           }
           .padding(.horizontal)
@@ -331,8 +301,7 @@ extension HomePage {
 
       enum Items {
         case stats
-        case continueListening([BookCard.Model])
-        case offline([BookCard.Model])
+        case continueBooks([BookCard.Model])
         case playlist(id: String, items: [BookCard.Model])
         case books([BookCard.Model])
         case series([SeriesCard.Model])
@@ -394,7 +363,7 @@ extension HomePage.Model {
         Section(
           id: "continue-listening",
           title: "Continue Listening",
-          items: .continueListening(books)
+          items: .continueBooks(books)
         )
       ]
     )

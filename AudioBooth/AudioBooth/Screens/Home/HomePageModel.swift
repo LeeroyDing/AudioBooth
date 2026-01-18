@@ -148,6 +148,13 @@ extension HomePageModel {
       case .books(let items):
         if section.id == "continue-listening" {
           continue
+        } else if section.id == "continue-reading" {
+          let books = items.map({ BookCardModel($0, sortBy: .title) })
+          sectionsByID[section.id] = .init(
+            id: section.id,
+            title: section.label,
+            items: .continueBooks(books)
+          )
         } else {
           let books = items.map({ BookCardModel($0, sortBy: .title) })
           sectionsByID[section.id] = .init(
@@ -214,7 +221,7 @@ extension HomePageModel {
   private func buildContinueListeningSection() -> Section? {
     let existingModels: [String: ContinueListeningBookCardModel]
     if let existingSection = sections.first(where: { $0.id == "continue-listening" }),
-      case .continueListening(let items) = existingSection.items
+      case .continueBooks(let items) = existingSection.items
     {
       existingModels = Dictionary(
         uniqueKeysWithValues: items.compactMap { item in
@@ -277,7 +284,7 @@ extension HomePageModel {
     return Section(
       id: "continue-listening",
       title: "Continue Listening",
-      items: .continueListening(sorted)
+      items: .continueBooks(sorted)
     )
   }
 

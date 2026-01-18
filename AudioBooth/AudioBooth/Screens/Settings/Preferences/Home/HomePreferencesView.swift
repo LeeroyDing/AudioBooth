@@ -9,6 +9,17 @@ struct HomePreferencesView: View {
   var body: some View {
     Form {
       Section {
+        Picker("Continue Section Size", selection: $preferences.continueSectionSize) {
+          ForEach(ContinueSectionSize.allCases, id: \.self) { size in
+            Text(size.displayText).tag(size)
+          }
+        }
+      } footer: {
+        Text("Adjusts the cover size for Continue Listening and Continue Reading sections.")
+          .font(.caption)
+      }
+
+      Section {
         List {
           ForEach(allSections) { section in
             HStack {
@@ -27,7 +38,7 @@ struct HomePreferencesView: View {
         }
       } footer: {
         Text(
-          "Drag to reorder enabled sections. Continue Listening and Available Offline cannot be disabled."
+          "Drag to reorder enabled sections. Continue Listening and Continue Reading cannot be disabled."
         )
         .font(.caption)
       }
