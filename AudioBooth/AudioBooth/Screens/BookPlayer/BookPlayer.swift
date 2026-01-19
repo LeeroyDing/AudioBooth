@@ -32,6 +32,16 @@ struct BookPlayer: View {
           startPoint: .top,
           endPoint: .bottom
         )
+        .overlay {
+          LazyImage(url: model.coverURL) { state in
+            state.image?
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+              .blur(radius: 10)
+              .opacity(0.3)
+          }
+        }
+        .accessibilityHidden(true)
         .ignoresSafeArea()
 
         Group {
@@ -508,7 +518,7 @@ extension BookPlayer.Model {
     let model = BookPlayer.Model(
       title: "Sample Audiobook",
       author: "Sample Author",
-      coverURL: nil,
+      coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
       speed: .mock,
       timer: .mock,
       chapters: .mock,

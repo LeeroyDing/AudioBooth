@@ -266,7 +266,7 @@ struct BookDetailsView: View {
         LazyImage(url: model.coverURL) { state in
           state.image?
             .resizable()
-            .aspectRatio(1, contentMode: .fill)
+            .aspectRatio(contentMode: .fill)
             .blur(radius: 5)
             .opacity(0.3)
         }
