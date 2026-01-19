@@ -21,32 +21,35 @@ struct ContentView: View {
   }
 
   var body: some View {
-    Group {
-      if #available(iOS 26.0, *) {
-        modernTabView
-      } else {
-        legacyTabView
+    content
+      .adaptivePresentation(isPresented: $playerManager.isShowingFullPlayer) {
+        if let currentPlayer = playerManager.current {
+          BookPlayer(model: currentPlayer)
+            .presentationDetents([.large])
+            .presentationDragIndicator(UIAccessibility.isVoiceOverRunning ? .hidden : .visible)
+        }
       }
-    }
-    .sheet(isPresented: $playerManager.isShowingFullPlayer) {
-      if let currentPlayer = playerManager.current {
-        BookPlayer(model: currentPlayer)
-          .presentationDetents([.large])
-          .presentationDragIndicator(UIAccessibility.isVoiceOverRunning ? .hidden : .visible)
+      .fullScreenCover(item: $playerManager.reader) { reader in
+        NavigationStack {
+          EbookReaderView(model: reader)
+        }
       }
-    }
-    .fullScreenCover(item: $playerManager.reader) { reader in
-      NavigationStack {
-        EbookReaderView(model: reader)
+      .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+        isKeyboardVisible = true
       }
+      .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+        isKeyboardVisible = false
+      }
+      .handleDeepLinks()
+  }
+
+  @ViewBuilder
+  var content: some View {
+    if #available(iOS 26.0, *) {
+      modernTabView
+    } else {
+      legacyTabView
     }
-    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-      isKeyboardVisible = true
-    }
-    .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-      isKeyboardVisible = false
-    }
-    .handleDeepLinks()
   }
 
   @available(iOS 26.0, *)

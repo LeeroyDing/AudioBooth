@@ -139,6 +139,7 @@ struct BookPlayer: View {
 
           mainPlaybackControls
         }
+        .frame(maxWidth: 800)
 
         Spacer(minLength: 24)
 
