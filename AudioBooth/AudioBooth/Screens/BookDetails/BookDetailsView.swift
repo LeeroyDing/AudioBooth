@@ -100,7 +100,14 @@ struct BookDetailsView: View {
 
           if Audiobookshelf.shared.authentication.permissions?.download == true {
             Button(action: { model.onDownloadTapped() }) {
-              Label(downloadButtonText, systemImage: downloadButtonIcon)
+              switch model.downloadState {
+              case .downloading:
+                Label("Cancel", systemImage: "stop.circle")
+              case .downloaded:
+                Label("Remove Download", systemImage: "trash")
+              case .notDownloaded:
+                Label("Download", systemImage: "arrow.down.circle")
+              }
             }
           }
 
@@ -182,7 +189,7 @@ struct BookDetailsView: View {
       actionButtons
 
       headerSection
-      infoSection
+      MetadataSection(model: model.metadata)
       if let description = model.description {
         descriptionSection(description)
       }
@@ -222,10 +229,18 @@ struct BookDetailsView: View {
         .foregroundStyle(.secondary)
     }
 
-    return
+    return VStack(alignment: .leading, spacing: 4) {
       result
-      .multilineTextAlignment(.leading)
-      .frame(maxWidth: .infinity, alignment: .leading)
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      if let subtitle = model.subtitle {
+        Text(subtitle)
+          .font(.title3)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
+    }
   }
 
   private var contentTabsSection: some View {
@@ -244,12 +259,12 @@ struct BookDetailsView: View {
 
       if model.tabs.indices.contains(selectedTabIndex) {
         switch model.tabs[selectedTabIndex] {
-        case .chapters(let chapters):
-          chaptersContent(chapters)
-        case .tracks(let tracks):
-          tracksContent(tracks)
-        case .ebooks(let ebooks):
-          ebooksContent(ebooks)
+        case .chapters(let chaptersModel):
+          ChaptersContent(model: chaptersModel)
+        case .tracks(let tracksModel):
+          TracksContent(model: tracksModel)
+        case .ebooks(let ebooksModel):
+          EbooksContent(model: ebooksModel)
         }
       }
     }
@@ -363,9 +378,9 @@ struct BookDetailsView: View {
 
   private var headerSection: some View {
     VStack(alignment: .leading, spacing: 16) {
-      if !model.authors.isEmpty || (model.hasAudio && !model.narrators.isEmpty) {
+      if !model.authors.isEmpty || (model.metadata.hasAudio && !model.narrators.isEmpty) {
         VStack(alignment: .leading, spacing: 12) {
-          Text(model.hasAudio ? "Authors & Narrators" : "Authors")
+          Text(model.metadata.hasAudio ? "Authors & Narrators" : "Authors")
             .font(.headline)
 
           FlowLayout(spacing: 4) {
@@ -380,7 +395,7 @@ struct BookDetailsView: View {
               }
             }
 
-            if model.hasAudio {
+            if model.metadata.hasAudio {
               ForEach(model.narrators, id: \.self) { narrator in
                 NavigationLink(value: NavigationDestination.narrator(name: narrator)) {
                   Chip(
@@ -419,172 +434,63 @@ struct BookDetailsView: View {
     .textSelection(.enabled)
   }
 
-  private var infoSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Text("Metadata")
-        .font(.headline)
-
-      VStack(alignment: .leading, spacing: 8) {
-        if let publisher = model.publisher {
-          HStack {
-            Image(systemName: "building.2")
-              .accessibilityHidden(true)
-            Text("**Publisher:** \(publisher)")
-          }
-          .font(.subheadline)
-        }
-
-        if let publishedYear = model.publishedYear {
-          HStack {
-            Image(systemName: "calendar")
-              .accessibilityHidden(true)
-            Text("**Published:** \(publishedYear)")
-          }
-          .font(.subheadline)
-        }
-
-        if let duration = model.durationText {
-          HStack {
-            Image(systemName: "clock")
-              .accessibilityHidden(true)
-            Text("**Duration:** \(duration)")
-          }
-          .font(.subheadline)
-        }
-
-        if let audioProgress = model.audioProgress, audioProgress > 0, model.hasAudio {
-          HStack {
-            Image(systemName: "chart.bar.fill")
-              .accessibilityHidden(true)
-            Text("**Progress:** \(audioProgress.formatted(.percent.precision(.fractionLength(0))))")
-          }
-          .font(.subheadline)
-        } else if let ebookProgress = model.ebookProgress, ebookProgress > 0, model.isEbook {
-          HStack {
-            Image(systemName: "chart.bar.fill")
-              .accessibilityHidden(true)
-            Text("**Progress:** \(ebookProgress.formatted(.percent.precision(.fractionLength(0))))")
-          }
-          .font(.subheadline)
-        }
-
-        if let timeRemaining = model.timeRemaining {
-          HStack {
-            Image(systemName: "clock.arrow.circlepath")
-              .accessibilityHidden(true)
-            Text("**Time remaining:** \(timeRemaining)")
-          }
-          .font(.subheadline)
-        }
-      }
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-  }
-
   private var actionButtons: some View {
     VStack(spacing: 12) {
-      if model.hasAudio {
+      if model.metadata.hasAudio {
         Button(action: model.onPlayTapped) {
-          HStack {
-            Image(systemName: playButtonIcon)
-            Text(playButtonText)
-          }
+          Label(
+            playButtonText,
+            systemImage: model.isPlaying ? "pause.fill" : "play.fill"
+          )
           .frame(maxWidth: .infinity)
           .padding()
           .background {
-            if let audioProgress = model.audioProgress, audioProgress >= 0.01 {
-              GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                  Color.accentColor.opacity(0.6)
-
-                  Rectangle()
-                    .fill(Color.accentColor)
-                    .frame(width: geometry.size.width * audioProgress)
-                }
-              }
-            } else {
-              Color.accentColor
-            }
+            actionBackground(progress: model.metadata.audioProgress)
           }
           .foregroundColor(.white)
           .cornerRadius(12)
         }
       }
 
-      if model.isEbook {
+      if model.metadata.isEbook {
         Button(action: model.onReadTapped) {
-          HStack {
-            Image(systemName: "book.fill")
-            Text("Read")
-          }
-          .frame(maxWidth: .infinity)
-          .padding()
-          .background {
-            if let ebookProgress = model.ebookProgress, ebookProgress >= 0.01 {
-              GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                  Color.accentColor.opacity(0.6)
-
-                  Rectangle()
-                    .fill(Color.accentColor)
-                    .frame(width: geometry.size.width * ebookProgress)
-                }
-              }
-            } else {
-              Color.accentColor
+          Label("Read", systemImage: "book.fill")
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background {
+              actionBackground(progress: model.metadata.ebookProgress)
             }
-          }
-          .foregroundColor(.white)
-          .cornerRadius(12)
+            .foregroundColor(.white)
+            .cornerRadius(12)
         }
       }
     }
-  }
-
-  private var playButtonIcon: String {
-    if model.isCurrentlyPlaying {
-      return "pause.fill"
-    }
-    return "play.fill"
   }
 
   private var playButtonText: String {
-    if model.isCurrentlyPlaying {
-      return "Pause"
-    }
-    if let audioProgress = model.audioProgress, audioProgress > 0 {
-      return "Continue Listening"
-    }
-    return "Play"
-  }
-
-  private var downloadButtonRole: ButtonRole? {
-    switch model.downloadState {
-    case .downloading: nil
-    case .downloaded: .destructive
-    case .notDownloaded: nil
+    if model.isPlaying {
+      "Pause"
+    } else if let audioProgress = model.metadata.audioProgress, audioProgress > 0 {
+      "Continue Listening"
+    } else {
+      "Play"
     }
   }
 
-  private var downloadButtonIcon: String {
-    switch model.downloadState {
-    case .downloading:
-      return "stop.circle"
-    case .downloaded:
-      return "trash"
-    case .notDownloaded:
-      return "arrow.down.circle"
-    }
-  }
+  @ViewBuilder
+  func actionBackground(progress: Double?) -> some View {
+    if let progress, progress >= 0.01 {
+      GeometryReader { geometry in
+        ZStack(alignment: .leading) {
+          Color.accentColor.opacity(0.6)
 
-  private var downloadButtonText: String {
-    switch model.downloadState {
-    case .downloading:
-      return "Cancel"
-    case .downloaded:
-      return "Remove Download"
-    case .notDownloaded:
-      return "Download"
+          Rectangle()
+            .fill(Color.accentColor)
+            .frame(width: geometry.size.width * progress)
+        }
+      }
+    } else {
+      Color.accentColor
     }
   }
 
@@ -662,24 +568,16 @@ struct BookDetailsView: View {
     }
     .textSelection(.enabled)
   }
-
-  private func formatDuration(_ seconds: Double) -> String {
-    if seconds < 3600 {
-      Duration.seconds(seconds).formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2)))
-    } else {
-      Duration.seconds(seconds).formatted(.time(pattern: .hourMinuteSecond(padHourToLength: 2)))
-    }
-  }
 }
 
 extension BookDetailsView {
   @ViewBuilder
   private var ereaderDevices: some View {
-    if model.isEbook {
+    if model.metadata.isEbook {
       Divider()
 
       Button(
-        action: { model.onOpenTapped(nil) },
+        action: { model.onOpenTapped() },
         label: {
           Label("Open on Web", systemImage: "globe")
         }
@@ -701,153 +599,6 @@ extension BookDetailsView {
 }
 
 extension BookDetailsView {
-  private func chaptersContent(_ chapters: [BookDetailsView.Model.Chapter]) -> some View {
-    VStack(alignment: .leading, spacing: 8) {
-      ForEach(chapters, id: \.id) { chapter in
-        Button(action: { model.onChapterTapped(chapter) }) {
-          HStack(spacing: 8) {
-            Image(systemName: chapterIcon(for: chapter.status))
-              .font(.caption)
-              .foregroundColor(chapterColor(for: chapter.status))
-              .frame(width: 16)
-
-            Text(chapter.title)
-              .font(.subheadline)
-              .foregroundColor(chapterColor(for: chapter.status))
-              .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text(formatDuration(chapter.end - chapter.start))
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
-          .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .padding(.vertical, 4)
-      }
-    }
-    .padding()
-    .background(Color.secondary.opacity(0.1))
-    .cornerRadius(8)
-  }
-
-  private func chapterIcon(for status: BookDetailsView.Model.Chapter.Status) -> String {
-    switch status {
-    case .completed:
-      return "checkmark.circle.fill"
-    case .current:
-      return "play.circle.fill"
-    case .remaining:
-      return "circle"
-    }
-  }
-
-  private func chapterColor(for status: BookDetailsView.Model.Chapter.Status) -> Color {
-    switch status {
-    case .completed:
-      return .secondary
-    case .current:
-      return .accentColor
-    case .remaining:
-      return .primary
-    }
-  }
-
-  private func tracksContent(_ tracks: [Track]) -> some View {
-    VStack(alignment: .leading, spacing: 8) {
-      ForEach(tracks, id: \.index) { track in
-        VStack(alignment: .leading, spacing: 8) {
-          Text(track.filename ?? "Track \(track.index)")
-            .font(.caption)
-            .fontWeight(.medium)
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-          VStack(alignment: .leading, spacing: 2) {
-            if let codec = track.codec {
-              Text("**Codec:** \(codec)")
-            }
-
-            if let bitRate = track.bitRate {
-              Text("**Bitrate:** \(bitRate / 1000) kbps")
-            }
-
-            if let channel = track.channels {
-              Text("**Channel:** \(channel) (\(track.channelLayout ?? ""))")
-            }
-
-            if let size = track.size {
-              Text(
-                "**Size:** \(size.formatted(.byteCount(style: .file, allowedUnits: [.kb, .mb, .gb])))"
-              )
-            }
-
-            Text("**Duration:** \(formatDuration(track.duration))")
-          }
-          .font(.caption2)
-          .foregroundColor(.secondary)
-        }
-        .padding(.vertical, 4)
-      }
-    }
-    .padding()
-    .background(Color.secondary.opacity(0.1))
-    .cornerRadius(8)
-  }
-
-  private func ebooksContent(
-    _ supplementaryEbooks: [BookDetailsView.Model.SupplementaryEbook]
-  ) -> some View {
-    VStack(alignment: .leading, spacing: 8) {
-      ForEach(supplementaryEbooks, id: \.filename) { ebook in
-        Button(action: { model.onSupplementaryEbookTapped(ebook) }) {
-          HStack {
-            Image(systemName: "book.closed.fill")
-              .foregroundColor(Color.accentColor)
-
-            VStack(alignment: .leading, spacing: 4) {
-              Text(ebook.filename)
-                .font(.subheadline)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
-
-              Text(
-                ebook.size.formatted(
-                  .byteCount(
-                    style: .file,
-                    allowedUnits: [.kb, .mb, .gb]
-                  )
-                )
-              )
-              .font(.caption)
-              .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
-          .padding(.vertical, 8)
-        }
-        .contextMenu {
-          Button(
-            action: { model.onOpenTapped(ebook) },
-            label: {
-              Label("Open on Web", systemImage: "globe")
-            }
-          )
-        }
-      }
-    }
-    .padding()
-    .background(Color.secondary.opacity(0.1))
-    .cornerRadius(8)
-  }
-}
-
-extension BookDetailsView {
   @Observable
   class Model: ObservableObject {
     struct Flags: OptionSet {
@@ -859,24 +610,17 @@ extension BookDetailsView {
 
     let bookID: String
     var title: String
+    var subtitle: String?
     var authors: [Author]
     var narrators: [String]
     var series: [Series]
     var coverURL: URL?
     var progress: Double?
-    var audioProgress: Double?
-    var ebookProgress: Double?
-    var durationText: String?
-    var timeRemaining: String?
     var downloadState: DownloadManager.DownloadState
     var isLoading: Bool
-    var hasAudio: Bool
-    var isEbook: Bool
-    var isCurrentlyPlaying: Bool
+    var isPlaying: Bool
     var flags: Flags
     var error: String?
-    var publisher: String?
-    var publishedYear: String?
     var genres: [String]?
     var tags: [String]?
     var description: String?
@@ -886,40 +630,32 @@ extension BookDetailsView {
     var ebookReader: EbookReaderView.Model?
 
     var tabs: [ContentTab]
+    var metadata: MetadataSection.Model
 
     func onAppear() {}
     func onPlayTapped() {}
     func onReadTapped() {}
-    func onOpenTapped(_ ebook: SupplementaryEbook?) {}
+    func onOpenTapped() {}
     func onDownloadTapped() {}
     func onMarkFinishedTapped() {}
     func onResetProgressTapped() {}
     func onWriteTagTapped() {}
-    func onSupplementaryEbookTapped(_ ebook: SupplementaryEbook) {}
     func onSendToEbookTapped(_ device: String) {}
-    func onChapterTapped(_ chapter: Chapter) {}
 
     init(
       bookID: String,
       title: String = "",
+      subtitle: String? = nil,
       authors: [Author] = [],
       narrators: [String] = [],
       series: [Series] = [],
       coverURL: URL? = nil,
       progress: Double? = nil,
-      audioProgress: Double? = nil,
-      ebookProgress: Double? = nil,
-      durationText: String? = nil,
-      timeRemaining: String? = nil,
       downloadState: DownloadManager.DownloadState = .notDownloaded,
       isLoading: Bool = true,
-      hasAudio: Bool = false,
-      isEbook: Bool = false,
       isCurrentlyPlaying: Bool = false,
       flags: Flags = [],
       error: String? = nil,
-      publisher: String? = nil,
-      publishedYear: String? = nil,
       genres: [String]? = nil,
       tags: [String]? = nil,
       description: String? = nil,
@@ -927,28 +663,22 @@ extension BookDetailsView {
       bookmarks: BookmarkViewerSheet.Model? = nil,
       ereaderDevices: [String] = [],
       ebookReader: EbookReaderView.Model? = nil,
-      tabs: [ContentTab]
+      tabs: [ContentTab],
+      metadata: MetadataSection.Model = .init()
     ) {
       self.bookID = bookID
       self.title = title
+      self.subtitle = subtitle
       self.authors = authors
       self.narrators = narrators
       self.series = series
       self.coverURL = coverURL
       self.progress = progress
-      self.audioProgress = audioProgress
-      self.ebookProgress = ebookProgress
-      self.durationText = durationText
-      self.timeRemaining = timeRemaining
       self.downloadState = downloadState
       self.isLoading = isLoading
-      self.hasAudio = hasAudio
-      self.isEbook = isEbook
-      self.isCurrentlyPlaying = isCurrentlyPlaying
+      self.isPlaying = isCurrentlyPlaying
       self.flags = flags
       self.error = error
-      self.publisher = publisher
-      self.publishedYear = publishedYear
       self.genres = genres
       self.tags = tags
       self.description = description
@@ -957,15 +687,16 @@ extension BookDetailsView {
       self.ereaderDevices = ereaderDevices
       self.ebookReader = ebookReader
       self.tabs = tabs
+      self.metadata = metadata
     }
   }
 }
 
 extension BookDetailsView.Model {
   enum ContentTab {
-    case chapters([BookDetailsView.Model.Chapter])
-    case tracks([Track])
-    case ebooks([SupplementaryEbook])
+    case chapters(ChaptersContent.Model)
+    case tracks(TracksContent.Model)
+    case ebooks(EbooksContent.Model)
 
     var title: String {
       switch self {
@@ -986,31 +717,32 @@ extension BookDetailsView.Model {
     let name: String
     let sequence: String
   }
-
-  struct SupplementaryEbook {
-    let filename: String
-    let size: Int64
-    let ino: String
-  }
-
-  struct Chapter {
-    enum Status {
-      case completed
-      case current
-      case remaining
-    }
-
-    let id: Int
-    let start: TimeInterval
-    let end: TimeInterval
-    let title: String
-    let status: Status
-  }
 }
 
 extension BookDetailsView.Model {
   static var mock: BookDetailsView.Model {
-    BookDetailsView.Model(
+    let chapters: [ChaptersContent.Chapter] = [
+      .init(id: 1, start: 0, end: 1000, title: "001", status: .completed),
+      .init(id: 2, start: 1001, end: 2000, title: "002", status: .completed),
+      .init(id: 3, start: 2001, end: 3000, title: "003", status: .current),
+      .init(id: 4, start: 3001, end: 4000, title: "004", status: .remaining),
+      .init(id: 5, start: 4001, end: 5000, title: "005", status: .remaining),
+      .init(id: 6, start: 5001, end: 6000, title: "006", status: .remaining),
+    ]
+
+    let tracks: [Track] = [
+      .init(
+        index: 1,
+        startOffset: 0,
+        duration: 45000,
+        filename: "The Lord of the Rings.m4b",
+        size: 552_003_086,
+        bitRate: 128000,
+        codec: "aac"
+      )
+    ]
+
+    return BookDetailsView.Model(
       bookID: "mock-id",
       title: "The Lord of the Rings",
       authors: [
@@ -1022,35 +754,20 @@ extension BookDetailsView.Model {
       ],
       coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
       progress: 0.45,
-      durationText: "12hr 30min",
-      timeRemaining: "6hr 52min",
       downloadState: .downloaded,
       isLoading: false,
-      hasAudio: true,
       flags: [.explicit],
       description:
         "As the Colony continues to develop and thrive, there's too much to do! Territory to seize, nests to build, Champions to train! Anthony will have his mandibles full trying to teach his new protege Brilliant while trying to keep a war from breaking out with the ka'armodo. However, when the Mother Tree comes looking for his help against a particular breed of monster, there is no way he can refuse. After all, no ant can resist a fight against their ancient nemesis... the Termite! Book 7 of the hit monster-evolution LitRPG series with nearly 30 Million views on Royal Road. Grab your copy today!",
       tabs: [
-        .chapters([
-          .init(id: 1, start: 0, end: 1000, title: "001", status: .completed),
-          .init(id: 2, start: 1001, end: 2000, title: "002", status: .completed),
-          .init(id: 3, start: 2001, end: 3000, title: "003", status: .current),
-          .init(id: 4, start: 3001, end: 4000, title: "004", status: .remaining),
-          .init(id: 5, start: 4001, end: 5000, title: "005", status: .remaining),
-          .init(id: 6, start: 5001, end: 6000, title: "006", status: .remaining),
-        ]),
-        .tracks([
-          .init(
-            index: 1,
-            startOffset: 0,
-            duration: 45000,
-            filename: "The Lord of the Rings.m4b",
-            size: 552_003_086,
-            bitRate: 128000,
-            codec: "aac"
-          )
-        ]),
-      ]
+        .chapters(ChaptersContent.Model(chapters: chapters)),
+        .tracks(TracksContent.Model(tracks: tracks)),
+      ],
+      metadata: .init(
+        durationText: "12hr 30min",
+        timeRemaining: "6hr 52min",
+        hasAudio: true
+      )
     )
   }
 }
@@ -1058,52 +775,5 @@ extension BookDetailsView.Model {
 #Preview {
   NavigationStack {
     BookDetailsView(model: .mock)
-  }
-}
-
-struct ParallaxHeader<Content: View, Space: Hashable>: View {
-  let content: () -> Content
-  let coordinateSpace: Space
-  @State var height: CGFloat = 0
-
-  init(
-    coordinateSpace: Space,
-    @ViewBuilder _ content: @escaping () -> Content
-  ) {
-    self.content = content
-    self.coordinateSpace = coordinateSpace
-  }
-
-  var body: some View {
-    GeometryReader { proxy in
-      let offset = offset(for: proxy)
-      let heightModifier = heightModifier(for: proxy)
-      content()
-        .edgesIgnoringSafeArea(.horizontal)
-        .frame(
-          width: proxy.size.width,
-          height: proxy.size.height + heightModifier
-        )
-        .offset(y: offset)
-        .onAppear {
-          height = min(370, proxy.size.width)
-        }
-        .onChange(of: proxy.size.width) { _, new in height = min(370, new) }
-    }
-    .frame(height: height)
-    .accessibilityHidden(true)
-  }
-
-  private func offset(for proxy: GeometryProxy) -> CGFloat {
-    let frame = proxy.frame(in: .named(coordinateSpace))
-    if frame.minY < 0 {
-      return -frame.minY * 0.8
-    }
-    return -frame.minY
-  }
-
-  private func heightModifier(for proxy: GeometryProxy) -> CGFloat {
-    let frame = proxy.frame(in: .named(coordinateSpace))
-    return max(0, frame.minY)
   }
 }

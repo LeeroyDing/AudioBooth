@@ -33,11 +33,13 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     super.init(
       bookID: bookID,
       progress: MediaProgress.progress(for: bookID),
-      audioProgress: initialMediaProgress?.progress,
-      ebookProgress: initialMediaProgress?.ebookProgress,
       isLoading: false,
       canManageCollections: canManageCollections,
-      tabs: []
+      tabs: [],
+      metadata: .init(
+        audioProgress: initialMediaProgress?.progress,
+        ebookProgress: initialMediaProgress?.ebookProgress
+      )
     )
     mediaProgress = initialMediaProgress
   }
@@ -80,7 +82,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         }
 
         let currentTime = MediaProgress.progress(for: bookID) * localBook.duration
-        let chapters: [BookDetailsView.Model.Chapter]?
+        let chapters: [ChaptersContent.Chapter]?
         if !localBook.chapters.isEmpty {
           chapters = convertChapters(localBook.chapters, currentTime: currentTime)
         } else {
@@ -147,7 +149,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       let ebooks = book.libraryFiles?
         .filter { $0.fileType == .ebook }
         .map { libraryFile in
-          BookDetailsView.Model.SupplementaryEbook(
+          EbooksContent.SupplementaryEbook(
             filename: libraryFile.metadata.filename,
             size: libraryFile.metadata.size,
             ino: libraryFile.ino
@@ -163,7 +165,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       }
 
       let currentTime = mediaProgress?.currentTime ?? 0
-      let chapters: [BookDetailsView.Model.Chapter]?
+      let chapters: [ChaptersContent.Chapter]?
       if let apiChapters = book.chapters {
         let modelChapters = apiChapters.map(Models.Chapter.init(from:))
         chapters = convertChapters(modelChapters, currentTime: currentTime)
@@ -173,6 +175,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
       updateUI(
         title: book.title,
+        subtitle: book.media.metadata.subtitle,
         authors: authors,
         narrators: narrators,
         series: series,
@@ -181,6 +184,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         mediaType: book.mediaType,
         publisher: book.publisher,
         publishedYear: book.publishedYear,
+        language: book.media.metadata.language,
         genres: book.genres,
         tags: book.tags,
         description: book.description ?? book.descriptionPlain,
@@ -202,6 +206,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
   private func updateUI(
     title: String,
+    subtitle: String? = nil,
     authors: [Author],
     narrators: [String],
     series: [Series],
@@ -210,44 +215,51 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     mediaType: Book.MediaType?,
     publisher: String? = nil,
     publishedYear: String? = nil,
+    language: String? = nil,
     genres: [String]? = nil,
     tags: [String]? = nil,
     description: String? = nil,
     flags: BookDetailsView.Model.Flags = [],
-    chapters: [BookDetailsView.Model.Chapter]?,
+    chapters: [ChaptersContent.Chapter]?,
     tracks: [Track]?,
-    ebooks: [BookDetailsView.Model.SupplementaryEbook]? = nil
+    ebooks: [EbooksContent.SupplementaryEbook]? = nil
   ) {
     self.title = title
+    self.subtitle = subtitle
     self.authors = authors
     self.series = series
     self.narrators = narrators
     self.coverURL = coverURL
-    self.publisher = publisher
-    self.publishedYear = publishedYear
     self.genres = genres
     self.tags = tags
     self.description = description
     self.flags = flags
 
-    if let mediaType {
-      self.hasAudio = mediaType.contains(.audiobook)
-      self.isEbook = mediaType.contains(.ebook)
-      if mediaType.contains(.ebook) {
-        self.ereaderDevices = miscService.ereaderDevices.compactMap(\.name)
-      }
+    let hasAudio = mediaType?.contains(.audiobook) == true
+    let isEbook = mediaType?.contains(.ebook) == true
+
+    if isEbook {
+      self.ereaderDevices = miscService.ereaderDevices.compactMap(\.name)
     }
 
-    if mediaType?.contains(.audiobook) == true {
-      self.durationText = Duration.seconds(duration).formatted(
+    let durationText: String?
+    if hasAudio {
+      durationText = Duration.seconds(duration).formatted(
         .units(
           allowed: [.hours, .minutes],
           width: .narrow
         )
       )
     } else {
-      self.durationText = nil
+      durationText = nil
     }
+
+    metadata.publisher = publisher
+    metadata.publishedYear = publishedYear
+    metadata.language = language
+    metadata.durationText = durationText
+    metadata.hasAudio = hasAudio
+    metadata.isEbook = isEbook
 
     if let book {
       self.bookmarks = BookmarkViewerSheetViewModel(item: .remote(book))
@@ -260,15 +272,26 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     var tabs = [ContentTab]()
 
     if let chapters, !chapters.isEmpty {
-      tabs.append(.chapters(chapters))
+      let chaptersModel = ChaptersContentModel(
+        chapters: chapters,
+        book: book,
+        localBook: localBook,
+        bookID: bookID
+      )
+      tabs.append(.chapters(chaptersModel))
     }
 
     if let tracks, !tracks.isEmpty {
-      tabs.append(.tracks(tracks))
+      let tracksModel = TracksContent.Model(tracks: tracks)
+      tabs.append(.tracks(tracksModel))
     }
 
     if let ebooks, !ebooks.isEmpty {
-      tabs.append(.ebooks(ebooks))
+      let ebooksModel = EbooksContentModel(
+        ebooks: ebooks,
+        bookID: bookID
+      )
+      tabs.append(.ebooks(ebooksModel))
     }
 
     self.tabs = tabs
@@ -277,11 +300,11 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   private func convertChapters(
     _ chapters: [Models.Chapter],
     currentTime: TimeInterval
-  ) -> [BookDetailsView.Model.Chapter] {
+  ) -> [ChaptersContent.Chapter] {
     chapters
       .sorted { $0.start < $1.start }
       .map { chapter in
-        let status: BookDetailsView.Model.Chapter.Status
+        let status: ChaptersContent.Chapter.Status
 
         if currentTime >= chapter.end {
           status = .completed
@@ -291,7 +314,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           status = .remaining
         }
 
-        return BookDetailsView.Model.Chapter(
+        return ChaptersContent.Chapter(
           id: chapter.id,
           start: chapter.start,
           end: chapter.end,
@@ -341,7 +364,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
   private func observeIsPlaying(_ current: BookPlayer.Model?) {
     guard let current, current.id == bookID else {
-      isCurrentlyPlaying = false
+      isPlaying = false
       return
     }
 
@@ -361,7 +384,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   private func updatePlayingState() {
     let isCurrentBook = playerManager.current?.id == bookID
     let isPlaying = playerManager.current?.isPlaying ?? false
-    isCurrentlyPlaying = isCurrentBook && isPlaying
+    self.isPlaying = isCurrentBook && isPlaying
   }
 
   override func onPlayTapped() {
@@ -398,10 +421,8 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
   }
 
-  override func onOpenTapped(_ ebook: SupplementaryEbook?) {
-    if let url = ebook?.url(for: bookID) {
-      openEbookInSafari(url)
-    } else if let url = book?.ebookURL {
+  override func onOpenTapped() {
+    if let url = book?.ebookURL {
       openEbookInSafari(url)
     } else {
       Toast(error: "Unable to open ebook").show()
@@ -460,7 +481,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
           duration = localBook.duration
         }
         progress = 0
-        timeRemaining = Duration.seconds(duration)
+        metadata.timeRemaining = Duration.seconds(duration)
           .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
         Toast(success: "Progress reset").show()
       } catch {
@@ -486,58 +507,6 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     }
   }
 
-  override func onSupplementaryEbookTapped(_ ebook: BookDetailsView.Model.SupplementaryEbook) {
-    guard let url = ebook.url(for: bookID) else {
-      Toast(error: "Unable to open ebook").show()
-      return
-    }
-
-    ebookReader = EbookReaderViewModel(source: .remote(url), bookID: nil)
-  }
-
-  override func onChapterTapped(_ chapter: BookDetailsView.Model.Chapter) {
-    if let book {
-      if playerManager.current?.id == bookID {
-        if let currentPlayer = playerManager.current as? BookPlayerModel {
-          if chapter.status == .current && !currentPlayer.isPlaying {
-            currentPlayer.onTogglePlaybackTapped()
-          } else {
-            currentPlayer.seekToTime(chapter.start)
-            if !currentPlayer.isPlaying {
-              currentPlayer.onTogglePlaybackTapped()
-            }
-          }
-        }
-      } else {
-        playerManager.setCurrent(book)
-        if let currentPlayer = playerManager.current as? BookPlayerModel {
-          currentPlayer.seekToTime(chapter.start)
-          PlayerManager.shared.play()
-        }
-      }
-    } else if let localBook {
-      if playerManager.current?.id == bookID {
-        if let currentPlayer = playerManager.current as? BookPlayerModel {
-          if chapter.status == .current && !currentPlayer.isPlaying {
-            currentPlayer.onTogglePlaybackTapped()
-          } else {
-            currentPlayer.seekToTime(chapter.start)
-            if !currentPlayer.isPlaying {
-              currentPlayer.onTogglePlaybackTapped()
-            }
-          }
-        }
-      } else {
-        playerManager.setCurrent(localBook)
-        if let currentPlayer = playerManager.current as? BookPlayerModel {
-          currentPlayer.seekToTime(chapter.start)
-          PlayerManager.shared.play()
-        }
-      }
-    } else {
-      Toast(error: "Book not available").show()
-    }
-  }
 }
 
 extension BookDetailsViewModel {
@@ -554,44 +523,24 @@ extension BookDetailsViewModel {
   }
 }
 
-extension BookDetailsView.Model.SupplementaryEbook {
-  func url(for bookID: String) -> URL? {
-    guard let serverURL = Audiobookshelf.shared.serverURL,
-      let token = Audiobookshelf.shared.authentication.server?.token
-    else {
-      return nil
-    }
-
-    var url = serverURL.appendingPathComponent("api/items/\(bookID)/file/\(ino)")
-    switch token {
-    case .legacy(let token):
-      url.append(queryItems: [URLQueryItem(name: "token", value: token)])
-    case .bearer(let accessToken, _, _):
-      url.append(queryItems: [URLQueryItem(name: "token", value: accessToken)])
-    }
-
-    return url
-  }
-}
-
 extension BookDetailsViewModel {
   func progressChanged() {
     guard let mediaProgress else { return }
 
     Task { @MainActor in
       progress = MediaProgress.progress(for: bookID)
-      audioProgress = mediaProgress.progress
-      ebookProgress = mediaProgress.ebookProgress
+      metadata.audioProgress = mediaProgress.progress
+      metadata.ebookProgress = mediaProgress.ebookProgress
 
       let remainingTime = mediaProgress.remaining
-      if remainingTime > 0 && audioProgress ?? 0 > 0 {
+      if remainingTime > 0 && metadata.audioProgress ?? 0 > 0 {
         if let current = PlayerManager.shared.current,
           [book?.id, localBook?.bookID].contains(current.id)
         {
-          timeRemaining = Duration.seconds(current.playbackProgress.totalTimeRemaining)
+          metadata.timeRemaining = Duration.seconds(current.playbackProgress.totalTimeRemaining)
             .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
         } else {
-          timeRemaining = Duration.seconds(remainingTime)
+          metadata.timeRemaining = Duration.seconds(remainingTime)
             .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
         }
       }
@@ -613,13 +562,11 @@ extension BookDetailsViewModel {
     let currentTime = mediaProgress?.currentTime ?? 0
     let viewChapters = convertChapters(modelChapters, currentTime: currentTime)
 
-    var updatedTabs = tabs
-    if let chapterIndex = updatedTabs.firstIndex(where: {
-      if case .chapters = $0 { return true }
-      return false
-    }) {
-      updatedTabs[chapterIndex] = .chapters(viewChapters)
-      tabs = updatedTabs
+    for tab in tabs {
+      if case .chapters(let chaptersModel) = tab {
+        chaptersModel.chapters = viewChapters
+        break
+      }
     }
   }
 }
