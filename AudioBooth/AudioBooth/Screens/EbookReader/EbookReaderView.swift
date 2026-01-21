@@ -21,7 +21,7 @@ struct EbookReaderView: View {
     .navigationBarTitleDisplayMode(.inline)
     .toolbarBackground(.hidden, for: .navigationBar)
     .toolbar {
-      ToolbarItem(placement: .navigationBarLeading) {
+      ToolbarItem(placement: .topBarLeading) {
         if showControls, !model.isLoading, model.error == nil, model.supportsSearch {
           Button {
             model.onSearchTapped()
@@ -33,7 +33,7 @@ struct EbookReaderView: View {
         }
       }
 
-      ToolbarItem(placement: .navigationBarTrailing) {
+      ToolbarItem(placement: .topBarTrailing) {
         if showControls || model.isLoading {
           Button {
             dismiss()
@@ -53,7 +53,7 @@ struct EbookReaderView: View {
       }
     }
     .sheet(isPresented: $showSettings) {
-      readerSettingsSheet
+      EbookReaderPreferencesView(preferences: model.preferences)
     }
     .sheet(
       isPresented: Binding(
@@ -102,11 +102,9 @@ struct EbookReaderView: View {
     ReaderViewControllerWrapper(viewController: viewController)
       .ignoresSafeArea(.all)
       .simultaneousGesture(
-        TapGesture()
-          .onEnded { _ in
-            withAnimation(.easeInOut(duration: 0.2)) {
-              showControls.toggle()
-            }
+        SpatialTapGesture()
+          .onEnded { value in
+            handleTap(at: value.location.x)
           }
       )
       .animation(.easeInOut(duration: 0.2), value: showControls)
@@ -119,6 +117,23 @@ struct EbookReaderView: View {
           }
         }
       }
+  }
+
+  private func handleTap(at x: CGFloat) {
+    let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+    let windowWidth = windowScene?.windows.first?.bounds.width ?? UIScreen.main.bounds.width
+    let leftThreshold = windowWidth * 0.25
+    let rightThreshold = windowWidth * 0.75
+
+    if model.preferences.tapToNavigate, x < leftThreshold {
+      model.onTapLeft()
+    } else if model.preferences.tapToNavigate, x > rightThreshold {
+      model.onTapRight()
+    } else {
+      withAnimation(.easeInOut(duration: 0.2)) {
+        showControls.toggle()
+      }
+    }
   }
 
   private var bottomControlBar: some View {
@@ -160,58 +175,6 @@ struct EbookReaderView: View {
     }
     .padding(.vertical, 8)
   }
-
-  private var readerSettingsSheet: some View {
-    NavigationStack {
-      List {
-        Section("Typography") {
-          Picker("Font Size", selection: $model.preferences.fontSize) {
-            ForEach(EbookReaderPreferences.FontSize.allCases) { size in
-              Text(size.rawValue).tag(size)
-            }
-          }
-
-          Picker("Font Family", selection: $model.preferences.fontFamily) {
-            ForEach(EbookReaderPreferences.FontFamily.allCases) { family in
-              Text(family.rawValue).tag(family)
-            }
-          }
-
-          Picker("Line Spacing", selection: $model.preferences.lineSpacing) {
-            ForEach(EbookReaderPreferences.LineSpacing.allCases) { spacing in
-              Text(spacing.rawValue).tag(spacing)
-            }
-          }
-        }
-
-        Section("Appearance") {
-          Picker("Theme", selection: $model.preferences.theme) {
-            ForEach(EbookReaderPreferences.Theme.allCases) { theme in
-              Text(theme.rawValue).tag(theme)
-            }
-          }
-
-          Picker("Page Margins", selection: $model.preferences.pageMargins) {
-            ForEach(EbookReaderPreferences.PageMargins.allCases) { margins in
-              Text(margins.rawValue).tag(margins)
-            }
-          }
-        }
-      }
-      .navigationTitle("Reader Settings")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-          Button("Done") {
-            showSettings = false
-          }
-          .tint(.primary)
-        }
-      }
-    }
-    .presentationDetents([.medium, .large])
-    .presentationDragIndicator(.visible)
-  }
 }
 
 struct ReaderViewControllerWrapper: UIViewControllerRepresentable {
@@ -246,6 +209,8 @@ extension EbookReaderView {
     func onProgressTapped() {}
     func onSearchTapped() {}
     func onPreferencesChanged(_ preferences: EbookReaderPreferences) {}
+    func onTapLeft() {}
+    func onTapRight() {}
 
     init(
       isLoading: Bool = true,

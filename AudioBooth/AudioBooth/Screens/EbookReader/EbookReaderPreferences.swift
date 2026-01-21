@@ -5,42 +5,38 @@ import ReadiumShared
 import SwiftUI
 
 class EbookReaderPreferences: ObservableObject {
-  @AppStorage("ebookReader.fontSize") var fontSize: FontSize = .medium
+  @AppStorage("ebookReader.fontSize") var fontSize: Double = 1.0
+  @AppStorage("ebookReader.fontWeight") var fontWeight: Double = 1.0
+  @AppStorage("ebookReader.textNormalization") var textNormalization: Bool = false
   @AppStorage("ebookReader.fontFamily") var fontFamily: FontFamily = .system
   @AppStorage("ebookReader.theme") var theme: Theme = .light
   @AppStorage("ebookReader.pageMargins") var pageMargins: PageMargins = .medium
-  @AppStorage("ebookReader.lineSpacing") var lineSpacing: LineSpacing = .normal
+  @AppStorage("ebookReader.scroll") var scroll: Bool = false
+  @AppStorage("ebookReader.tapToNavigate") var tapToNavigate: Bool = true
 
-  enum FontSize: String, CaseIterable, Identifiable {
-    case small = "Small"
-    case medium = "Medium"
-    case large = "Large"
-    case extraLarge = "Extra Large"
-
-    var id: String { rawValue }
-
-    var value: Double {
-      switch self {
-      case .small: return 0.8
-      case .medium: return 1.0
-      case .large: return 1.2
-      case .extraLarge: return 1.5
-      }
-    }
-  }
+  @AppStorage("ebookReader.publisherStyles") var publisherStyles: Bool = true
+  @AppStorage("ebookReader.lineHeight") var lineHeight: Double = 1.2
+  @AppStorage("ebookReader.paragraphIndent") var paragraphIndent: Double = 0.0
+  @AppStorage("ebookReader.paragraphSpacing") var paragraphSpacing: Double = 0.0
+  @AppStorage("ebookReader.wordSpacing") var wordSpacing: Double = 0.0
+  @AppStorage("ebookReader.letterSpacing") var letterSpacing: Double = 0.0
 
   enum FontFamily: String, CaseIterable, Identifiable {
-    case system = "System"
-    case serif = "Serif"
+    case system = "Original"
     case sansSerif = "Sans Serif"
+    case iaWriterDuospace = "IA Writer Duospace"
+    case accessibleDfA = "Accessible DfA"
+    case openDyslexic = "OpenDyslexic"
 
     var id: String { rawValue }
 
-    var fontName: String? {
+    var readiumFontFamily: ReadiumNavigator.FontFamily? {
       switch self {
       case .system: return nil
-      case .serif: return "Georgia"
-      case .sansSerif: return "Helvetica"
+      case .sansSerif: return .sansSerif
+      case .iaWriterDuospace: return .iaWriterDuospace
+      case .accessibleDfA: return .accessibleDfA
+      case .openDyslexic: return .openDyslexic
       }
     }
   }
@@ -68,38 +64,28 @@ class EbookReaderPreferences: ObservableObject {
       }
     }
   }
-
-  enum LineSpacing: String, CaseIterable, Identifiable {
-    case compact = "Compact"
-    case normal = "Normal"
-    case relaxed = "Relaxed"
-
-    var id: String { rawValue }
-
-    var value: Double {
-      switch self {
-      case .compact: return 1.2
-      case .normal: return 1.5
-      case .relaxed: return 1.8
-      }
-    }
-  }
 }
 
 extension EbookReaderPreferences {
   func toEPUBPreferences() -> EPUBPreferences {
     var prefs = EPUBPreferences()
 
-    prefs.fontSize = fontSize.value
-
-    if let fontName = fontFamily.fontName {
-      prefs.fontFamily = ReadiumNavigator.FontFamily(rawValue: fontName)
-    }
-
+    prefs.fontSize = fontSize
+    prefs.fontWeight = fontWeight
+    prefs.textNormalization = textNormalization
+    prefs.fontFamily = fontFamily.readiumFontFamily
     prefs.theme = theme.toReadiumTheme()
-
     prefs.pageMargins = pageMargins.value
-    prefs.lineHeight = lineSpacing.value
+    prefs.scroll = scroll
+
+    prefs.publisherStyles = publisherStyles
+    if !publisherStyles {
+      prefs.lineHeight = lineHeight
+      prefs.paragraphIndent = paragraphIndent
+      prefs.paragraphSpacing = paragraphSpacing
+      prefs.wordSpacing = wordSpacing
+      prefs.letterSpacing = letterSpacing
+    }
 
     return prefs
   }

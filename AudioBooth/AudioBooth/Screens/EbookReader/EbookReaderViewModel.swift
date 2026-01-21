@@ -260,6 +260,18 @@ final class EbookReaderViewModel: EbookReaderView.Model {
     applyPreferences(preferences)
   }
 
+  override func onTapLeft() {
+    Task {
+      await navigator?.goBackward()
+    }
+  }
+
+  override func onTapRight() {
+    Task {
+      await navigator?.goForward()
+    }
+  }
+
   private func applyPreferences(_ preferences: EbookReaderPreferences) {
     guard let epubNavigator = navigator as? EPUBNavigatorViewController else {
       AppLogger.viewModel.info("PDF navigator doesn't support preferences yet")
