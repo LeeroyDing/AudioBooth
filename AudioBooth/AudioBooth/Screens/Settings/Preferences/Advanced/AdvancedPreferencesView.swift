@@ -1,3 +1,4 @@
+import CoreNFC
 import SwiftUI
 
 struct AdvancedPreferencesView: View {
@@ -7,20 +8,46 @@ struct AdvancedPreferencesView: View {
     Form {
       Section {
         VStack(alignment: .leading) {
-          Text("NFC Tag Writing".uppercased())
+          Text("iCloud Sync".uppercased())
             .bold()
 
           Text(
-            "Show option in book details menu to write book information to NFC tags for quick playback access."
+            "Sync your preferences across all your devices using iCloud."
           )
         }
         .font(.caption)
 
-        Toggle("Visible", isOn: $preferences.showNFCTagWriting)
+        Toggle("Enabled", isOn: $preferences.iCloudSyncEnabled)
           .font(.subheadline)
           .bold()
+          .onChange(of: preferences.iCloudSyncEnabled) { _, enabled in
+            if enabled {
+              preferences.syncToCloud()
+            } else {
+              preferences.purgeCloud()
+            }
+          }
       }
       .listRowSeparator(.hidden)
+
+      if NFCNDEFReaderSession.readingAvailable {
+        Section {
+          VStack(alignment: .leading) {
+            Text("NFC Tag Writing".uppercased())
+              .bold()
+
+            Text(
+              "Show option in book details menu to write book information to NFC tags for quick playback access."
+            )
+          }
+          .font(.caption)
+
+          Toggle("Visible", isOn: $preferences.showNFCTagWriting)
+            .font(.subheadline)
+            .bold()
+        }
+        .listRowSeparator(.hidden)
+      }
     }
     .navigationTitle("Advanced")
   }

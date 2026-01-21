@@ -82,6 +82,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("showDebugSection")
   var showDebugSection: Bool = false
 
+  @AppStorage("iCloudSyncEnabled")
+  var iCloudSyncEnabled: Bool = false
+
   @AppStorage("accentColor")
   var accentColor: Color?
 
@@ -103,11 +106,17 @@ final class UserPreferences: ObservableObject {
   @AppStorage("continueSectionSize")
   var continueSectionSize: ContinueSectionSize = .default
 
+  let cloud = NSUbiquitousKeyValueStore.default
+  var cloudObserver: NSObjectProtocol?
+  var localObserver: NSObjectProtocol?
+  var isApplyingCloudChanges = false
+
   private init() {
     migrateShowListeningStats()
     migrateAutoDownloadBooks()
     migrateShakeToExtendTimer()
     migrateAutoTimerDuration()
+    setupCloudSync()
   }
 
   private func migrateShowListeningStats() {

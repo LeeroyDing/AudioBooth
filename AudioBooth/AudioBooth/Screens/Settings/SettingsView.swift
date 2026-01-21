@@ -1,6 +1,5 @@
 import API
 import Combine
-import CoreNFC
 import PulseUI
 import SwiftData
 import SwiftUI
@@ -38,12 +37,10 @@ struct SettingsView: View {
             }
           }
 
-          if NFCNDEFReaderSession.readingAvailable {
-            NavigationLink(value: "advanced") {
-              HStack {
-                Image(systemName: "ellipsis.circle")
-                Text("Advanced")
-              }
+          NavigationLink(value: "advanced") {
+            HStack {
+              Image(systemName: "ellipsis.circle")
+              Text("Advanced")
             }
           }
         }
