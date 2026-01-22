@@ -1,11 +1,12 @@
 import API
+import AuthenticationServices
 import Foundation
 import Logging
+import SwiftUI
 
 final class AuthenticationViewModel: AuthenticationView.Model {
   private let audiobookshelf = Audiobookshelf.shared
   private let server: Server
-  private var oidcAuthManager: OIDCAuthenticationManager?
 
   init(server: Server) {
     self.server = server
@@ -41,7 +42,7 @@ final class AuthenticationViewModel: AuthenticationView.Model {
     }
   }
 
-  override func onOIDCLoginTapped() {
+  override func onOIDCLoginTapped(using session: WebAuthenticationSession) {
     isLoading = true
 
     let authManager = OIDCAuthenticationManager(
@@ -49,29 +50,19 @@ final class AuthenticationViewModel: AuthenticationView.Model {
       customHeaders: server.customHeaders,
       existingServerID: server.id
     )
-    authManager.delegate = self
-    self.oidcAuthManager = authManager
 
-    authManager.start()
-  }
-
-  func showError(_ message: String) {
-    Toast(error: message).show()
-    isLoading = false
-  }
-}
-
-extension AuthenticationViewModel: OIDCAuthenticationDelegate {
-  func oidcAuthenticationDidSucceed(connectionID: String) {
-    isLoading = false
-    oidcAuthManager = nil
-    Toast(success: "Successfully authenticated with SSO").show()
-    onAuthenticationSuccess()
-  }
-
-  func oidcAuthentication(didFailWithError error: Error) {
-    showError("SSO login failed: \(error.localizedDescription)")
-    isLoading = false
-    oidcAuthManager = nil
+    Task {
+      do {
+        _ = try await authManager.start(using: session)
+        isLoading = false
+        Toast(success: "Successfully authenticated with SSO").show()
+        onAuthenticationSuccess()
+      } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
+        isLoading = false
+      } catch {
+        Toast(error: "SSO login failed: \(error.localizedDescription)").show()
+        isLoading = false
+      }
+    }
   }
 }

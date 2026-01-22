@@ -10,7 +10,6 @@ import UIKit
 
 final class ServerViewModel: ServerView.Model {
   private let audiobookshelf = Audiobookshelf.shared
-  private var oidcAuthManager: OIDCAuthenticationManager?
   private var playerManager: PlayerManager { .shared }
 
   private var libraryData: [API.Library] = []
@@ -33,8 +32,8 @@ final class ServerViewModel: ServerView.Model {
       )
     }
 
-    override func onOIDCLoginTapped() {
-      parent?.performNewServerOIDCLogin(authModel: self)
+    override func onOIDCLoginTapped(using session: WebAuthenticationSession) {
+      parent?.performNewServerOIDCLogin(authModel: self, using: session)
     }
   }
 
@@ -249,7 +248,10 @@ final class ServerViewModel: ServerView.Model {
     }
   }
 
-  private func performNewServerOIDCLogin(authModel: AuthenticationView.Model) {
+  private func performNewServerOIDCLogin(
+    authModel: AuthenticationView.Model,
+    using session: WebAuthenticationSession
+  ) {
     guard !serverURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
       return
     }
@@ -263,10 +265,23 @@ final class ServerViewModel: ServerView.Model {
       serverURL: normalizedURL,
       customHeaders: headers
     )
-    authManager.delegate = self
-    self.oidcAuthManager = authManager
 
-    authManager.start()
+    Task {
+      do {
+        let connectionID = try await authManager.start(using: session)
+        pendingConnectionID = connectionID
+        server = audiobookshelf.authentication.servers[connectionID]
+        authModel.isLoading = false
+        authenticationModel = nil
+        Toast(success: "Successfully authenticated with SSO").show()
+        await fetchLibraries()
+      } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
+        authModel.isLoading = false
+      } catch {
+        showError("SSO login failed: \(error.localizedDescription)")
+        authModel.isLoading = false
+      }
+    }
   }
 
   func showError(_ message: String) {
@@ -384,7 +399,6 @@ final class ServerViewModel: ServerView.Model {
     }
 
     authModel.availableAuthMethods = availableMethods
-    authModel.shouldAutoLaunchOIDC = status.shouldAutoLaunchOIDC
 
     if availableMethods.contains(.oidc) && !availableMethods.contains(.usernamePassword) {
       authModel.authenticationMethod = .oidc
@@ -393,7 +407,7 @@ final class ServerViewModel: ServerView.Model {
     }
 
     if status.shouldAutoLaunchOIDC && availableMethods.contains(.oidc) {
-      authModel.onOIDCLoginTapped()
+      authModel.shouldAutoLaunchOIDC = true
     }
   }
 
@@ -499,30 +513,5 @@ final class ServerViewModel: ServerView.Model {
     }
 
     return fullURL
-  }
-}
-
-extension ServerViewModel: OIDCAuthenticationDelegate {
-  func oidcAuthenticationDidSucceed(connectionID: String) {
-    pendingConnectionID = connectionID
-    server = audiobookshelf.authentication.servers[connectionID]
-    authenticationModel?.isLoading = false
-    authenticationModel = nil
-    oidcAuthManager = nil
-    Toast(success: "Successfully authenticated with SSO").show()
-    Task {
-      await fetchLibraries()
-    }
-  }
-
-  func oidcAuthentication(didFailWithError error: Error) {
-    if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
-      authenticationModel?.isLoading = false
-      oidcAuthManager = nil
-    } else {
-      showError("SSO login failed: \(error.localizedDescription)")
-      authenticationModel?.isLoading = false
-      oidcAuthManager = nil
-    }
   }
 }

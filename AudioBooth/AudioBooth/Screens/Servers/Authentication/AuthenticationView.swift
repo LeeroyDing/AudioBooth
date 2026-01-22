@@ -1,4 +1,5 @@
 import API
+import AuthenticationServices
 import Combine
 import SwiftUI
 
@@ -9,6 +10,7 @@ struct AuthenticationView: View {
   }
 
   @Environment(\.dismiss) var dismiss
+  @Environment(\.webAuthenticationSession) private var webAuthenticationSession
 
   @FocusState private var focusedField: FocusField?
 
@@ -68,7 +70,9 @@ struct AuthenticationView: View {
       }
     } else {
       Section {
-        Button(action: model.onOIDCLoginTapped) {
+        Button {
+          model.onOIDCLoginTapped(using: webAuthenticationSession)
+        } label: {
           HStack {
             if model.isLoading {
               ProgressView()
@@ -84,6 +88,12 @@ struct AuthenticationView: View {
         Text("Add **audiobooth://oauth** to audiobookshelf server redirect URIs")
           .textSelection(.enabled)
           .font(.footnote)
+      }
+      .onChange(of: model.shouldAutoLaunchOIDC) { _, shouldAutoLaunch in
+        if shouldAutoLaunch {
+          model.shouldAutoLaunchOIDC = false
+          model.onOIDCLoginTapped(using: webAuthenticationSession)
+        }
       }
     }
   }
@@ -106,7 +116,7 @@ extension AuthenticationView {
     var onAuthenticationSuccess: () -> Void
 
     func onLoginTapped() {}
-    func onOIDCLoginTapped() {}
+    func onOIDCLoginTapped(using session: WebAuthenticationSession) {}
 
     init(
       isLoading: Bool = false,

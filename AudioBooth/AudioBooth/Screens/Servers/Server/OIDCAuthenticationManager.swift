@@ -3,83 +3,53 @@ import AuthenticationServices
 import CryptoKit
 import Foundation
 import Logging
-import UIKit
+import SwiftUI
 
-final class OIDCAuthenticationManager: NSObject {
-  private var serverURL: String
-  private var pkce: PKCE
-  private var session: ASWebAuthenticationSession?
-  private var capturedCookies: [HTTPCookie] = []
-  private var customHeaders: [String: String]
-  private var existingServerID: String?
-
-  weak var delegate: OIDCAuthenticationDelegate?
+final class OIDCAuthenticationManager {
+  private let serverURL: String
+  private let pkce: PKCE
+  private let customHeaders: [String: String]
+  private let existingServerID: String?
 
   init(serverURL: String, customHeaders: [String: String] = [:], existingServerID: String? = nil) {
     self.serverURL = serverURL
     self.pkce = PKCE()
     self.customHeaders = customHeaders
     self.existingServerID = existingServerID
-    super.init()
   }
 
-  func start() {
+  func start(using session: WebAuthenticationSession) async throws -> String {
     AppLogger.authentication.info(
       "Starting OIDC authentication for server: \(self.serverURL)"
     )
-    Task {
-      do {
-        let authURL = try buildOIDCURL()
 
-        let (redirectURL, cookies) = try await makeInitialOAuthRequest(authURL: authURL)
-        self.capturedCookies = cookies
+    let authURL = try buildOIDCURL()
+    let (redirectURL, cookies) = try await makeInitialOAuthRequest(authURL: authURL)
 
-        self.openAuthenticationSession(with: redirectURL)
-      } catch {
-        AppLogger.authentication.error(
-          "OIDC authentication failed during initialization: \(error.localizedDescription)"
-        )
-        delegate?.oidcAuthentication(didFailWithError: error)
-      }
-    }
-  }
-
-  private func openAuthenticationSession(with url: URL) {
-    session = ASWebAuthenticationSession(
-      url: url,
-      callbackURLScheme: "audiobooth"
-    ) { [weak self] callbackURL, error in
-      self?.handleAuthenticationResult(callbackURL: callbackURL, error: error)
-    }
+    let callbackURL: URL
 
     if #available(iOS 17.4, *) {
-      session?.additionalHeaderFields = customHeaders
-    }
-
-    session?.presentationContextProvider = self
-    session?.start()
-  }
-
-  func cancel() {
-    session?.cancel()
-    session = nil
-  }
-
-  private func handleAuthenticationResult(callbackURL: URL?, error: Error?) {
-    if let error {
-      AppLogger.authentication.error(
-        "Authentication session failed with error: \(error.localizedDescription)"
+      callbackURL = try await session.authenticate(
+        using: redirectURL,
+        callback: .customScheme("audiobooth"),
+        preferredBrowserSession: .shared,
+        additionalHeaderFields: customHeaders
       )
-      delegate?.oidcAuthentication(didFailWithError: error)
-      return
+    } else {
+      callbackURL = try await session.authenticate(
+        using: redirectURL,
+        callbackURLScheme: "audiobooth",
+        preferredBrowserSession: .shared
+      )
     }
 
-    guard let callbackURL else {
-      AppLogger.authentication.error("No callback URL received")
-      delegate?.oidcAuthentication(didFailWithError: OIDCError.invalidCallback)
-      return
-    }
+    return try await handleAuthenticationResult(callbackURL: callbackURL, cookies: cookies)
+  }
 
+  private func handleAuthenticationResult(
+    callbackURL: URL,
+    cookies: [HTTPCookie]
+  ) async throws -> String {
     AppLogger.authentication.info(
       "Received callback URL: \(callbackURL.redactedString)"
     )
@@ -88,8 +58,7 @@ final class OIDCAuthenticationManager: NSObject {
       let queryItems = components.queryItems
     else {
       AppLogger.authentication.error("Failed to parse callback URL components")
-      delegate?.oidcAuthentication(didFailWithError: OIDCError.invalidCallback)
-      return
+      throw OIDCError.invalidCallback
     }
 
     let allParams = queryItems.map { "\($0.name): \($0.value ?? "nil")" }.joined(separator: ", ")
@@ -103,8 +72,7 @@ final class OIDCAuthenticationManager: NSObject {
       AppLogger.authentication.error(
         "Authentication failed with error parameter: \(error)"
       )
-      delegate?.oidcAuthentication(didFailWithError: OIDCError.authenticationFailed(error))
-      return
+      throw OIDCError.authenticationFailed(error)
     }
 
     guard let authCode = code else {
@@ -114,35 +82,25 @@ final class OIDCAuthenticationManager: NSObject {
       AppLogger.authentication.error(
         "No authorization code in callback. Available params: \(availableParams)"
       )
-      delegate?.oidcAuthentication(didFailWithError: OIDCError.noAuthorizationCode(availableParams))
-      return
+      throw OIDCError.noAuthorizationCode(availableParams)
     }
 
     AppLogger.authentication.info(
-      "Calling API loginWithOIDC - code length: \(authCode.count), verifier length: \(self.pkce.verifier.count), state: \(state ?? "nil"), cookies count: \(self.capturedCookies.count), custom headers count: \(self.customHeaders.count)"
+      "Calling API loginWithOIDC - code length: \(authCode.count), verifier length: \(self.pkce.verifier.count), state: \(state ?? "nil"), cookies count: \(cookies.count), custom headers count: \(self.customHeaders.count)"
     )
 
-    Task {
-      do {
-        let connectionID = try await Audiobookshelf.shared.authentication.loginWithOIDC(
-          serverURL: serverURL,
-          code: authCode,
-          verifier: pkce.verifier,
-          state: state,
-          cookies: capturedCookies,
-          customHeaders: customHeaders,
-          existingServerID: existingServerID
-        )
+    let connectionID = try await Audiobookshelf.shared.authentication.loginWithOIDC(
+      serverURL: serverURL,
+      code: authCode,
+      verifier: pkce.verifier,
+      state: state,
+      cookies: cookies,
+      customHeaders: customHeaders,
+      existingServerID: existingServerID
+    )
 
-        AppLogger.authentication.info("OIDC authentication succeeded")
-        delegate?.oidcAuthenticationDidSucceed(connectionID: connectionID)
-      } catch {
-        AppLogger.authentication.error(
-          "loginWithOIDC API call failed: \(error.localizedDescription)"
-        )
-        delegate?.oidcAuthentication(didFailWithError: error)
-      }
-    }
+    AppLogger.authentication.info("OIDC authentication succeeded")
+    return connectionID
   }
 
   private func buildOIDCURL() throws -> URL {
@@ -240,17 +198,6 @@ final class OIDCAuthenticationManager: NSObject {
   }
 }
 
-extension OIDCAuthenticationManager: ASWebAuthenticationPresentationContextProviding {
-  func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first
-    else {
-      return ASPresentationAnchor()
-    }
-    return window
-  }
-}
-
 extension OIDCAuthenticationManager {
   struct PKCE {
     let verifier: String
@@ -275,11 +222,6 @@ extension OIDCAuthenticationManager {
         .replacingOccurrences(of: "=", with: "")
     }
   }
-}
-
-protocol OIDCAuthenticationDelegate: AnyObject {
-  func oidcAuthenticationDidSucceed(connectionID: String)
-  func oidcAuthentication(didFailWithError error: Error)
 }
 
 enum OIDCError: LocalizedError {
