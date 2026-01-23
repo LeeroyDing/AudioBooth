@@ -55,6 +55,9 @@ final class UserPreferences: ObservableObject {
   @AppStorage("showBookProgressBar")
   var showBookProgressBar: Bool = false
 
+  @AppStorage("hideChapterSkipButtons")
+  var hideChapterSkipButtons: Bool = false
+
   @AppStorage("volumeLevel")
   var volumeLevel: Double = 1.0
 

@@ -263,7 +263,7 @@ struct BookPlayer: View {
 
   private var mainPlaybackControls: some View {
     HStack(spacing: 0) {
-      if let chapters = model.chapters {
+      if let chapters = model.chapters, !preferences.hideChapterSkipButtons {
         let isFirstChapter = chapters.currentIndex == 0
         Button(action: { chapters.onPreviousChapterTapped() }) {
           Image(systemName: "backward.end")
@@ -272,15 +272,20 @@ struct BookPlayer: View {
         }
         .disabled(isFirstChapter)
         .accessibilityLabel("Previous chapter")
-
-        Spacer(minLength: 8)
       }
+
+      Spacer(minLength: 8)
 
       Button(action: { model.onSkipBackwardTapped(seconds: preferences.skipBackwardInterval) }) {
         Image(
           systemName: "\(Int(preferences.skipBackwardInterval)).arrow.trianglehead.counterclockwise"
         )
-        .font(.system(size: 36, weight: .thin))
+        .font(
+          .system(
+            size: preferences.hideChapterSkipButtons ? 40 : 36,
+            weight: .thin
+          )
+        )
         .minimumScaleFactor(0.5)
         .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
@@ -314,16 +319,21 @@ struct BookPlayer: View {
 
       Button(action: { model.onSkipForwardTapped(seconds: preferences.skipForwardInterval) }) {
         Image(systemName: "\(Int(preferences.skipForwardInterval)).arrow.trianglehead.clockwise")
-          .font(.system(size: 36, weight: .thin))
+          .font(
+            .system(
+              size: preferences.hideChapterSkipButtons ? 40 : 36,
+              weight: .thin
+            )
+          )
           .minimumScaleFactor(0.5)
           .foregroundColor(model.isLoading ? .white.opacity(0.3) : .white)
       }
       .fontWeight(.light)
       .accessibilityLabel("Skip forward \(Int(preferences.skipForwardInterval)) seconds")
 
-      if let chapters = model.chapters {
-        Spacer(minLength: 8)
+      Spacer(minLength: 8)
 
+      if let chapters = model.chapters, !preferences.hideChapterSkipButtons {
         let isLastChapter = chapters.currentIndex == chapters.chapters.count - 1
         Button(action: { chapters.onNextChapterTapped() }) {
           Image(systemName: "forward.end")

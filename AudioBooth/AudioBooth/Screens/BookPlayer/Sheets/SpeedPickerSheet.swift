@@ -28,7 +28,7 @@ struct SpeedPickerSheet: View {
                   .foregroundColor(.primary)
               }
           }
-          .disabled(model.playbackSpeed <= 0.7)
+          .disabled(model.playbackSpeed <= 0.5)
 
           Slider(
             value: Binding(
@@ -49,7 +49,7 @@ struct SpeedPickerSheet: View {
                   .foregroundColor(.primary)
               }
           }
-          .disabled(model.playbackSpeed >= 2.0)
+          .disabled(model.playbackSpeed >= 3.5)
         }
         .padding(.horizontal, 40)
 

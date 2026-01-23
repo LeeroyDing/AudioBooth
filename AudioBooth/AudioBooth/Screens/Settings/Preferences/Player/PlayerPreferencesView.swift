@@ -294,11 +294,11 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Progress Display".uppercased())
+          Text("Playback Display".uppercased())
             .bold()
             .accessibilityAddTraits(.isHeader)
 
-          Text("Configure how progress is displayed for books with chapters.")
+          Text("Configure how playback and progress is displayed for books with chapters.")
         }
         .font(.caption)
 
@@ -307,6 +307,10 @@ struct PlayerPreferencesView: View {
           .bold()
 
         Toggle("Show Supplementary Book Progress Bar", isOn: $preferences.showBookProgressBar)
+          .font(.subheadline)
+          .bold()
+
+        Toggle("Hide Chapter Skip Buttons", isOn: $preferences.hideChapterSkipButtons)
           .font(.subheadline)
           .bold()
       }
