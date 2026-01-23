@@ -55,8 +55,8 @@ final class UserPreferences: ObservableObject {
   @AppStorage("showBookProgressBar")
   var showBookProgressBar: Bool = false
 
-  @AppStorage("volumeBoost")
-  var volumeBoost: VolumeBoost = .none
+  @AppStorage("volumeLevel")
+  var volumeLevel: Double = 1.0
 
   @AppStorage("libraryDisplayMode")
   var libraryDisplayMode: BookCard.DisplayMode = .card
@@ -119,6 +119,7 @@ final class UserPreferences: ObservableObject {
     migrateAutoDownloadBooks()
     migrateShakeToExtendTimer()
     migrateAutoTimerDuration()
+    migrateVolumeBoost()
     setupCloudSync()
   }
 
@@ -152,6 +153,19 @@ final class UserPreferences: ObservableObject {
       if duration > 0 {
         autoTimerMode = .duration(duration)
       }
+    }
+  }
+
+  private func migrateVolumeBoost() {
+    guard let rawValue = UserDefaults.standard.string(forKey: "volumeBoost") else { return }
+    UserDefaults.standard.removeObject(forKey: "volumeBoost")
+
+    switch rawValue {
+    case "none": volumeLevel = 1.0
+    case "low": volumeLevel = 1.5
+    case "medium": volumeLevel = 2.0
+    case "high": volumeLevel = 3.0
+    default: break
     }
   }
 }
@@ -235,31 +249,6 @@ enum ShakeSensitivity: String, CaseIterable {
     case .medium: "Medium"
     case .high: "High"
     case .veryHigh: "Very High"
-    }
-  }
-}
-
-enum VolumeBoost: String, CaseIterable {
-  case none
-  case low
-  case medium
-  case high
-
-  var multiplier: Float {
-    switch self {
-    case .none: 1.0
-    case .low: 1.5
-    case .medium: 2.0
-    case .high: 3.0
-    }
-  }
-
-  var displayText: String {
-    switch self {
-    case .none: "None"
-    case .low: "Low"
-    case .medium: "Medium"
-    case .high: "High"
     }
   }
 }

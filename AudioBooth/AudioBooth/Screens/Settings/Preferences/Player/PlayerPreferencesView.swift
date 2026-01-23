@@ -315,24 +315,25 @@ struct PlayerPreferencesView: View {
 
       Section {
         VStack(alignment: .leading) {
-          Text("Volume Boost".uppercased())
+          Text("Volume Level".uppercased())
             .bold()
             .accessibilityAddTraits(.isHeader)
 
-          Text("Boost the volume for quieter audiobooks.")
+          Text("Adjust the volume level for audiobooks.")
         }
         .font(.caption)
 
-        Picker("Volume Boost", selection: $preferences.volumeBoost) {
-          Text("None").tag(VolumeBoost.none)
-          Text("Low").tag(VolumeBoost.low)
-          Text("Medium").tag(VolumeBoost.medium)
-          Text("High").tag(VolumeBoost.high)
+        Stepper(
+          value: $preferences.volumeLevel,
+          in: 0.1...3.0,
+          step: 0.1
+        ) {
+          Text(preferences.volumeLevel.formatted(.percent.precision(.fractionLength(0))))
         }
         .font(.subheadline)
         .bold()
-        .accessibilityLabel("Volume Boost")
-        .accessibilityValue(preferences.volumeBoost.displayText)
+        .accessibilityLabel("Volume Level")
+        .accessibilityValue(preferences.volumeLevel.formatted(.percent.precision(.fractionLength(0))))
       }
       .listRowSeparator(.hidden)
       .listSectionSpacing(.custom(12))

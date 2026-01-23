@@ -135,7 +135,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private func fadeOut(_ seconds: TimeInterval) {
     let fadeOut = preferences.timerFadeOut
     if fadeOut > 0, seconds < fadeOut {
-      player?.volume = Float(seconds / fadeOut) * preferences.volumeBoost.multiplier
+      player?.volume = Float(seconds / fadeOut) * Float(preferences.volumeLevel)
     }
   }
 
@@ -143,7 +143,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     let duration = originalTimerDuration
 
     player?.pause()
-    player?.volume = preferences.volumeBoost.multiplier
+    player?.volume = Float(preferences.volumeLevel)
 
     if preferences.shakeSensitivity.isEnabled {
       let extendAction = formatExtendButtonTitle(for: duration)
@@ -295,7 +295,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   func onShakeDetected() {
     guard preferences.shakeSensitivity.isEnabled, originalTimerDuration > 0 else { return }
 
-    player?.volume = preferences.volumeBoost.multiplier
+    player?.volume = Float(preferences.volumeLevel)
 
     switch current {
     case .preset:

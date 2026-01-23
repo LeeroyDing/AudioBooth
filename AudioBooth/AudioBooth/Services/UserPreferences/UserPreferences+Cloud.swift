@@ -19,7 +19,7 @@ extension UserPreferences {
     "chapterProgressionAdjustsWithSpeed",
     "showFullBookDuration",
     "showBookProgressBar",
-    "volumeBoost",
+    "volumeLevel",
     "libraryDisplayMode",
     "collapseSeriesInLibrary",
     "groupSeriesInOffline",
