@@ -81,5 +81,7 @@
 		<string>audio</string>
 		<string>fetch</string>
 	</array>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 </dict>
 </plist>

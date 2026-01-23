@@ -7,6 +7,7 @@ struct AudioBoothWidgetBundle: WidgetBundle {
     AudioBoothWidget()
     AudioBoothLockscreenPlaybackWidget()
     AudioBoothLockscreenBookWidget()
+    SleepTimerLiveActivity()
   }
 }
 

@@ -1,4 +1,5 @@
 import API
+import ActivityKit
 import AppIntents
 import Logging
 import Models
@@ -46,6 +47,8 @@ struct AudioBoothApp: App {
       }
       await Audiobookshelf.shared.authentication.checkServersHealth()
     }
+
+    endAllLiveActivities()
   }
 
   private func setupDatabaseCallbacks() {
@@ -64,6 +67,17 @@ struct AudioBoothApp: App {
         try ModelContextProvider.shared.switchToServer(serverID, serverURL: serverURL)
       } catch {
         AppLogger.general.error("Failed to switch database: \(error.localizedDescription)")
+      }
+    }
+  }
+
+  func endAllLiveActivities() {
+    Task {
+      for activity in Activity<SleepTimerActivityAttributes>.activities {
+        await activity.end(
+          ActivityContent(state: activity.content.state, staleDate: nil),
+          dismissalPolicy: .immediate
+        )
       }
     }
   }

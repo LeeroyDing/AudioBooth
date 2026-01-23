@@ -1,7 +1,9 @@
 import AVFoundation
+import ActivityKit
 import Combine
 import Foundation
 import Logging
+import PlayerIntents
 import SwiftUI
 
 final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
@@ -15,6 +17,9 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private var originalTimerDuration: TimeInterval = 0
   private var lastObservedChapterIndex: Int = 0
   private var cancellables = Set<AnyCancellable>()
+  private var playbackObserver: AnyCancellable?
+  private var seekObserver: AnyCancellable?
+  private var liveActivity: Activity<SleepTimerActivityAttributes>?
 
   init(player: AVPlayer, chapters: ChapterPickerSheet.Model?, speed: SpeedPickerSheet.Model) {
     self.player = player
@@ -147,6 +152,8 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     completedAlert = nil
     estimatedEndTime = nil
     stopSleepTimer()
+    stopObservingPlaybackState()
+    endLiveActivity()
     isPresented = false
   }
 
@@ -159,14 +166,45 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
       let totalMinutes = customHours * 60 + customMinutes
       preferences.customTimerMinutes = totalMinutes
       startSleepTimer(duration: duration)
-    case .chapters:
-      break
+    case .chapters(let count):
+      if let duration = calculateChapterDuration(for: count) {
+        startLiveActivity(duration: duration)
+      }
+      startObservingPlaybackState()
     case .none:
       break
     }
     isPresented = false
 
     player.play()
+  }
+
+  private func calculateChapterDuration(for chapterCount: Int) -> TimeInterval? {
+    guard let chapters, chapterCount > 0 else { return nil }
+
+    let currentTime = CMTimeGetSeconds(player.currentTime())
+    let currentIndex = chapters.currentIndex
+    let allChapters = chapters.chapters
+
+    guard currentIndex < allChapters.count else { return nil }
+
+    var totalSeconds: TimeInterval = 0
+
+    let currentChapter = allChapters[currentIndex]
+    totalSeconds += max(0, currentChapter.end - currentTime)
+
+    let additionalChaptersNeeded = chapterCount - 1
+    if additionalChaptersNeeded > 0 {
+      for i in 1...additionalChaptersNeeded {
+        let chapterIndex = currentIndex + i
+        guard chapterIndex < allChapters.count else { break }
+        let chapter = allChapters[chapterIndex]
+        totalSeconds += chapter.end - chapter.start
+      }
+    }
+
+    let playbackSpeed = Double(speed.playbackSpeed)
+    return totalSeconds / playbackSpeed
   }
 
   private func startSleepTimer(duration: TimeInterval) {
@@ -182,6 +220,8 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     RunLoop.current.add(sleepTimer!, forMode: .common)
 
     ShakeDetector.shared.startMonitoring()
+
+    startLiveActivity(duration: duration)
   }
 
   private func stopSleepTimer() {
@@ -191,6 +231,7 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     originalTimerDuration = 0
 
     ShakeDetector.shared.stopMonitoring()
+    endLiveActivity()
   }
 
   private func updateSleepTimer() {
@@ -247,6 +288,8 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     sleepTimer = nil
     timerStartTime = nil
 
+    pauseLiveActivity(remaining: originalTimerDuration)
+
     AppLogger.player.info("Timer expired - playback paused")
   }
 
@@ -261,16 +304,18 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   }
 
   private func extendTimer() {
-    if originalTimerDuration > 0 {
-      startSleepTimer(duration: originalTimerDuration)
-      current = .preset(originalTimerDuration)
-
-      player.play()
-
-      AppLogger.player.info("Timer extended by \(self.originalTimerDuration) seconds")
+    guard originalTimerDuration > 0 else {
+      completedAlert = nil
+      return
     }
 
+    startSleepTimer(duration: originalTimerDuration)
+    current = .preset(originalTimerDuration)
+
+    player.play()
+
     completedAlert = nil
+    AppLogger.player.info("Timer extended by \(self.originalTimerDuration) seconds")
   }
 
   private func resetTimerFromAlert() {
@@ -282,12 +327,15 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     originalTimerDuration = 0
 
     ShakeDetector.shared.stopMonitoring()
+    endLiveActivity()
+    stopObservingPlaybackState()
 
     AppLogger.player.info("Timer reset from alert")
   }
 
   func pauseFromChapterTimer() {
     player.pause()
+    stopObservingPlaybackState()
 
     if preferences.shakeSensitivity.isEnabled {
       completedAlert = TimerCompletedAlertViewModel(
@@ -308,11 +356,15 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
   private func extendChapterTimer() {
     current = .chapters(1)
 
+    if let duration = calculateChapterDuration(for: 1) {
+      startLiveActivity(duration: duration)
+    }
+    startObservingPlaybackState()
+
     player.play()
 
-    AppLogger.player.info("Chapter timer extended by 1 chapter")
-
     completedAlert = nil
+    AppLogger.player.info("Chapter timer extended by 1 chapter")
   }
 
   private func currentTimeInMinutes() -> Int {
@@ -353,6 +405,10 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
 
     case .chapters(let count):
       current = .chapters(count)
+      if let duration = calculateChapterDuration(for: count) {
+        startLiveActivity(duration: duration)
+      }
+      startObservingPlaybackState()
       AppLogger.player.info("Auto-timer activated: \(count) chapters")
 
     case .off:
@@ -382,5 +438,114 @@ final class TimerPickerSheetViewModel: TimerPickerSheet.Model {
     case .none:
       break
     }
+  }
+}
+
+// MARK: - Live Activity
+
+extension TimerPickerSheetViewModel {
+  func startLiveActivity(duration: TimeInterval) {
+    let endTime = Date().addingTimeInterval(duration)
+    let state = SleepTimerActivityAttributes.ContentState(
+      timer: .countdown(endTime),
+      accentColor: preferences.accentColor
+    )
+
+    if liveActivity != nil {
+      updateLiveActivity(state)
+      return
+    }
+
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+      AppLogger.player.debug("Live Activities not enabled")
+      return
+    }
+
+    let attributes = SleepTimerActivityAttributes()
+    do {
+      liveActivity = try Activity.request(
+        attributes: attributes,
+        content: .init(state: state, staleDate: endTime),
+        pushType: nil
+      )
+      AppLogger.player.info("Sleep timer Live Activity started")
+    } catch {
+      AppLogger.player.error("Failed to start Live Activity: \(error)")
+    }
+  }
+
+  func updateLiveActivity(_ state: SleepTimerActivityAttributes.ContentState) {
+    guard let liveActivity else { return }
+
+    let staleDate: Date? = if case .countdown(let endTime) = state.timer { endTime } else { nil }
+    Task {
+      await liveActivity.update(.init(state: state, staleDate: staleDate))
+    }
+  }
+
+  func endLiveActivity() {
+    guard let liveActivity else { return }
+
+    Task {
+      await liveActivity.end(nil, dismissalPolicy: .immediate)
+      AppLogger.player.info("Sleep timer Live Activity ended")
+    }
+    self.liveActivity = nil
+  }
+
+  func startObservingPlaybackState() {
+    playbackObserver = player.publisher(for: \.timeControlStatus)
+      .removeDuplicates()
+      .sink { [weak self] status in
+        guard let self, case .chapters(let count) = self.current else { return }
+        switch status {
+        case .playing:
+          if let duration = self.calculateChapterDuration(for: count) {
+            self.startLiveActivity(duration: duration)
+          }
+        case .paused:
+          self.pauseLiveActivity()
+        case .waitingToPlayAtSpecifiedRate:
+          break
+        @unknown default:
+          break
+        }
+      }
+
+    seekObserver = NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)
+      .sink { [weak self] _ in
+        guard let self,
+          case .chapters(let count) = self.current,
+          self.player.timeControlStatus == .playing,
+          let duration = self.calculateChapterDuration(for: count)
+        else { return }
+        self.startLiveActivity(duration: duration)
+      }
+  }
+
+  func pauseLiveActivity(remaining: TimeInterval? = nil) {
+    guard liveActivity != nil else { return }
+
+    let remainingTime: TimeInterval
+    if let remaining {
+      remainingTime = remaining
+    } else if case .chapters(let count) = current {
+      remainingTime = calculateChapterDuration(for: count) ?? 0
+    } else {
+      remainingTime = 0
+    }
+
+    let state = SleepTimerActivityAttributes.ContentState(
+      timer: .paused(remainingTime),
+      accentColor: preferences.accentColor
+    )
+    updateLiveActivity(state)
+  }
+
+  func stopObservingPlaybackState() {
+    playbackObserver?.cancel()
+    playbackObserver = nil
+    seekObserver?.cancel()
+    seekObserver = nil
   }
 }

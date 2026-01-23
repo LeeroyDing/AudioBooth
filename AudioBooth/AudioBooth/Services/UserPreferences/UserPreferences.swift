@@ -193,28 +193,6 @@ extension Array: @retroactive RawRepresentable where Element: Codable {
   }
 }
 
-extension Color: @retroactive RawRepresentable {
-  public init?(rawValue: String) {
-    guard
-      let data = Data(base64Encoded: rawValue),
-      let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: UIColor.self, from: data)
-    else {
-      return nil
-    }
-
-    self = Color(color)
-  }
-
-  public var rawValue: String {
-    guard let data = try? NSKeyedArchiver.archivedData(withRootObject: UIColor(self), requiringSecureCoding: false)
-    else {
-      return ""
-    }
-
-    return data.base64EncodedString()
-  }
-}
-
 enum AutoDownloadMode: String, CaseIterable {
   case off
   case wifiOnly
