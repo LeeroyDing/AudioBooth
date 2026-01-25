@@ -3,7 +3,7 @@ import Foundation
 import SwiftData
 
 enum AudiobookshelfSchema: VersionedSchema {
-  static nonisolated(unsafe) var versionIdentifier = Schema.Version(0, 0, 1)
+  static nonisolated(unsafe) var versionIdentifier = Schema.Version(0, 0, 2)
 
   static var models: [any PersistentModel.Type] {
     [

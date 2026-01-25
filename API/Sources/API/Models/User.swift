@@ -15,6 +15,7 @@ extension User {
     public let ebookProgress: Double?
     public let ebookLocation: String?
     public let isFinished: Bool
+    public let startedAt: Int64
     public let finishedAt: Int64?
     public let currentTime: Double
     public let lastUpdate: Int64
@@ -27,6 +28,7 @@ extension User {
       ebookProgress: Double,
       ebookLocation: String?,
       isFinished: Bool,
+      startedAt: Int64,
       finishedAt: Int64?,
       currentTime: Double,
       lastUpdate: Int64
@@ -38,9 +40,25 @@ extension User {
       self.ebookProgress = ebookProgress
       self.ebookLocation = ebookLocation
       self.isFinished = isFinished
+      self.startedAt = startedAt
       self.finishedAt = finishedAt
       self.currentTime = currentTime
       self.lastUpdate = lastUpdate
+    }
+
+    public init(from decoder: any Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      self.id = try container.decode(String.self, forKey: .id)
+      self.libraryItemId = try container.decode(String.self, forKey: .libraryItemId)
+      self.duration = try container.decodeIfPresent(Double.self, forKey: .duration)
+      self.progress = try container.decode(Double.self, forKey: .progress)
+      self.ebookProgress = try container.decodeIfPresent(Double.self, forKey: .ebookProgress)
+      self.ebookLocation = try? container.decodeIfPresent(String.self, forKey: .ebookLocation)
+      self.isFinished = try container.decode(Bool.self, forKey: .isFinished)
+      self.startedAt = try container.decode(Int64.self, forKey: .startedAt)
+      self.finishedAt = try container.decodeIfPresent(Int64.self, forKey: .finishedAt)
+      self.currentTime = try container.decode(Double.self, forKey: .currentTime)
+      self.lastUpdate = try container.decode(Int64.self, forKey: .lastUpdate)
     }
   }
 

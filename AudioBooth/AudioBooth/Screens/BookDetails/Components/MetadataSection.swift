@@ -44,31 +44,6 @@ struct MetadataSection: View {
           }
           .font(.subheadline)
         }
-
-        if let audioProgress = model.audioProgress, audioProgress > 0, model.hasAudio {
-          HStack {
-            Image(systemName: "chart.bar.fill")
-              .accessibilityHidden(true)
-            Text("**Progress:** \(audioProgress.formatted(.percent.precision(.fractionLength(0))))")
-          }
-          .font(.subheadline)
-        } else if let ebookProgress = model.ebookProgress, ebookProgress > 0, model.isEbook {
-          HStack {
-            Image(systemName: "chart.bar.fill")
-              .accessibilityHidden(true)
-            Text("**Progress:** \(ebookProgress.formatted(.percent.precision(.fractionLength(0))))")
-          }
-          .font(.subheadline)
-        }
-
-        if let timeRemaining = model.timeRemaining {
-          HStack {
-            Image(systemName: "clock.arrow.circlepath")
-              .accessibilityHidden(true)
-            Text("**Time remaining:** \(timeRemaining)")
-          }
-          .font(.subheadline)
-        }
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -81,32 +56,23 @@ extension MetadataSection {
     var publishedYear: String?
     var language: String?
     var durationText: String?
-    var timeRemaining: String?
     var hasAudio: Bool
     var isEbook: Bool
-    var audioProgress: Double?
-    var ebookProgress: Double?
 
     init(
       publisher: String? = nil,
       publishedYear: String? = nil,
       language: String? = nil,
       durationText: String? = nil,
-      timeRemaining: String? = nil,
       hasAudio: Bool = false,
-      isEbook: Bool = false,
-      audioProgress: Double? = nil,
-      ebookProgress: Double? = nil
+      isEbook: Bool = false
     ) {
       self.publisher = publisher
       self.publishedYear = publishedYear
       self.language = language
       self.durationText = durationText
-      self.timeRemaining = timeRemaining
       self.hasAudio = hasAudio
       self.isEbook = isEbook
-      self.audioProgress = audioProgress
-      self.ebookProgress = ebookProgress
     }
   }
 }

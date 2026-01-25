@@ -204,6 +204,10 @@ struct BookDetailsView: View {
 
       headerSection
       MetadataSection(model: model.metadata)
+
+      if let progressCard = model.progressCard {
+        ProgressCard(model: progressCard)
+      }
       if let description = model.description {
         descriptionSection(description)
       }
@@ -315,8 +319,9 @@ struct BookDetailsView: View {
           }
         }
         .overlay(alignment: .bottom) {
-          if let progress = model.progress, progress > 0 {
-            ProgressBarView(progress: model.progress)
+          let progress = max(model.progress.audio, model.progress.ebook)
+          if progress > 0 {
+            ProgressBarView(progress: progress)
           }
         }
         .overlay { downloadProgress }
@@ -337,8 +342,9 @@ struct BookDetailsView: View {
       CoverImage(url: model.coverURL)
         .frame(width: 200, height: 200)
         .overlay(alignment: .bottom) {
-          if let progress = model.progress, progress > 0 {
-            ProgressBarView(progress: model.progress)
+          let progress = max(model.progress.audio, model.progress.ebook)
+          if progress > 0 {
+            ProgressBarView(progress: progress)
           }
         }
         .overlay { downloadProgress }
@@ -459,7 +465,7 @@ struct BookDetailsView: View {
           .frame(maxWidth: .infinity)
           .padding()
           .background {
-            actionBackground(progress: model.metadata.audioProgress)
+            actionBackground(progress: model.progress.audio)
           }
           .foregroundColor(.white)
           .cornerRadius(12)
@@ -472,7 +478,7 @@ struct BookDetailsView: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background {
-              actionBackground(progress: model.metadata.ebookProgress)
+              actionBackground(progress: model.progress.ebook)
             }
             .foregroundColor(.white)
             .cornerRadius(12)
@@ -484,7 +490,7 @@ struct BookDetailsView: View {
   private var playButtonText: String {
     if model.isPlaying {
       "Pause"
-    } else if let audioProgress = model.metadata.audioProgress, audioProgress > 0 {
+    } else if model.progress.audio > 0 {
       "Continue Listening"
     } else {
       "Play"
@@ -643,7 +649,7 @@ extension BookDetailsView {
     var narrators: [String]
     var series: [Series]
     var coverURL: URL?
-    var progress: Double?
+    var progress: (audio: Double, ebook: Double)
     var downloadState: DownloadManager.DownloadState
     var isLoading: Bool
     var isPlaying: Bool
@@ -659,6 +665,7 @@ extension BookDetailsView {
 
     var tabs: [ContentTab]
     var metadata: MetadataSection.Model
+    var progressCard: ProgressCard.Model?
 
     func onAppear() {}
     func onPlayTapped() {}
@@ -680,7 +687,7 @@ extension BookDetailsView {
       narrators: [String] = [],
       series: [Series] = [],
       coverURL: URL? = nil,
-      progress: Double? = nil,
+      progress: (audio: Double, ebook: Double) = (0, 0),
       downloadState: DownloadManager.DownloadState = .downloaded,
       isLoading: Bool = true,
       isCurrentlyPlaying: Bool = false,
@@ -694,7 +701,8 @@ extension BookDetailsView {
       ereaderDevices: [String] = [],
       ebookReader: EbookReaderView.Model? = nil,
       tabs: [ContentTab],
-      metadata: MetadataSection.Model = .init()
+      metadata: MetadataSection.Model = .init(),
+      progressCard: ProgressCard.Model? = nil
     ) {
       self.bookID = bookID
       self.title = title
@@ -718,6 +726,7 @@ extension BookDetailsView {
       self.ebookReader = ebookReader
       self.tabs = tabs
       self.metadata = metadata
+      self.progressCard = progressCard
     }
   }
 }
@@ -783,7 +792,7 @@ extension BookDetailsView.Model {
         Series(id: "series-1", name: "The Lord of the Rings", sequence: "1")
       ],
       coverURL: URL(string: "https://m.media-amazon.com/images/I/51YHc7SK5HL._SL500_.jpg"),
-      progress: 0.45,
+      progress: (0.45, 0),
       downloadState: .downloaded,
       isLoading: false,
       flags: [.explicit],
@@ -795,8 +804,12 @@ extension BookDetailsView.Model {
       ],
       metadata: .init(
         durationText: "12hr 30min",
-        timeRemaining: "6hr 52min",
         hasAudio: true
+      ),
+      progressCard: .init(
+        progress: 0.45,
+        timeRemaining: 24720,
+        startedAt: Calendar.current.date(byAdding: .day, value: -10, to: Date())!
       )
     )
   }

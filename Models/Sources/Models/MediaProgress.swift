@@ -14,6 +14,7 @@ public final class MediaProgress {
   public var ebookProgress: Double?
   public var ebookLocation: String?
   public var isFinished: Bool
+  public var startedAt: Date = Date()
   public var finishedAt: Date?
   public var lastUpdate: Date
 
@@ -29,6 +30,7 @@ public final class MediaProgress {
     ebookProgress: Double? = nil,
     ebookLocation: String? = nil,
     isFinished: Bool = false,
+    startedAt: Date = Date(),
     finishedAt: Date? = nil,
     lastUpdate: Date = Date()
   ) {
@@ -41,6 +43,7 @@ public final class MediaProgress {
     self.ebookProgress = ebookProgress
     self.ebookLocation = ebookLocation
     self.isFinished = isFinished
+    self.startedAt = startedAt
     self.finishedAt = finishedAt
     self.lastUpdate = lastUpdate
   }
@@ -54,18 +57,22 @@ public final class MediaProgress {
       currentTime = apiProgress.duration ?? 0
     }
 
+    let lastUpdate = Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
+    let startedAt = Date(timeIntervalSince1970: TimeInterval(apiProgress.startedAt / 1000))
+
     self.init(
       bookID: apiProgress.libraryItemId,
       id: apiProgress.id,
-      lastPlayedAt: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000)),
+      lastPlayedAt: lastUpdate,
       currentTime: currentTime,
       duration: apiProgress.duration ?? 0,
       progress: progress,
       ebookProgress: apiProgress.ebookProgress,
       ebookLocation: apiProgress.ebookLocation,
       isFinished: apiProgress.isFinished,
+      startedAt: startedAt,
       finishedAt: apiProgress.finishedAt.map { Date(timeIntervalSince1970: TimeInterval($0 / 1000)) },
-      lastUpdate: Date(timeIntervalSince1970: TimeInterval(apiProgress.lastUpdate / 1000))
+      lastUpdate: lastUpdate
     )
   }
 }
@@ -276,6 +283,7 @@ extension MediaProgress {
       if let local = localProgressMap[apiProgress.libraryItemId] {
         local.id = remote.id
         local.duration = remote.duration
+        local.startedAt = remote.startedAt
 
         if local.finishedAt == nil {
           local.finishedAt = remote.finishedAt

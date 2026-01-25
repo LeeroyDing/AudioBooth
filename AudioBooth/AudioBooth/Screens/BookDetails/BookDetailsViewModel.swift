@@ -31,16 +31,24 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     let initialMediaProgress = try? MediaProgress.fetch(bookID: bookID)
     super.init(
       bookID: bookID,
-      progress: MediaProgress.progress(for: bookID),
+      progress: (initialMediaProgress?.progress ?? 0, initialMediaProgress?.ebookProgress ?? 0),
       isLoading: false,
       tabs: [],
-      metadata: .init(
-        audioProgress: initialMediaProgress?.progress,
-        ebookProgress: initialMediaProgress?.ebookProgress
-      )
+      metadata: .init(),
+      progressCard: initialMediaProgress.map { Self.makeProgressCard(from: $0) }
     )
     mediaProgress = initialMediaProgress
     updateActions()
+  }
+
+  private static func makeProgressCard(from mediaProgress: MediaProgress) -> ProgressCard.Model {
+    ProgressCard.Model(
+      progress: mediaProgress.progress,
+      timeRemaining: mediaProgress.remaining,
+      startedAt: mediaProgress.startedAt,
+      finishedAt: mediaProgress.finishedAt,
+      isFinished: mediaProgress.isFinished
+    )
   }
 
   isolated deinit {
@@ -389,7 +397,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
       updatedActions.insert(isInQueue ? .removeFromQueue : .addToQueue)
     }
 
-    let currentProgress = progress ?? 0
+    let currentProgress = max(progress.audio, progress.ebook)
     if currentProgress < 1.0 {
       updatedActions.insert(.markAsFinished)
     }
@@ -510,7 +518,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
         } else if let localBook {
           try await localBook.markAsFinished()
         }
-        progress = 1.0
+        progress = (1.0, 1.0)
         updateActions()
         Toast(success: "Marked as finished").show()
       } catch {
@@ -522,17 +530,13 @@ final class BookDetailsViewModel: BookDetailsView.Model {
   override func onResetProgressTapped() {
     Task {
       do {
-        var duration = 0.0
         if let book {
           try await book.resetProgress()
-          duration = book.duration
         } else if let localBook {
           try await localBook.resetProgress()
-          duration = localBook.duration
         }
-        progress = 0
-        metadata.timeRemaining = Duration.seconds(duration)
-          .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
+        progress = (0, 0)
+        updateProgressCard()
         updateActions()
         Toast(success: "Progress reset").show()
       } catch {
@@ -597,25 +601,27 @@ extension BookDetailsViewModel {
     guard let mediaProgress else { return }
 
     Task { @MainActor in
-      progress = MediaProgress.progress(for: bookID)
-      metadata.audioProgress = mediaProgress.progress
-      metadata.ebookProgress = mediaProgress.ebookProgress
-
-      let remainingTime = mediaProgress.remaining
-      if remainingTime > 0 && metadata.audioProgress ?? 0 > 0 {
-        if let current = PlayerManager.shared.current,
-          [book?.id, localBook?.bookID].contains(current.id)
-        {
-          metadata.timeRemaining = Duration.seconds(current.playbackProgress.totalTimeRemaining)
-            .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
-        } else {
-          metadata.timeRemaining = Duration.seconds(remainingTime)
-            .formatted(.units(allowed: [.hours, .minutes], width: .narrow))
-        }
-      }
-
+      progress = (mediaProgress.progress, mediaProgress.ebookProgress ?? 0)
+      updateProgressCard()
       updateChapterStatuses()
       updateActions()
+    }
+  }
+
+  private func updateProgressCard() {
+    guard let mediaProgress else {
+      progressCard = nil
+      return
+    }
+
+    if let existingCard = progressCard {
+      existingCard.progress = mediaProgress.progress
+      existingCard.timeRemaining = mediaProgress.remaining
+      existingCard.startedAt = mediaProgress.startedAt
+      existingCard.finishedAt = mediaProgress.finishedAt
+      existingCard.isFinished = mediaProgress.isFinished
+    } else {
+      progressCard = Self.makeProgressCard(from: mediaProgress)
     }
   }
 
