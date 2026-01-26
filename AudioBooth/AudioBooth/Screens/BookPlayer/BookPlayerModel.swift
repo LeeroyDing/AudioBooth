@@ -211,6 +211,13 @@ final class BookPlayerModel: BookPlayer.Model {
     bookmarks?.isPresented = true
   }
 
+  func getCurrentTime() -> Int? {
+    guard let player else { return nil }
+    let time = player.currentTime()
+    guard time.isValid && !time.isIndefinite else { return nil }
+    return Int(ceil(CMTimeGetSeconds(time)))
+  }
+
   override func onHistoryTapped() {
     history?.isPresented = true
   }

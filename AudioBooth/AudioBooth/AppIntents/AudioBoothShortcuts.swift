@@ -93,5 +93,16 @@ struct AudioBoothShortcuts: AppShortcutsProvider {
       shortTitle: "Cancel sleep timer",
       systemImageName: "timer"
     )
+
+    AppShortcut(
+      intent: AddBookmarkIntent(),
+      phrases: [
+        "Add a bookmark in \(.applicationName)",
+        "Bookmark in \(.applicationName)",
+        "Create bookmark in \(.applicationName)",
+      ],
+      shortTitle: "Add bookmark",
+      systemImageName: "bookmark"
+    )
   }
 }
