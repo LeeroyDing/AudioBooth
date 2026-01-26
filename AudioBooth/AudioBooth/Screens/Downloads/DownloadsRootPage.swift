@@ -6,9 +6,12 @@ struct DownloadsRootPage: View {
     case downloaded
     case downloading
   }
+  @ObservedObject private var downloadManager = DownloadManager.shared
 
   @State private var selectedTab: DownloadTab = .downloaded
-  @ObservedObject private var downloadManager = DownloadManager.shared
+
+  @StateObject private var offline = OfflineListViewModel()
+  @StateObject private var downloading = DownloadingListViewModel()
 
   private var hasDownloadingBooks: Bool {
     !downloadManager.downloadInfos.isEmpty
@@ -18,9 +21,9 @@ struct DownloadsRootPage: View {
     NavigationStack {
       VStack {
         if selectedTab == .downloaded || !hasDownloadingBooks {
-          OfflineListView(model: OfflineListViewModel())
+          OfflineListView(model: offline)
         } else {
-          DownloadingListView(model: DownloadingListViewModel())
+          DownloadingListView(model: downloading)
         }
       }
       .navigationBarTitleDisplayMode(.inline)

@@ -3,7 +3,7 @@ import Models
 import SwiftUI
 
 struct DownloadingListView: View {
-  @StateObject var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     ScrollView {

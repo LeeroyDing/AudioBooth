@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 struct CollectionsPage: View {
-  @StateObject var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     Group {

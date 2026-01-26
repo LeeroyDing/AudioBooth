@@ -2,7 +2,7 @@ import Combine
 import SwiftUI
 
 struct OfflineListView: View {
-  @StateObject var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     content

@@ -2,7 +2,7 @@ import Combine
 import SwiftUI
 
 struct SeriesPage: View {
-  @StateObject var model: Model
+  @ObservedObject var model: Model
 
   var body: some View {
     content

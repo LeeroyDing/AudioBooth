@@ -15,18 +15,23 @@ struct CollectionsRootPage: View {
   }
 
   @ObservedObject private var libraries = Audiobookshelf.shared.libraries
+
   @Binding var selectedType: CollectionType
+
+  @StateObject private var series = SeriesPageModel()
+  @StateObject private var collections = CollectionsPageModel(mode: .collections)
+  @StateObject private var playlists = CollectionsPageModel(mode: .playlists)
 
   var body: some View {
     NavigationStack {
       VStack {
         switch selectedType {
         case .series:
-          SeriesPage(model: SeriesPageModel())
+          SeriesPage(model: series)
         case .collections:
-          CollectionsPage(model: CollectionsPageModel(mode: .collections))
+          CollectionsPage(model: collections)
         case .playlists:
-          CollectionsPage(model: CollectionsPageModel(mode: .playlists))
+          CollectionsPage(model: playlists)
         }
       }
       .id(libraries.current?.id)
