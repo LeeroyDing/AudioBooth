@@ -36,7 +36,6 @@ extension UserPreferences {
     "playerOrientation",
     "colorScheme",
     "continueSectionSize",
-    "pinnedPlaylistID",
     "ebookReader.fontSize",
     "ebookReader.fontWeight",
     "ebookReader.textNormalization",
