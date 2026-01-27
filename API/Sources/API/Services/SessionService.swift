@@ -252,4 +252,59 @@ public final class SessionService {
       )
     }
   }
+
+  public struct ListeningSessionsResponse: Sendable {
+    public let sessions: [SessionSync]
+    public let total: Int
+    public let numPages: Int
+    public let page: Int
+  }
+
+  public func getListeningSessions(
+    itemID: String,
+    limit: Int? = nil,
+    page: Int? = nil
+  ) async throws -> ListeningSessionsResponse {
+    guard let networkService = audiobookshelf.networkService else {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Network service not configured. Please login first."
+      )
+    }
+
+    struct Response: Codable {
+      let total: Int
+      let numPages: Int
+      let page: Int
+      let itemsPerPage: Int
+      let sessions: [SessionSync]
+    }
+
+    var query: [String: String] = [:]
+    if let limit {
+      query["itemsPerPage"] = String(limit)
+    }
+    if let page {
+      query["page"] = String(page)
+    }
+
+    let request = NetworkRequest<Response>(
+      path: "/api/me/item/listening-sessions/\(itemID)",
+      method: .get,
+      query: query
+    )
+
+    do {
+      let response = try await networkService.send(request)
+      return ListeningSessionsResponse(
+        sessions: response.value.sessions,
+        total: response.value.total,
+        numPages: response.value.numPages,
+        page: response.value.page
+      )
+    } catch {
+      throw Audiobookshelf.AudiobookshelfError.networkError(
+        "Failed to fetch listening sessions: \(error.localizedDescription)"
+      )
+    }
+  }
 }

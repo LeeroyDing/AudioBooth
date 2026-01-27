@@ -9,6 +9,7 @@ import UIKit
 
 final class BookDetailsViewModel: BookDetailsView.Model {
   private var booksService: BooksService { Audiobookshelf.shared.books }
+  private var sessionsService: SessionService { Audiobookshelf.shared.sessions }
   private var miscService: MiscService { Audiobookshelf.shared.misc }
   private var downloadManager: DownloadManager { .shared }
   private var playerManager: PlayerManager { .shared }
@@ -194,11 +195,33 @@ final class BookDetailsViewModel: BookDetailsView.Model {
 
       error = nil
       isLoading = false
+
+      await loadSessions()
     } catch {
       if localBook == nil {
         isLoading = false
         self.error = "Failed to load book details. Please check your connection and try again."
       }
+    }
+  }
+
+  private func loadSessions() async {
+    do {
+      let response = try await sessionsService.getListeningSessions(itemID: bookID)
+
+      if !response.sessions.isEmpty {
+        let bookDuration = book?.duration ?? localBook?.duration ?? 0
+        let sessionsModel = SessionsContentModel(
+          bookID: bookID,
+          bookDuration: bookDuration,
+          sessions: response.sessions,
+          currentPage: response.page,
+          numPages: response.numPages
+        )
+        tabs.append(.sessions(sessionsModel))
+      }
+    } catch {
+      AppLogger.viewModel.error("Failed to load sessions: \(error)")
     }
   }
 

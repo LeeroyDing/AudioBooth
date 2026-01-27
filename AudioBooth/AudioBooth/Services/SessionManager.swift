@@ -517,7 +517,7 @@ extension SessionSync {
       duration: session.duration,
       startTime: session.startTime,
       currentTime: session.currentTime,
-      timeListening: Int(session.timeListening + session.pendingListeningTime),
+      timeListening: session.timeListening + session.pendingListeningTime,
       startedAt: Int(session.startedAt.timeIntervalSince1970 * 1000),
       updatedAt: Int(session.updatedAt.timeIntervalSince1970 * 1000)
     )

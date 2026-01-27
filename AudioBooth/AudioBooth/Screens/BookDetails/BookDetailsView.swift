@@ -283,6 +283,8 @@ struct BookDetailsView: View {
           TracksContent(model: tracksModel)
         case .ebooks(let ebooksModel):
           EbooksContent(model: ebooksModel)
+        case .sessions(let sessionsModel):
+          SessionsContent(model: sessionsModel)
         }
       }
     }
@@ -724,12 +726,14 @@ extension BookDetailsView.Model {
     case chapters(ChaptersContent.Model)
     case tracks(TracksContent.Model)
     case ebooks(EbooksContent.Model)
+    case sessions(SessionsContent.Model)
 
     var title: String {
       switch self {
       case .chapters: "Chapters"
       case .tracks: "Tracks"
       case .ebooks: "eBooks"
+      case .sessions: "Sessions"
       }
     }
   }

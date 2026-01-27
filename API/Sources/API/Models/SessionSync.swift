@@ -7,9 +7,9 @@ public struct SessionSync: Codable, Sendable {
   public let duration: TimeInterval
   public let startTime: TimeInterval
   public let currentTime: TimeInterval
-  public let timeListening: Int
+  public let timeListening: TimeInterval?
   public let playMethod: Int
-  public let mediaPlayer: String
+  public let mediaPlayer: String?
   public let deviceInfo: DeviceInfo
   public let startedAt: Int
   public let updatedAt: Int
@@ -40,7 +40,7 @@ public struct SessionSync: Codable, Sendable {
     duration: TimeInterval,
     startTime: TimeInterval,
     currentTime: TimeInterval,
-    timeListening: Int,
+    timeListening: TimeInterval,
     startedAt: Int,
     updatedAt: Int,
   ) {
