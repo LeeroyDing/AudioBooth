@@ -7,9 +7,16 @@ final class SeriesCardModel: SeriesCard.Model {
     let bookCovers = series.books.prefix(10).map { $0.coverURL() }
     let progress = Self.progress(books: series.books)
 
+    let title: String
+    if Audiobookshelf.shared.libraries.sortingIgnorePrefix {
+      title = series.nameIgnorePrefix
+    } else {
+      title = series.name
+    }
+
     super.init(
       id: series.id,
-      title: series.name,
+      title: title,
       bookCount: series.books.count,
       bookCovers: Array(bookCovers),
       progress: progress
