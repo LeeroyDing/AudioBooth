@@ -14,12 +14,6 @@ final class LibraryPageModel: LibraryPage.Model {
   private var isLoadingNextPage: Bool = false
   private let itemsPerPage: Int = 100
 
-  private var filterData: FilterData? {
-    didSet {
-      updateFilterOptions()
-    }
-  }
-
   init() {
     let preferences = UserPreferences.shared
     self.filter = preferences.libraryFilter == .all ? nil : preferences.libraryFilter
@@ -34,7 +28,7 @@ final class LibraryPageModel: LibraryPage.Model {
 
     self.ascending = preferences.librarySortAscending
 
-    createFilterPickerModel()
+    self.filters = FilterPickerModel(currentFilter: filter)
   }
 
   init(destination: NavigationDestination) {
@@ -90,17 +84,6 @@ final class LibraryPageModel: LibraryPage.Model {
     guard fetched.isEmpty else { return }
 
     Task {
-      if isRoot && filterData == nil {
-        filterData = audiobookshelf.libraries.getCachedFilterData()
-        if filterData == nil {
-          do {
-            filterData = try await audiobookshelf.libraries.fetchFilterData()
-          } catch {
-            print("Failed to fetch filter data: \(error)")
-          }
-        }
-      }
-
       await loadBooks()
     }
   }
@@ -113,11 +96,7 @@ final class LibraryPageModel: LibraryPage.Model {
     books.removeAll()
 
     if isRoot {
-      do {
-        filterData = try await audiobookshelf.libraries.fetchFilterData()
-      } catch {
-        print("Failed to fetch filter data: \(error)")
-      }
+      await filters?.refresh()
     }
 
     await loadBooks()
@@ -187,6 +166,17 @@ final class LibraryPageModel: LibraryPage.Model {
 
   override func onFilterButtonTapped() {
     showingFilterSelection = true
+  }
+
+  override func onFilterPreferenceChanged(_ newFilter: Filter) {
+    let resolved = newFilter == .all ? nil : newFilter
+    guard filter != resolved else { return }
+
+    filter = resolved
+
+    Task {
+      await refresh()
+    }
   }
 
   private func loadBooks() async {
@@ -297,68 +287,6 @@ final class LibraryPageModel: LibraryPage.Model {
     isLoading = false
   }
 
-  private func createFilterPickerModel() {
-    let emptyFilterData = FilterData(
-      authors: [],
-      genres: [],
-      tags: [],
-      series: [],
-      narrators: [],
-      languages: [],
-      publishers: [],
-      publishedDecades: []
-    )
-
-    filters = FilterPickerModel(
-      filterData: filterData ?? emptyFilterData,
-      currentFilter: filter,
-      onFilterApplied: { [weak self] newFilter in
-        self?.applyFilter(newFilter)
-      },
-      onFilterCleared: { [weak self] in
-        self?.clearFilter()
-      }
-    )
-  }
-
-  private func updateFilterOptions() {
-    guard let filters, let filterData else { return }
-
-    filters.authors = filterData.authors
-    filters.genres = filterData.genres.sorted()
-    filters.narrators = filterData.narrators.sorted()
-    filters.series = filterData.series
-    filters.tags = filterData.tags.sorted()
-    filters.languages = filterData.languages.sorted()
-    filters.publishers = filterData.publishers.sorted()
-    filters.publishedDecades = filterData.publishedDecades.sorted(by: >)
-  }
-
-  private func applyFilter(_ newFilter: Filter) {
-    guard filter != newFilter else { return }
-
-    filter = newFilter
-
-    Task { @MainActor in
-      UserPreferences.shared.libraryFilter = newFilter
-
-      await refresh()
-    }
-  }
-
-  private func clearFilter() {
-    guard filter != nil else { return }
-
-    filter = nil
-
-    if isRoot {
-      UserPreferences.shared.libraryFilter = .all
-    }
-
-    Task {
-      await refresh()
-    }
-  }
 }
 
 extension LibraryPageModel {

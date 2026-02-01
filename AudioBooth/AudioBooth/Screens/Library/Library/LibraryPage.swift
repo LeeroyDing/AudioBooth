@@ -175,6 +175,10 @@ struct LibraryPage: View {
     .onAppear {
       model.onAppear()
     }
+    .onChange(of: preferences.libraryFilter) { _, newFilter in
+      guard model.isRoot else { return }
+      model.onFilterPreferenceChanged(newFilter)
+    }
   }
 
   @ViewBuilder
@@ -253,6 +257,7 @@ extension LibraryPage {
     func onCollapseSeriesToggled() {}
     func onDownloadAllTapped() {}
     func onFilterButtonTapped() {}
+    func onFilterPreferenceChanged(_ filter: LibraryPageModel.Filter) {}
 
     init(
       isLoading: Bool = true,
