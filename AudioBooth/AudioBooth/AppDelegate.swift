@@ -1,6 +1,5 @@
 import API
 import UIKit
-import WidgetKit
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   static var orientationLock = UIInterfaceOrientationMask.all {
@@ -22,18 +21,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     completionHandler: @escaping () -> Void
   ) {
     DownloadManager.shared.backgroundCompletionHandler = completionHandler
-  }
-
-  func applicationDidEnterBackground(_ application: UIApplication) {
-    WidgetCenter.shared.reloadAllTimelines()
-  }
-
-  func applicationWillEnterForeground(_ application: UIApplication) {
-    Task {
-      if Audiobookshelf.shared.authentication.isAuthenticated {
-        await SessionManager.shared.syncUnsyncedSessions()
-      }
-    }
   }
 
   func application(

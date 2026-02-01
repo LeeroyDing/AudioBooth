@@ -13,6 +13,8 @@ import WidgetKit
 struct AudioBoothApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+  @Environment(\.scenePhase) private var scenePhase
+
   @StateObject private var libraries: LibrariesService = Audiobookshelf.shared.libraries
   @ObservedObject private var preferences = UserPreferences.shared
 
@@ -39,16 +41,9 @@ struct AudioBoothApp: App {
 
     Task { @MainActor in
       await PlayerManager.shared.restoreLastPlayer()
-    }
 
-    Task {
-      if Audiobookshelf.shared.authentication.isAuthenticated {
-        await SessionManager.shared.syncUnsyncedSessions()
-      }
       await Audiobookshelf.shared.authentication.checkServersHealth()
-    }
 
-    Task { @MainActor in
       await StorageManager.shared.cleanupUnusedDownloads()
     }
 
@@ -99,6 +94,17 @@ struct AudioBoothApp: App {
             try? await Audiobookshelf.shared.libraries.fetchFilterData()
           }
         }
+      }
+    }
+    .onChange(of: scenePhase) { _, phase in
+      switch phase {
+      case .background:
+        WidgetCenter.shared.reloadAllTimelines()
+      case .active:
+        guard Audiobookshelf.shared.authentication.isAuthenticated else { return }
+        SessionManager.shared.syncUnsyncedSessions()
+      default:
+        break
       }
     }
     .onChange(of: libraries.current) { _, newValue in

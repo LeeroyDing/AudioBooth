@@ -403,7 +403,7 @@ final class SessionManager {
     cancelInactivityTask()
   }
 
-  func syncUnsyncedSessions() async {
+  func syncUnsyncedSessions() {
     AppLogger.session.info("Starting bulk sync of unsynced sessions")
 
     let unsyncedSessions: [PlaybackSession]
@@ -423,24 +423,26 @@ final class SessionManager {
       "Found \(unsyncedSessions.count) unsynced sessions to sync"
     )
 
-    let sessionSyncs = unsyncedSessions.map(SessionSync.init)
+    let sessionSyncs = unsyncedSessions.map { SessionSync($0) }
 
-    do {
-      try await audiobookshelf.sessions.syncLocalSessions(sessionSyncs)
+    Task {
+      do {
+        try await audiobookshelf.sessions.syncLocalSessions(sessionSyncs)
 
-      for session in unsyncedSessions {
-        session.timeListening += session.pendingListeningTime
-        session.pendingListeningTime = 0
-        try session.save()
+        for session in unsyncedSessions {
+          session.timeListening += session.pendingListeningTime
+          session.pendingListeningTime = 0
+          try session.save()
+        }
+
+        AppLogger.session.info(
+          "Successfully synced \(unsyncedSessions.count) sessions"
+        )
+      } catch {
+        AppLogger.session.error(
+          "Failed to bulk sync sessions: \(error). Will retry on next startup."
+        )
       }
-
-      AppLogger.session.info(
-        "Successfully synced \(unsyncedSessions.count) sessions"
-      )
-    } catch {
-      AppLogger.session.error(
-        "Failed to bulk sync sessions: \(error). Will retry on next startup."
-      )
     }
   }
 
