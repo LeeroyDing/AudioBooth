@@ -265,7 +265,7 @@ final class BookDetailsViewModel: BookDetailsView.Model {
     self.coverURL = coverURL
     self.genres = genres
     self.tags = tags
-    self.description = description
+    self.description = description?.replacingOccurrences(of: "\n", with: "<br>")
     self.flags = flags
 
     let hasAudio = mediaType?.contains(.audiobook) == true
