@@ -118,7 +118,7 @@ struct OfflineListView: View {
         case .series(let group):
           DisclosureGroup {
             ForEach(group.books) { seriesBook in
-              bookRow(seriesBook.book, sequence: seriesBook.sequence)
+              bookRow(seriesBook.book)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -162,12 +162,13 @@ struct OfflineListView: View {
     }
     .listStyle(.plain)
     .environment(\.editMode, $model.editMode)
+    .environment(\.bookCardDisplayMode, .row)
   }
 
   @ViewBuilder
-  private func bookRow(_ book: BookCard.Model, sequence: String? = nil) -> some View {
-    if model.editMode == .active {
-      HStack(spacing: 12) {
+  private func bookRow(_ book: BookCard.Model) -> some View {
+    HStack(spacing: 12) {
+      if model.editMode == .active {
         Button {
           model.onSelectBook(id: book.id)
         } label: {
@@ -178,87 +179,9 @@ struct OfflineListView: View {
           .imageScale(.large)
         }
         .buttonStyle(.plain)
-
-        Row(book: book, sequence: sequence)
       }
-    } else {
-      NavigationLink(value: NavigationDestination.book(id: book.id)) {
-        Row(book: book, sequence: sequence)
-      }
-      .buttonStyle(.plain)
-    }
-  }
-}
 
-extension OfflineListView {
-  struct Row: View {
-    let book: BookCard.Model
-    let sequence: String?
-
-    var body: some View {
-      HStack(spacing: 12) {
-        cover
-
-        VStack(alignment: .leading, spacing: 6) {
-          Text(book.title)
-            .font(.caption)
-            .fontWeight(.medium)
-            .lineLimit(1)
-            .allowsTightening(true)
-
-          if let author = book.author {
-            Text(author)
-              .font(.caption2)
-              .lineLimit(1)
-          }
-
-          if let details = book.details {
-            Text(details)
-              .font(.caption2)
-              .lineLimit(1)
-          }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-
-        if let publishedYear = book.publishedYear {
-          Text(publishedYear)
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-      }
-      .foregroundColor(.primary)
-      .contentShape(Rectangle())
-      .onAppear(perform: book.onAppear)
-    }
-
-    var cover: some View {
-      Cover(model: book.cover)
-        .overlay(alignment: .topTrailing) {
-          if let sequence = sequence {
-            Text("#\(sequence)")
-              .font(.caption2)
-              .fontWeight(.medium)
-              .foregroundStyle(Color.white)
-              .padding(.vertical, 2)
-              .padding(.horizontal, 4)
-              .background(Color.black.opacity(0.6))
-              .clipShape(.capsule)
-              .padding(2)
-          }
-        }
-        .frame(width: 60, height: 60)
-    }
-
-    func rowMetadata(icon: String, value: String) -> some View {
-      HStack(spacing: 4) {
-        Image(systemName: icon)
-          .font(.caption2)
-          .foregroundColor(.secondary)
-        Text(value)
-          .font(.caption2)
-          .foregroundColor(.primary)
-      }
-      .lineLimit(1)
+      BookListCard(model: book)
     }
   }
 }

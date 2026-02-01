@@ -40,6 +40,7 @@ final class BookCardModel: BookCard.Model {
       title: item.title,
       details: details,
       cover: cover,
+      sequence: item.series.first?.sequence,
       author: item.authorNames,
       publishedYear: item.publishedYear,
       hasEbook: item.ebookFile != nil

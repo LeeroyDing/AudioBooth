@@ -5,15 +5,18 @@ import SwiftUI
 struct Cover: View {
   let model: Model
   let style: Style
+  let size: Size
 
-  init(model: Model, style: Style = .standard) {
+  init(model: Model, style: Style = .standard, size: Size = .medium) {
     self.model = model
     self.style = style
+    self.size = size
   }
 
-  init(url: URL?, style: Style = .standard) {
+  init(url: URL?, style: Style = .standard, size: Size = .medium) {
     self.model = Model(url: url)
     self.style = style
+    self.size = size
   }
 
   var body: some View {
@@ -42,7 +45,7 @@ struct Cover: View {
     .overlay { downloadOverlay }
     .overlay(alignment: .bottom) {
       ProgressOverlay(progress: model.progress)
-        .padding(4)
+        .padding(size.progressPadding)
     }
     .clipShape(RoundedRectangle(cornerRadius: 8))
     .overlay {
@@ -101,6 +104,18 @@ extension Cover {
   enum Style {
     case standard
     case plain
+  }
+
+  enum Size {
+    case small
+    case medium
+
+    var progressPadding: CGFloat {
+      switch self {
+      case .small: 2
+      case .medium: 4
+      }
+    }
   }
 
   @Observable

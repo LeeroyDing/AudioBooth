@@ -29,11 +29,13 @@ final class OfflineListViewModel: OfflineListView.Model {
   }
 
   override func onEditModeTapped() {
-    if editMode == .active {
-      selectedBookIDs.removeAll()
-      editMode = .inactive
-    } else {
-      editMode = .active
+    withAnimation {
+      if editMode == .active {
+        selectedBookIDs.removeAll()
+        editMode = .inactive
+      } else {
+        editMode = .active
+      }
     }
   }
 
