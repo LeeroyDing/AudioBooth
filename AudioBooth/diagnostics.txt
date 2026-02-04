@@ -1,0 +1,924 @@
+--- FILE STRUCTURE ---
+API
+AudioBooth
+AudioBoothTests
+CODE-OF-CONDUCT.md
+diagnostics.txt
+images
+LICENSE
+Models
+PlayerIntents
+PRIVACY.md
+README.md
+
+../API:
+Package.swift
+Sources
+
+../API/Sources:
+API
+
+../API/Sources/API:
+AppLogger.swift
+Audiobookshelf.swift
+CredentialsActor.swift
+Models
+NetworkService.swift
+Services
+
+../API/Sources/API/Models:
+Author.swift
+AuthorDetails.swift
+Authorize.swift
+Book.swift
+Collection.swift
+CollectionLike.swift
+Connection.swift
+DiscoveredServer.swift
+FilterData.swift
+Library.swift
+ListeningStats.swift
+Narrator.swift
+Personalized.swift
+Playlist.swift
+PlaySession.swift
+SearchResponse.swift
+Series.swift
+Server.swift
+ServerStatus.swift
+SessionSync.swift
+User.swift
+YearStats.swift
+
+../API/Sources/API/Services:
+AuthenticationService.swift
+AuthorsService.swift
+BookmarksService.swift
+BooksService.swift
+CollectionsService.swift
+LibrariesService.swift
+MiscService.swift
+NarratorsService.swift
+NetworkDiscoveryService.swift
+PlaylistsService.swift
+SearchService.swift
+SeriesService.swift
+SessionService.swift
+
+../AudioBooth:
+AudioBooth
+AudioBooth Watch App
+AudioBooth.xcodeproj
+AudioBoothWidget
+
+../AudioBooth/AudioBooth:
+AppDelegate.swift
+AppIcon-Blue.icon
+AppIcon-Dark.icon
+AppIcon-Green.icon
+AppIcon-Pink.icon
+AppIcon-Purple.icon
+AppIcon-Red.icon
+AppIcon-Teal.icon
+AppIcon-Yellow.icon
+AppIcon.icon
+AppIntents
+Assets.xcassets
+AudioBooth.entitlements
+AudioBooth.storekit
+AudioBoothApp.swift
+CarPlay
+Components
+ContentView.swift
+Extensions
+Info.plist
+Localizable.xcstrings
+Models
+NavigationDestination.swift
+Screens
+Services
+
+../AudioBooth/AudioBooth/AppIcon-Blue.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Blue.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon-Dark.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Dark.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon-Green.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Green.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon-Pink.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Pink.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon-Purple.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Purple.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon-Red.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Red.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon-Teal.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Teal.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon-Yellow.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon-Yellow.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIcon.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth/AppIcon.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth/AppIntents:
+AddBookmarkIntent.swift
+AppIntentError.swift
+AudioBoothShortcuts.swift
+CancelSleepTimerIntent.swift
+SetSleepTimerToEndOfChapterIntent.swift
+SetSleepTimerWithDurationIntent.swift
+SkipBackwardIntent.swift
+SkipForwardIntent.swift
+SkipToNextChapterIntent.swift
+SkipToPreviousChapterIntent.swift
+
+../AudioBooth/AudioBooth/Assets.xcassets:
+AccentColor.colorset
+Contents.json
+IconPreviews
+
+../AudioBooth/AudioBooth/Assets.xcassets/AccentColor.colorset:
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews:
+AppIcon-Blue.imageset
+AppIcon-Dark.imageset
+AppIcon-Green.imageset
+AppIcon-Pink.imageset
+AppIcon-Purple.imageset
+AppIcon-Red.imageset
+AppIcon-Teal.imageset
+AppIcon-Yellow.imageset
+AppIcon.imageset
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Blue.imageset:
+AppIcon-Blue-dark.png
+AppIcon-Blue.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Dark.imageset:
+AppIcon-Dark-dark.png
+AppIcon-Dark.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Green.imageset:
+AppIcon-Green-dark.png
+AppIcon-Green.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Pink.imageset:
+AppIcon-Pink-dark.png
+AppIcon-Pink.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Purple.imageset:
+AppIcon-Purple-dark.png
+AppIcon-Purple.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Red.imageset:
+AppIcon-Red-dark.png
+AppIcon-Red.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Teal.imageset:
+AppIcon-Teal-dark.png
+AppIcon-Teal.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon-Yellow.imageset:
+AppIcon-Yellow-dark.png
+AppIcon-Yellow.png
+Contents.json
+
+../AudioBooth/AudioBooth/Assets.xcassets/IconPreviews/AppIcon.imageset:
+AppIcon-dark.png
+AppIcon.png
+Contents.json
+
+../AudioBooth/AudioBooth/CarPlay:
+CarPlayChapters.swift
+CarPlayController.swift
+CarPlayDelegate.swift
+CarPlayHome.swift
+CarPlayLibrary.swift
+CarPlayNowPlaying.swift
+CarPlayOffline.swift
+CarPlayTabBar.swift
+
+../AudioBooth/AudioBooth/Components:
+Chip.swift
+Cover
+FlowLayout.swift
+GaugeProgressStyle.swift
+Progress
+
+../AudioBooth/AudioBooth/Components/Cover:
+Cover.swift
+
+../AudioBooth/AudioBooth/Components/Progress:
+ProgressOverlay.swift
+
+../AudioBooth/AudioBooth/Extensions:
+AVAudioSession+CarPlay.swift
+UIApplication+BuildType.swift
+View+AdaptivePresentation.swift
+View+ConditionalSearchable.swift
+View+OrientationLock.swift
+
+../AudioBooth/AudioBooth/Models:
+CollectionMode.swift
+HomeSection.swift
+
+../AudioBooth/AudioBooth/Screens:
+BookDetails
+BookPlayer
+Collections
+Downloads
+EbookReader
+Home
+Library
+Search
+Servers
+Settings
+StatsPage
+
+../AudioBooth/AudioBooth/Screens/BookDetails:
+BookDetailsView.swift
+BookDetailsViewModel.swift
+Components
+FullScreenCoverView.swift
+Sheets
+
+../AudioBooth/AudioBooth/Screens/BookDetails/Components:
+ChaptersContent
+EbooksContent
+MetadataSection.swift
+ParallaxHeader.swift
+ProgressCard
+SessionsContent
+TracksContent
+
+../AudioBooth/AudioBooth/Screens/BookDetails/Components/ChaptersContent:
+ChaptersContent.swift
+ChaptersContentModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookDetails/Components/EbooksContent:
+EbooksContent.swift
+EbooksContentModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookDetails/Components/ProgressCard:
+ProgressCard.swift
+
+../AudioBooth/AudioBooth/Screens/BookDetails/Components/SessionsContent:
+SessionsContent.swift
+SessionsContentModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookDetails/Components/TracksContent:
+TracksContent.swift
+
+../AudioBooth/AudioBooth/Screens/BookDetails/Sheets:
+BookmarkViewerSheet.swift
+BookmarkViewerSheetViewModel.swift
+CollectionSelectorSheet.swift
+CollectionSelectorSheetModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookPlayer:
+BookmarkRow
+BookPlayer.swift
+BookPlayerModel.swift
+MiniBookPlayer.swift
+PlaybackProgress
+PlayerQueue
+Sheets
+
+../AudioBooth/AudioBooth/Screens/BookPlayer/BookmarkRow:
+BookmarkRow.swift
+
+../AudioBooth/AudioBooth/Screens/BookPlayer/PlaybackProgress:
+PlaybackProgressView.swift
+PlaybackProgressViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookPlayer/PlayerQueue:
+PlayerQueueView.swift
+PlayerQueueViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookPlayer/Sheets:
+ChapterPickerSheet.swift
+ChapterPickerSheetModel.swift
+History
+SpeedPickerSheet.swift
+SpeedPickerSheetModel.swift
+Timer
+
+../AudioBooth/AudioBooth/Screens/BookPlayer/Sheets/History:
+PlaybackHistoryRow.swift
+PlaybackHistorySheet.swift
+PlaybackHistorySheetViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookPlayer/Sheets/Timer:
+Completed
+TimerPickerSheet.swift
+TimerPickerSheetModel.swift
+
+../AudioBooth/AudioBooth/Screens/BookPlayer/Sheets/Timer/Completed:
+TimerCompletedAlertView.swift
+TimerCompletedAlertViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Collections:
+Collection
+CollectionsRootPage.swift
+Series
+
+../AudioBooth/AudioBooth/Screens/Collections/Collection:
+CollectionDetailPage
+CollectionRow
+CollectionsPage.swift
+CollectionsPageModel.swift
+
+../AudioBooth/AudioBooth/Screens/Collections/Collection/CollectionDetailPage:
+CollectionDetailPage.swift
+CollectionDetailPageModel.swift
+EditPlaylistSheet.swift
+
+../AudioBooth/AudioBooth/Screens/Collections/Collection/CollectionRow:
+CollectionRow.swift
+CollectionRowModel.swift
+
+../AudioBooth/AudioBooth/Screens/Collections/Series:
+SeriesCard
+SeriesPage.swift
+SeriesPageModel.swift
+SeriesView.swift
+
+../AudioBooth/AudioBooth/Screens/Collections/Series/SeriesCard:
+SeriesCard.swift
+SeriesCardModel.swift
+
+../AudioBooth/AudioBooth/Screens/Downloads:
+DownloadingListView.swift
+DownloadingListViewModel.swift
+DownloadsRootPage.swift
+OfflineListView.swift
+OfflineListViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/EbookReader:
+EbookChapterPickerSheet.swift
+EbookReaderPreferences.swift
+EbookReaderPreferencesView.swift
+EbookReaderView.swift
+EbookReaderViewModel.swift
+EbookSearch
+
+../AudioBooth/AudioBooth/Screens/EbookReader/EbookSearch:
+EbookSearchView.swift
+EbookSearchViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Home:
+ContinueListening
+HomePage.swift
+HomePageModel.swift
+ListeningStats
+
+../AudioBooth/AudioBooth/Screens/Home/ContinueListening:
+ContinueListeningBookCardModel.swift
+
+../AudioBooth/AudioBooth/Screens/Home/ListeningStats:
+ListeningStatsCard.swift
+ListeningStatsCardModel.swift
+
+../AudioBooth/AudioBooth/Screens/Library:
+AlphabetScrollBar.swift
+Authors
+Library
+LibraryRootPage.swift
+Narrators
+
+../AudioBooth/AudioBooth/Screens/Library/Authors:
+AuthorCard
+AuthorDetails
+AuthorsPage.swift
+AuthorsPageModel.swift
+AuthorsView.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Authors/AuthorCard:
+AuthorCard.swift
+AuthorCardModel.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Authors/AuthorDetails:
+AuthorDetailsView.swift
+AuthorDetailsViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Library:
+BookCard
+Filter
+LibraryPage.swift
+LibraryPageModel.swift
+LibraryView.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Library/BookCard:
+BookCard.swift
+BookCardContextMenu
+BookCardModel.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Library/BookCard/BookCardContextMenu:
+BookCardContextMenu.swift
+BookCardContextMenuModel.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Library/Filter:
+FilterCategorySelectorSheet.swift
+FilterCategorySelectorSheetModel.swift
+FilterPicker.swift
+FilterPickerModel.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Narrators:
+NarratorCard
+NarratorsPage.swift
+NarratorsPageModel.swift
+
+../AudioBooth/AudioBooth/Screens/Library/Narrators/NarratorCard:
+NarratorCard.swift
+NarratorCardModel.swift
+
+../AudioBooth/AudioBooth/Screens/Search:
+SearchView.swift
+SearchViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Servers:
+Authentication
+Server
+ServerListModel.swift
+ServerListPage.swift
+
+../AudioBooth/AudioBooth/Screens/Servers/Authentication:
+AuthenticationPage.swift
+AuthenticationView.swift
+AuthenticationViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Servers/Server:
+ConnectionSharingPage.swift
+ConnectionSharingPageViewModel.swift
+CustomHeaders
+OIDCAuthenticationManager.swift
+ServerView.swift
+ServerViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Servers/Server/CustomHeaders:
+CustomHeadersView.swift
+CustomHeadersViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Settings:
+PlaybackSessionListView
+Preferences
+SettingsView.swift
+SettingsViewModel.swift
+StoragePreferences
+TipJar
+
+../AudioBooth/AudioBooth/Screens/Settings/PlaybackSessionListView:
+PlaybackSessionListView.swift
+PlaybackSessionListViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Settings/Preferences:
+Advanced
+General
+Home
+Player
+
+../AudioBooth/AudioBooth/Screens/Settings/Preferences/Advanced:
+AdvancedPreferencesView.swift
+
+../AudioBooth/AudioBooth/Screens/Settings/Preferences/General:
+AppIconPicker
+GeneralPreferencesView.swift
+
+../AudioBooth/AudioBooth/Screens/Settings/Preferences/General/AppIconPicker:
+AppIconPickerView.swift
+AppIconPickerViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Settings/Preferences/Home:
+HomePreferencesView.swift
+
+../AudioBooth/AudioBooth/Screens/Settings/Preferences/Player:
+PlayerPreferencesView.swift
+
+../AudioBooth/AudioBooth/Screens/Settings/StoragePreferences:
+StoragePreferencesView.swift
+StoragePreferencesViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/Settings/TipJar:
+TipJarView.swift
+TipJarViewModel.swift
+
+../AudioBooth/AudioBooth/Screens/StatsPage:
+StatsPageView.swift
+StatsPageViewModel.swift
+YearInReviewCard.swift
+YearInReviewCardModel.swift
+
+../AudioBooth/AudioBooth/Services:
+AppLogger.swift
+BookActionable.swift
+BookmarkSyncQueue.swift
+CrashReporter.swift
+DeepLinkManager.swift
+DownloadManager.swift
+LegacyMigration.swift
+NetworkMonitor.swift
+NFCWriter.swift
+NowPlayingManager.swift
+PinnedPlaylistManager.swift
+PlayerManager.swift
+QueueItem.swift
+ReviewRequestManager.swift
+SessionManager.swift
+ShakeDetector.swift
+StorageManager.swift
+ToastManager.swift
+UserPreferences
+WatchConnectivityManager.swift
+
+../AudioBooth/AudioBooth/Services/UserPreferences:
+UserPreferences.swift
+UserPreferences+Cloud.swift
+
+../AudioBooth/AudioBooth Watch App:
+AppIcon.icon
+Assets.xcassets
+AudioBooth Watch App.entitlements
+AudioBoothWatch.swift
+Components
+Info.plist
+Models
+Screens
+Services
+WatchConnectivityManager.swift
+
+../AudioBooth/AudioBooth Watch App/AppIcon.icon:
+Assets
+icon.json
+
+../AudioBooth/AudioBooth Watch App/AppIcon.icon/Assets:
+book.png
+headset.png
+shelf.png
+
+../AudioBooth/AudioBooth Watch App/Assets.xcassets:
+AccentColor.colorset
+AppIcon.appiconset
+Contents.json
+
+../AudioBooth/AudioBooth Watch App/Assets.xcassets/AccentColor.colorset:
+Contents.json
+
+../AudioBooth/AudioBooth Watch App/Assets.xcassets/AppIcon.appiconset:
+Contents.json
+
+../AudioBooth/AudioBooth Watch App/Components:
+Cover.swift
+Marquee.swift
+VolumeView.swift
+
+../AudioBooth/AudioBooth Watch App/Models:
+LocalBookStorage.swift
+WatchBook.swift
+WatchChapter.swift
+WatchTrack.swift
+
+../AudioBooth/AudioBooth Watch App/Screens:
+ContentView.swift
+ContinueListening
+Player
+RemotePlayerOptionsSheet.swift
+RemotePlayerView.swift
+
+../AudioBooth/AudioBooth Watch App/Screens/ContinueListening:
+ContinueListeningRow
+ContinueListeningView.swift
+ContinueListeningViewModel.swift
+
+../AudioBooth/AudioBooth Watch App/Screens/ContinueListening/ContinueListeningRow:
+ContinueListeningRow.swift
+ContinueListeningRowModel.swift
+
+../AudioBooth/AudioBooth Watch App/Screens/Player:
+BookPlayerModel.swift
+ChapterPicker
+PlayerOptions
+PlayerView.swift
+
+../AudioBooth/AudioBooth Watch App/Screens/Player/ChapterPicker:
+BookChapterPickerModel.swift
+ChapterPickerSheet.swift
+
+../AudioBooth/AudioBooth Watch App/Screens/Player/PlayerOptions:
+BookPlayerOptionsModel.swift
+PlayerOptionsSheet.swift
+
+../AudioBooth/AudioBooth Watch App/Services:
+AppLogger.swift
+DownloadManager.swift
+PlayerManager.swift
+
+../AudioBooth/AudioBooth.xcodeproj:
+project.pbxproj
+project.xcworkspace
+xcshareddata
+
+../AudioBooth/AudioBooth.xcodeproj/project.xcworkspace:
+contents.xcworkspacedata
+
+../AudioBooth/AudioBooth.xcodeproj/xcshareddata:
+xcschemes
+
+../AudioBooth/AudioBooth.xcodeproj/xcshareddata/xcschemes:
+AudioBooth Watch App.xcscheme
+AudioBooth.xcscheme
+
+../AudioBooth/AudioBoothWidget:
+Assets.xcassets
+AudioBoothWidget.swift
+AudioBoothWidgetExtension.entitlements
+AudioBoothWidgetProvider.swift
+HomeScreen
+Info.plist
+LockScreen
+SleepTimerLiveActivity.swift
+
+../AudioBooth/AudioBoothWidget/Assets.xcassets:
+AccentColor.colorset
+audiobooth.fill.symbolset
+Contents.json
+WidgetBackground.colorset
+
+../AudioBooth/AudioBoothWidget/Assets.xcassets/AccentColor.colorset:
+Contents.json
+
+../AudioBooth/AudioBoothWidget/Assets.xcassets/audiobooth.fill.symbolset:
+audiobooth.svg
+Contents.json
+
+../AudioBooth/AudioBoothWidget/Assets.xcassets/WidgetBackground.colorset:
+Contents.json
+
+../AudioBooth/AudioBoothWidget/HomeScreen:
+SystemWidgetView.swift
+Views
+
+../AudioBooth/AudioBoothWidget/HomeScreen/Views:
+LargeWidgetView.swift
+MediumWidgetView.swift
+SmallWidgetView.swift
+
+../AudioBooth/AudioBoothWidget/LockScreen:
+CircularBookWidgetView.swift
+CircularPlaybackWidgetView.swift
+RectangularBookWidgetView.swift
+
+../AudioBoothTests:
+EbookReaderPreferencesTests.swift
+
+../images:
+AudioBooth.png
+
+../Models:
+Package.swift
+Sources
+
+../Models/Sources:
+Models
+
+../Models/Sources/Models:
+AppLogger.swift
+AudiobookshelfSchema.swift
+Author.swift
+Bookmark.swift
+Chapter.swift
+LocalBook.swift
+MediaProgress.swift
+MediaProgress+Mock.swift
+ModelContextProvider.swift
+PersistentModel+Observations.swift
+PlaybackHistory.swift
+PlaybackSession.swift
+PlaybackState.swift
+Series.swift
+Session.swift
+Track.swift
+
+../PlayerIntents:
+Package.swift
+Sources
+
+../PlayerIntents/Sources:
+PlayerIntents
+
+../PlayerIntents/Sources/PlayerIntents:
+AppIntentError.swift
+OpenBookIntent.swift
+PausePlaybackIntent.swift
+PlayBookIntent.swift
+PlayerManagerProtocol.swift
+ResumePlaybackIntent.swift
+SleepTimerActivityAttributes.swift
+\n--- XCODEBUILD LIST ---
+Command line invocation:
+    /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild -list -project AudioBooth.xcodeproj
+
+Resolve Package Graph
+package 'playerintents' is using Swift tools version 6.2.0 but the installed version is 6.1.0package 'api' is using Swift tools version 6.2.0 but the installed version is 6.1.0package 'models' is using Swift tools version 6.2.0 but the installed version is 6.1.0
+
+Resolved source packages:
+  PlayerIntents: (null)
+  API: (null)
+  Models: (null)
+
+xcodebuild -list failed
+\n--- AVAILABLE SIMULATORS ---
+== Devices ==
+-- iOS 18.5 --
+    iPhone 16 Pro (38606A79-C4CB-465E-83F3-D09A50714AAE) (Shutdown) 
+    iPhone 16 Pro Max (CF8D259F-1B96-4A8F-9E94-E3AE16AB3701) (Shutdown) 
+    iPhone 16e (8D612A15-B6E6-40DC-BCCD-6F9026549AE0) (Shutdown) 
+    iPhone 16 (BCD74884-1EE7-416A-B292-A9A416AC7A1C) (Shutdown) 
+    iPhone 16 Plus (95280C2C-7D58-41F9-A3A9-8D40914EBA55) (Shutdown) 
+    iPhone SE (3rd generation) (2A852C8F-0BC2-4456-81F9-65E7275B742B) (Shutdown) 
+    iPad Pro 11-inch (M4) (9516F8DE-0F01-4ABD-A029-C664B17AF811) (Shutdown) 
+    iPad Pro 13-inch (M4) (6049A6A0-498F-4F55-A46D-277AE6831AF6) (Shutdown) 
+    iPad mini (A17 Pro) (31F8E33D-9721-4A3F-B2A0-707AEE9B8AB0) (Shutdown) 
+    iPad (A16) (C3EEB5DC-73F9-4C49-9B67-90D1E680D05D) (Shutdown) 
+    iPad Air 13-inch (M3) (0D36075B-DAF2-46A2-B94F-7A5D71255884) (Shutdown) 
+    iPad Air 11-inch (M3) (17C2F78E-2C9F-41DC-93FC-77DDD4BF9650) (Shutdown) 
+    iPad Air 11-inch (M2) (73F68CC6-E60A-426F-AAE8-44B2D4034100) (Shutdown) 
+    iPad Air 13-inch (M2) (C349DA90-4967-4B93-878E-EADD03C97FFA) (Shutdown) 
+    iPad (10th generation) (C89BCAB9-4A15-434C-8691-302495B5C77C) (Shutdown) 
+-- iOS 18.6 --
+    iPhone 16 Pro (48E93E94-4069-4430-A44F-13DC0EB79E79) (Shutdown) 
+    iPhone 16 Pro Max (5E520525-0766-4884-A3F6-62029154E3F4) (Shutdown) 
+    iPhone 16e (F6D429CA-FA16-4C3D-9510-30DCB0045255) (Shutdown) 
+    iPhone 16 (D4B2D98E-69A4-4913-8376-718BEF6534F9) (Shutdown) 
+    iPhone 16 Plus (F02D70F6-7B8C-46D4-BA75-B1CAA1A5E2CF) (Shutdown) 
+    iPhone SE (3rd generation) (7FCA9FF8-847B-4ACF-8372-9DEB1AD6D1AB) (Shutdown) 
+    iPad Pro 11-inch (M4) (042C6524-0E5B-4BC3-BAF1-55B8FE76E8EE) (Shutdown) 
+    iPad Pro 13-inch (M4) (2E2F3A33-7B16-4E02-A14C-4962462BFDED) (Shutdown) 
+    iPad mini (A17 Pro) (5EDFD361-FB33-4E04-9908-35494E79DF0E) (Shutdown) 
+    iPad (A16) (5FCF3D99-BD9C-40B6-BCC3-84A2365A14B5) (Shutdown) 
+    iPad Air 13-inch (M3) (B51A3344-A4A8-4811-96B2-DC7021892FCB) (Shutdown) 
+    iPad Air 11-inch (M3) (30A60ED4-3E89-4876-A544-4C275E76361F) (Shutdown) 
+    iPad Air 11-inch (M2) (948504C5-E088-4A32-9E12-8FFBDBB950F2) (Shutdown) 
+    iPad Air 13-inch (M2) (96C97D23-1576-42FF-AFA8-756E5A6F52BC) (Shutdown) 
+    iPad (10th generation) (33A013E3-EAE4-41E2-B844-B786F3732F6E) (Shutdown) 
+-- iOS 26.1 --
+    iPhone 17 Pro (FD1BFA05-3887-46C8-9E31-C4F80732DA1E) (Shutdown) 
+    iPhone 17 Pro Max (0FF9B775-6019-43DF-8AB3-DBD349D7BAC3) (Shutdown) 
+    iPhone Air (D70FD458-F2A5-4129-9B5E-A2FFB72E8E59) (Shutdown) 
+    iPhone 17 (588607D3-9E5B-4BD0-89F1-8BA6047ADB45) (Shutdown) 
+    iPhone 16 Pro (821A8773-93B9-4813-8916-432873C5B9B4) (Shutdown) 
+    iPhone 16 Pro Max (7A7D1581-C83A-4518-B342-0C9F42ED5725) (Shutdown) 
+    iPhone 16e (8923995B-4AE9-4AD8-A4A7-7FBBF312F1F0) (Shutdown) 
+    iPhone 16 (7A11E57E-A276-4163-8444-DDC5B598F898) (Shutdown) 
+    iPhone 16 Plus (C970057E-7AF0-4439-B1F6-1B26EA6F8174) (Shutdown) 
+    iPhone SE (3rd generation) (5B7982B0-8D0C-4B3B-BC08-3167808465B7) (Shutdown) 
+    iPad Pro 13-inch (M5) (F7674D08-2E5D-4F38-8C4E-DC16AAD423B9) (Shutdown) 
+    iPad Pro 11-inch (M5) (6A82AA02-4CD3-483B-82B0-663C94B57B43) (Shutdown) 
+    iPad Pro 11-inch (M4) (390CAC51-1AB8-4A13-AC97-4AA90A06C06A) (Shutdown) 
+    iPad Pro 13-inch (M4) (71B13454-A9CE-4825-98DE-E9C57652D209) (Shutdown) 
+    iPad Air 13-inch (M3) (CEDC5338-6F3C-4E4D-B206-77BFB062918B) (Shutdown) 
+    iPad Air 11-inch (M2) (31A6DD8D-3A7F-493D-8F93-F11647E8FB69) (Shutdown) 
+    iPad mini (A17 Pro) (454E06E7-021B-48C3-8CE8-A6F10D4AA26F) (Shutdown) 
+    iPad (A16) (EF39DC52-D52B-42F2-8D3F-1103675727F3) (Shutdown) 
+    iPad Air 11-inch (M3) (DDB6F49B-EC45-4322-A55B-E44AD2F5B8B4) (Shutdown) 
+    iPad Air 13-inch (M2) (14ADED81-25F2-443D-B945-39B47770EEBF) (Shutdown) 
+    iPad (10th generation) (5341F102-8895-489C-99DD-37AA4FD4ECA2) (Shutdown) 
+-- iOS 26.2 --
+    iPhone 17 Pro (07972D99-934D-440F-85FA-4B6954C83744) (Shutdown) 
+    iPhone 17 Pro Max (2B55A4FB-E320-4C13-B9A6-DAD4C14554EC) (Shutdown) 
+    iPhone Air (9E5F2EA9-01F9-42DC-8B8A-7AA52FBCAE73) (Shutdown) 
+    iPhone 17 (96886C4F-2DF3-4589-943D-F07787035F4C) (Shutdown) 
+    iPhone 16 Pro (B8582708-C89E-46E3-9050-1FC27C75DF63) (Shutdown) 
+    iPhone 16 Pro Max (B33B05B5-795D-400D-95CF-B3FD5A0D22B3) (Shutdown) 
+    iPhone 16e (A067BAEA-43C1-4F28-9BB5-772ADD50E7BB) (Shutdown) 
+    iPhone 16 (A651803F-83A8-41B1-A228-1DD960A8676F) (Shutdown) 
+    iPhone 16 Plus (D463D8E2-A1D3-429D-A9F3-3E46E95B3A3F) (Shutdown) 
+    iPhone SE (3rd generation) (172BB666-DFA7-48AA-B314-EE1F7F0DF647) (Shutdown) 
+    iPad Pro 13-inch (M5) (3C5629E7-47A3-4648-AAB8-7F9CD59B22D4) (Shutdown) 
+    iPad Pro 11-inch (M5) (22AE377F-94C8-4D98-A814-EC26C63950AC) (Shutdown) 
+    iPad Pro 11-inch (M4) (BCF9137C-2651-47FB-A4DE-8BBBC6CC01FF) (Shutdown) 
+    iPad Pro 13-inch (M4) (0EF0CD0D-94C8-45A1-B785-36EC86DB70A7) (Shutdown) 
+    iPad (A16) (8B236283-D1E6-4439-8553-5CDD6571E1B5) (Shutdown) 
+    iPad Air 13-inch (M3) (7A5D6255-95E8-42F8-B189-BA32744F9A1B) (Shutdown) 
+    iPad Air 11-inch (M3) (B9CAA0B9-64ED-4AF8-B5F9-D2A2F00E7A4F) (Shutdown) 
+    iPad Air 11-inch (M2) (D32A9077-94B6-4B33-852D-62089C7BA04C) (Shutdown) 
+    iPad Air 13-inch (M2) (BE6F413E-EA1B-4F15-A46D-E300E8D31F16) (Shutdown) 
+    iPad mini (A17 Pro) (BADB1CB2-D685-42EB-8D20-21C2AD2007C3) (Shutdown) 
+    iPad (10th generation) (490D14BE-C2A0-42D5-96E2-EB0117C35F68) (Shutdown) 
+-- tvOS 18.5 --
+    Apple TV 4K (3rd generation) (A35C8C0E-10B9-44C6-9F38-CDF02BE8883B) (Shutdown) 
+    Apple TV 4K (3rd generation) (at 1080p) (9F70FCD3-73EE-4790-9F19-CBBBA543BFB6) (Shutdown) 
+    Apple TV (383B6F1D-3E5B-43BB-A71F-556FD54A4C2E) (Shutdown) 
+-- tvOS 26.1 --
+    Apple TV 4K (3rd generation) (69035143-87D6-4AB0-9D6D-805EB9B742EA) (Shutdown) 
+    Apple TV 4K (3rd generation) (at 1080p) (DC5A8B56-744D-4942-A7AD-907F83FD8F81) (Shutdown) 
+    Apple TV (7FED7499-1949-4F5D-B881-34B0E01C2732) (Shutdown) 
+-- tvOS 26.2 --
+    Apple TV 4K (3rd generation) (38229004-89C3-4961-87EF-02242224CE1A) (Shutdown) 
+    Apple TV 4K (3rd generation) (at 1080p) (153BECB4-3B83-4395-9462-388DC58C9F09) (Shutdown) 
+    Apple TV (3ABB81A9-7AD5-4BED-AF52-3B6F877D4F8D) (Shutdown) 
+-- watchOS 11.5 --
+    Apple Watch Series 10 (46mm) (86F4AF9F-F75C-4060-AEC5-24EAFF79755D) (Shutdown) 
+    Apple Watch Series 10 (42mm) (C3624666-84EB-452E-BA1A-63C83644669C) (Shutdown) 
+    Apple Watch Ultra 2 (49mm) (DFA3C934-01FE-4359-A24D-FDC079CD293A) (Shutdown) 
+    Apple Watch SE (44mm) (2nd generation) (7AFB27D7-DC01-4672-A1DB-5A59EA5E12AA) (Shutdown) 
+    Apple Watch SE (40mm) (2nd generation) (79BD6266-43B5-4AB2-919E-173497B4FDF3) (Shutdown) 
+-- watchOS 26.1 --
+    Apple Watch Series 11 (46mm) (48FBF3F0-2AB0-41D4-9C16-DADC0801A307) (Shutdown) 
+    Apple Watch Series 11 (42mm) (0913AA94-C0F1-4547-BDA9-C62E3F836C09) (Shutdown) 
+    Apple Watch Series 10 (46mm) (2166D96A-4715-4A47-A9F3-DD74B390E626) (Shutdown) 
+    Apple Watch Series 10 (42mm) (103C01DC-FF0C-4AEF-8CDF-3C377965A917) (Shutdown) 
+    Apple Watch Ultra 3 (49mm) (0111ECAB-A339-4466-8844-D76F59B75F46) (Shutdown) 
+    Apple Watch Ultra 2 (49mm) (FF05CF32-8214-47A2-94E5-C5652E2D764D) (Shutdown) 
+    Apple Watch SE 3 (44mm) (DB75E7C7-92CE-414D-B9BA-8891EB9FC960) (Shutdown) 
+    Apple Watch SE 3 (40mm) (B36DB65E-AE55-4A44-951E-1995AA89F950) (Shutdown) 
+    Apple Watch SE (44mm) (2nd generation) (A6A79B3D-11CD-4392-9D0A-1AB58939D42A) (Shutdown) 
+    Apple Watch SE (40mm) (2nd generation) (C012E32D-AF0A-4B7D-B92C-2CFCF9613404) (Shutdown) 
+-- watchOS 26.2 --
+    Apple Watch Series 11 (46mm) (9F4A5F09-5ECE-4027-A52F-9A3CA843F7D3) (Shutdown) 
+    Apple Watch Series 11 (42mm) (D6AF9C03-97C9-47D8-A99D-F34D6A142FEA) (Shutdown) 
+    Apple Watch Series 10 (46mm) (1623D558-5B85-433A-A698-65B3378CCDF2) (Shutdown) 
+    Apple Watch Series 10 (42mm) (57C7C6BE-C21D-4848-A3B1-3E3290B032C7) (Shutdown) 
+    Apple Watch Ultra 3 (49mm) (64A2AB11-6303-4810-A0C9-5B78BAD8C0AD) (Shutdown) 
+    Apple Watch Ultra 2 (49mm) (D26DADBF-8A51-43A3-A03C-BE473AE56440) (Shutdown) 
+    Apple Watch SE 3 (44mm) (B3CB4833-62F8-432D-B5DA-549D58F922D4) (Shutdown) 
+    Apple Watch SE 3 (40mm) (8394C020-8574-452C-8547-485A029E99D3) (Shutdown) 
+    Apple Watch SE (44mm) (2nd generation) (FA60C11D-0964-4308-8DAC-CF9358FF0AB7) (Shutdown) 
+    Apple Watch SE (40mm) (2nd generation) (8FE54F47-029F-4A7C-BAAB-91909EEEA97B) (Shutdown) 
+-- visionOS 2.3 --
+    Apple Vision Pro (AEC883DC-19A8-421C-B735-DB1A391B848F) (Shutdown) 
+-- visionOS 2.4 --
+    Apple Vision Pro (45E6074D-E4DE-42AF-90E2-1C1FFA35D9AF) (Shutdown) 
+-- visionOS 2.5 --
+    Apple Vision Pro (4A180F37-3F43-4BDB-8B64-F93DB34CE12F) (Shutdown) 
+-- visionOS 26.1 --
+    Apple Vision Pro (AFDAF1B6-61C3-4E5A-9B2A-7AAB8684B3EE) (Shutdown) 
+-- visionOS 26.2 --
+    Apple Vision Pro (1244087C-2434-4271-A61D-71CF9905BC73) (Shutdown) 
