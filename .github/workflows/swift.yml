@@ -17,16 +17,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: List available schemes and simulators
-      run: |
-        xcodebuild -list -project AudioBooth.xcodeproj > diagnostics.txt
-        xcrun simctl list devices available >> diagnostics.txt
+    - name: Diagnostic - List Files
+      run: ls -R .. > structure.txt
+
+    - name: Diagnostic - Xcodebuild List
+      continue-on-error: true
+      run: xcodebuild -list -project AudioBooth.xcodeproj >> structure.txt
+
+    - name: Diagnostic - Simulators
+      run: xcrun simctl list devices available >> structure.txt
 
     - name: Upload diagnostics
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: diagnostics
-        path: AudioBooth/diagnostics.txt
+        path: AudioBooth/structure.txt
 
     - name: Build
       run: xcodebuild build -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' -sdk iphonesimulator
