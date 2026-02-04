@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-latest
 
     defaults:
       run:
@@ -17,11 +17,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: List available schemes and devices
-      run: xcodebuild -list -project AudioBooth.xcodeproj
+    - name: List available schemes and simulators
+      run: |
+        xcodebuild -list -project AudioBooth.xcodeproj
+        xcrun simctl list devices available
 
     - name: Build
-      run: xcodebuild build -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,name=iPhone 15' -sdk iphonesimulator
+      run: xcodebuild build -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' -sdk iphonesimulator
 
     - name: Run tests
-      run: xcodebuild test -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,name=iPhone 15' -sdk iphonesimulator
+      run: xcodebuild test -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' -sdk iphonesimulator
