@@ -19,8 +19,14 @@ jobs:
 
     - name: List available schemes and simulators
       run: |
-        xcodebuild -list -project AudioBooth.xcodeproj
-        xcrun simctl list devices available
+        xcodebuild -list -project AudioBooth.xcodeproj > diagnostics.txt
+        xcrun simctl list devices available >> diagnostics.txt
+
+    - name: Upload diagnostics
+      uses: actions/upload-artifact@v4
+      with:
+        name: diagnostics
+        path: AudioBooth/diagnostics.txt
 
     - name: Build
       run: xcodebuild build -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' -sdk iphonesimulator
