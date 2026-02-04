@@ -10,20 +10,18 @@ jobs:
   build:
     runs-on: macos-14
 
+    defaults:
+      run:
+        working-directory: AudioBooth
+
     steps:
     - uses: actions/checkout@v4
 
     - name: List available schemes and devices
-      run: |
-        cd AudioBooth
-        xcodebuild -list
+      run: xcodebuild -list -project AudioBooth.xcodeproj
 
     - name: Build
-      run: |
-        cd AudioBooth
-        xcodebuild build -scheme AudioBooth -destination 'platform=iOS Simulator,name=iPhone 15' -sdk iphonesimulator
+      run: xcodebuild build -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,name=iPhone 15' -sdk iphonesimulator
 
     - name: Run tests
-      run: |
-        cd AudioBooth
-        xcodebuild test -scheme AudioBooth -destination 'platform=iOS Simulator,name=iPhone 15' -sdk iphonesimulator
+      run: xcodebuild test -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,name=iPhone 15' -sdk iphonesimulator
