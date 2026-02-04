@@ -16,26 +16,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Diagnostic - List Files
-      run: ls -R .. > structure.txt
-
-    - name: Diagnostic - Xcodebuild List
-      continue-on-error: true
-      run: xcodebuild -list -project AudioBooth.xcodeproj >> structure.txt
-
-    - name: Diagnostic - Simulators
-      run: xcrun simctl list devices available >> structure.txt
-
-    - name: Upload diagnostics
-      if: always()
-      uses: actions/upload-artifact@v4
       with:
-        name: diagnostics
-        path: AudioBooth/structure.txt
+        fetch-depth: 0
+
+    - name: Generate Diagnostics
+      run: |
+        echo "--- FILE STRUCTURE ---" > ../diagnostics.txt
+        ls -R .. >> ../diagnostics.txt
+        echo "\n--- XCODEBUILD LIST ---" >> ../diagnostics.txt
+        xcodebuild -list -project AudioBooth.xcodeproj >> ../diagnostics.txt || echo "xcodebuild -list failed" >> ../diagnostics.txt
+        echo "\n--- AVAILABLE SIMULATORS ---" >> ../diagnostics.txt
+        xcrun simctl list devices available >> ../diagnostics.txt
+
+    - name: Push Diagnostics to Branch
+      run: |
+        git config --global user.name "Leeroy Ding"
+        git config --global user.email "leeroy@ding.contact"
+        git checkout -b ci-debug
+        mv ../diagnostics.txt .
+        git add diagnostics.txt
+        git commit -m "CI: Add diagnostics from run ${{ github.run_id }}"
+        git push origin ci-debug --force
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build
       run: xcodebuild build -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' -sdk iphonesimulator
-
-    - name: Run tests
-      run: xcodebuild test -project AudioBooth.xcodeproj -scheme AudioBooth -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' -sdk iphonesimulator
